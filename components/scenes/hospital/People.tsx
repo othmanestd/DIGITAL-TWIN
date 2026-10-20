@@ -124,6 +124,7 @@ export default function People({ fl, mats, group, active }: {
     if (!g.visible) return;
     g.updateWorldMatrix(true, false);
     const T = torso.current!, H = head.current!, Hr = hair.current!, Lg = legs.current!, Ar = arms.current!, Hit = hit.current!;
+    if (T.parent && T.parent.parent && !T.parent.parent.visible) return; // floor interior not drawn (LOD)
     const dts = Math.min(dt, 0.25);
     const PL = pilotRef.current;
     for (let i = 0; i < N; i++) {

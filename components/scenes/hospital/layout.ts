@@ -7,7 +7,7 @@ import { isShrinkRole } from "./staffing";
 export type G = "box" | "rbox" | "cyl" | "sph" | "torus";
 export type M =
   | "white" | "light" | "grey" | "steel" | "dark" | "screen" | "wood" | "fabric" | "mattress" | "blanket"
-  | "green" | "lamp" | "carton" | "curtain" | "wall";
+  | "green" | "lamp" | "carton" | "curtain" | "wall" | "ecg" | "glassp" | "led" | "coral" | "band";
 export type Part = { g: G; m: M; x: number; y: number; z: number; yaw: number; sx: number; sy: number; sz: number; dept: string; paper?: boolean; pitch?: number; desk?: number };
 
 export type Pose = "stand" | "sit" | "lie" | "walk";
@@ -120,6 +120,27 @@ class B {
     add("rbox", "fabric", -0.34, 0.5, 0, 0.12, 0.22, 0.7);
     add("rbox", "fabric", 0.34, 0.5, 0, 0.12, 0.22, 0.7);
   }
+  ivPole(u: number, v: number) {
+    const { add } = this.at(u, v, 0, 1);
+    add("cyl", "grey", 0, 0.03, 0, 0.42, 0.04, 0.42); add("box", "steel", 0, 1.0, 0, 0.04, 2.0, 0.04);
+    add("rbox", "light", 0, 1.2, 0.05, 0.24, 0.28, 0.16); add("box", "led", 0, 1.25, 0.14, 0.12, 0.06, 0.02);
+  }
+  cart(u: number, v: number, fu: number, fv: number, m: M = "light", screen = false) {
+    const { add } = this.at(u, v, fu, fv);
+    add("rbox", m, 0, 0.5, 0, 0.6, 0.8, 0.45); add("box", "steel", 0, 0.94, 0, 0.64, 0.04, 0.5);
+    for (let i = 0; i < 3; i++) add("box", "grey", 0, 0.25 + i * 0.22, 0.23, 0.5, 0.015, 0.01);
+    if (screen) { add("box", "steel", 0, 1.25, -0.15, 0.04, 0.6, 0.04); add("box", "screen", 0, 1.5, -0.12, 0.42, 0.3, 0.03, { pitch: -0.3 }); }
+  }
+  ventilator(u: number, v: number, fu: number, fv: number) {
+    const { add } = this.at(u, v, fu, fv);
+    add("rbox", "white", 0, 0.55, 0, 0.45, 1.1, 0.45); add("box", "ecg", 0, 1.25, 0.05, 0.38, 0.3, 0.04, { pitch: -0.2 });
+    add("box", "led", 0.15, 0.95, 0.23, 0.05, 0.05, 0.02);
+  }
+  fridge(u: number, v: number, fu: number, fv: number, glass = true) {
+    const { add } = this.at(u, v, fu, fv);
+    add("rbox", "white", 0, 1.0, 0, 0.75, 2.0, 0.7); if (glass) add("box", "glassp", 0, 1.05, 0.36, 0.6, 1.7, 0.02);
+    add("box", "led", 0.25, 1.92, 0.36, 0.08, 0.04, 0.02);
+  }
   /** a row of n waiting chairs facing (fu, fv); returns seat slots */
   chairs(u: number, v: number, fu: number, fv: number, n: number) {
     const { add, slot } = this.at(u, v, fu, fv);
@@ -159,9 +180,17 @@ class B {
     add("rbox", "mattress", 0, 0.66, -0.78, 0.62, 0.11, 0.34);
     add("rbox", "blanket", 0, patient ? 0.8 : 0.63, 0.32, 1.0, patient ? 0.2 : 0.06, 1.36);
     if (patient) this.pats.push(slot(0, 0.93, "lie", { y: 0.76 }));
+    // side rails, wall oxygen panel behind the head, IV pole with pump next to an occupied bed
+    add("box", "steel", -0.5, 0.74, 0.05, 0.03, 0.16, 0.95); add("box", "steel", 0.5, 0.74, 0.05, 0.03, 0.16, 0.95);
+    add("box", "light", 0, 1.35, -1.16, 1.3, 0.28, 0.06); add("box", "led", 0.45, 1.35, -1.12, 0.06, 0.06, 0.03);
+    if (patient) {
+      add("cyl", "grey", 0.78, 0.03, -0.5, 0.42, 0.04, 0.42); add("box", "steel", 0.78, 1.0, -0.5, 0.04, 2.0, 0.04);
+      add("rbox", "light", 0.78, 1.25, -0.46, 0.24, 0.28, 0.16); add("box", "led", 0.78, 1.3, -0.37, 0.12, 0.06, 0.02);
+      add("rbox", "mattress", 0.78, 1.82, -0.5, 0.16, 0.24, 0.06);
+    }
     if (o.monitor) {
       add("box", "steel", -0.85, 0.75, -0.95, 0.05, 1.5, 0.05);
-      add("box", "screen", -0.85, 1.42, -0.92, 0.42, 0.3, 0.05, { yaw: 0.6 });
+      add("box", "ecg", -0.85, 1.42, -0.92, 0.42, 0.3, 0.05, { yaw: 0.6 });
     } else {
       add("box", "light", 0.85, 0.36, -0.8, 0.45, 0.72, 0.45); // bedside table
     }
@@ -235,6 +264,12 @@ class B {
   }
   room(gapsInner: [number, number][] = [[0.5, 2.2]], gapsOuter: [number, number][] = []) {
     const hw = this.w / 2, hd = this.d / 2;
+    // hand-sanitiser station and a wayfinding totem at the door (department colour band on the totem)
+    const du = -hw + this.w * gapsInner[0][0];
+    const s1 = this.at(du + gapsInner[0][1] / 2 + 0.45, hd - 0.4, 0, 1);
+    s1.add("box", "steel", 0, 0.55, 0, 0.05, 1.1, 0.05); s1.add("box", "white", 0, 1.12, 0.03, 0.16, 0.26, 0.12); s1.add("box", "coral", 0, 1.2, 0.1, 0.1, 0.05, 0.01);
+    const s2 = this.at(du - gapsInner[0][1] / 2 - 0.5, hd + 0.35, 0, 1);
+    s2.add("rbox", "white", 0, 0.85, 0, 0.5, 1.7, 0.12); s2.add("box", "screen", 0, 1.3, 0.065, 0.42, 0.5, 0.01); s2.add("box", "band", 0, 1.62, 0.065, 0.46, 0.08, 0.01);
     this.wall(-hw, hd, hw, hd, gapsInner);   // inner (corridor) side
     this.wall(-hw, -hd, hw, -hd, gapsOuter); // outer (façade) side
     this.wall(-hw, -hd, -hw, hd);
@@ -258,6 +293,10 @@ const L: Record<string, Fn> = {
     b.trolley(2.4, 3.6, 1, 0, "light");
     b.staff.push(b.stand(5.4, -0.2, 0, -1), b.stand(-2.2, -1.05, 0, -1), b.path(-6, 2.0, 1.5, 2.0));
     b.plant(-7.2, 4.8, 0.8);
+    // automated dispensing cabinet (robot) and sterilisation autoclaves
+    { const a = b.at(6.4, 3.4, -1, 0); a.add("rbox", "white", 0, 1.05, 0, 2.6, 2.1, 1.0); a.add("box", "glassp", 0, 1.2, 0.51, 2.3, 1.2, 0.02); a.add("box", "led", 1.0, 1.95, 0.52, 0.06, 0.06, 0.02); }
+    { const a = b.at(3.6, -4.6, 0, 1); a.add("rbox", "steel", 0, 0.85, 0, 1.3, 1.7, 1.0); a.add("cyl", "grey", 0, 0.95, 0.51, 0.7, 0.04, 0.7, { pitch: Math.PI / 2 }); a.add("box", "led", 0.5, 1.6, 0.51, 0.06, 0.06, 0.02); }
+    b.cart(0.8, 3.8, 0, -1, "light");
   },
   logistique: (b) => {
     b.room();
@@ -272,6 +311,9 @@ const L: Record<string, Fn> = {
     b.trolley(-5.5, 0.6, 1, 0, "carton");
     b.trolley(-3.6, 0.6, 1, 0, "carton");
     b.staff.push(b.desk(5.2, 1.4, -1, 0, { screens: 2, phone: true }), b.path(-6.2, 3.3, 3.0, 3.3));
+    // AGV trolley (automated guided vehicle) with its status light
+    { const a = b.at(-1.0, 0.8, 1, 0); a.add("rbox", "light", 0, 0.22, 0, 0.9, 0.3, 1.4); a.add("rbox", "carton", 0, 0.62, 0, 0.8, 0.5, 1.2); a.add("box", "led", 0, 0.4, 0.71, 0.4, 0.05, 0.02); }
+    b.shelf(5.0, -5.2, 0, 1, 5, 2.0, "carton");
   },
   bionettoyage: (b) => {
     b.room();
@@ -286,6 +328,9 @@ const L: Record<string, Fn> = {
     for (let i = 0; i < 3; i++) b.trolley(-5 + i * 1.7, -1.4, 0, 1, "light", 1.3);
     for (let i = 0; i < 3; i++) b.trolley(3 + i * 1.7, -2.8, 0, 1, "curtain", 0.9);
     b.staff.push(b.stand(-1.5, -0.6, -1, 0.4), b.path(-5.5, 3.0, 5.5, 3.0));
+    // washers and food carts
+    for (let i = 0; i < 3; i++) { const a = b.at(-6.6 + i * 1.3, -1.0, 0, -1); a.add("rbox", "white", 0, 0.55, 0, 1.1, 1.1, 0.9); a.add("cyl", "dark", 0, 0.6, -0.46, 0.55, 0.03, 0.55, { pitch: Math.PI / 2 }); a.add("box", "led", 0.35, 1.0, -0.46, 0.05, 0.05, 0.02); }
+    b.cart(5.6, 1.2, -1, 0, "steel"); b.cart(6.4, 1.2, -1, 0, "steel");
   },
   brancardage: (b) => {
     b.room();
@@ -314,6 +359,9 @@ const L: Record<string, Fn> = {
     b.at(-3.2, 3.6, 0, -1).add("rbox", "white", 0, 0.75, 0, 0.5, 1.5, 0.3); // ticket totem
     b.at(-3.2, 3.6, 0, -1).add("box", "screen", 0, 1.15, 0.16, 0.36, 0.5, 0.02);
     b.plant(-7.2, -5.0, 1.1); b.plant(7.2, -5.0, 1.1); b.plant(7.2, 5.0, 0.9);
+    { const a = b.at(-7.4, 2.6, 1, 0); a.add("rbox", "white", 0, 0.95, 0, 0.9, 1.9, 0.8); a.add("box", "glassp", 0, 1.15, 0.41, 0.7, 1.2, 0.02); a.add("box", "band", 0, 1.82, 0.41, 0.8, 0.12, 0.02); }
+    { const a = b.at(-7.4, 4.2, 1, 0); a.add("rbox", "white", 0, 0.5, 0, 0.35, 1.0, 0.3); a.add("cyl", "glassp", 0, 1.22, 0, 0.28, 0.45, 0.28); }
+    { const a = b.at(7.4, 2.6, -1, 0); a.add("cyl", "grey", 0, 0.02, 0, 0.4, 0.04, 0.4); a.add("box", "grey", 0, 0.9, 0, 0.04, 1.8, 0.04); a.add("box", "grey", 0, 1.72, 0, 0.5, 0.03, 0.03); }
   },
   admissions: (b) => {
     b.room();
@@ -336,6 +384,9 @@ const L: Record<string, Fn> = {
     b.staff.push(b.desk(-5.6, 2.6, 0, 1, { screens: 2, phone: true }));
     b.staff.push(b.stand(-0.7, -2.0, -1, -0.6), b.stand(2.9, -2.4, -1, -0.3), b.path(-3.5, 0.9, 6.0, 0.9));
     b.trolley(6.8, 3.6, -1, 0, "light", 0.8);
+    // crash cart (muted coral) and an extra stretcher
+    b.cart(-4.0, 3.8, 0, -1, "coral", true);
+    b.bed(3.6, 2.6, 1, 0, false, { stretcher: true });
   },
   caisse: (b) => {
     b.room();
@@ -369,6 +420,11 @@ const L: Record<string, Fn> = {
     b.staff.push(b.desk(5.6, -2.2, -1, 0, { screens: 2 }));
     b.staff.push(b.stand(-1.0, 0.7, -0.6, -1), b.stand(-4.4, 1.3, 0.3, -1));
     b.at(-6.8, -4.6, 0, 1).add("rbox", "light", 0, 0.9, 0, 1.0, 1.8, 0.7);
+    // lead-glass control-room window, X-ray C-arm, ultrasound cart
+    b.partition(3.2, -5.6, 3.2, 1.0, 2.0, "glassp", 0.05);
+    { const a = b.at(-4.6, 3.6, 1, 0); a.add("cyl", "white", 0, 0.03, 0, 0.9, 0.06, 0.9); a.add("box", "white", 0, 0.9, 0, 0.18, 1.8, 0.18);
+      a.add("box", "white", 0, 1.8, 0.45, 0.16, 0.16, 1.0); a.add("torus", "white", 0, 1.35, 0.95, 0.42, 0.42, 0.3, { pitch: 0 }); a.add("rbox", "light", 0, 1.0, 0.95, 0.35, 0.2, 0.35); }
+    b.cart(1.4, 3.6, 0, -1, "white", true);
   },
 
   // ===== 1st floor
@@ -408,6 +464,7 @@ const L: Record<string, Fn> = {
       b.desk(2.0, -0.8, 0, 1, { phone: true }), b.desk(3.6, -0.8, 0, 1, { phone: true }),
     );
     b.shelf(0, -5.2, 0, 1, 7, 1.4, "curtain");
+    { const a = b.at(6.4, 2.2, -1, 0); a.add("rbox", "light", 0, 0.38, 0, 0.7, 0.76, 0.55); a.add("rbox", "white", 0, 0.92, 0, 0.6, 0.32, 0.5); a.add("box", "led", 0.22, 1.06, 0.26, 0.04, 0.04, 0.02); }
     b.plant(-7.2, 4.8, 0.9);
   },
   facturation: (b) => {
@@ -424,6 +481,7 @@ const L: Record<string, Fn> = {
     b.room();
     b.staff.push(b.desk(-2.2, -1.0, 0, 1, { screens: 2 }), b.desk(2.2, -1.0, 0, 1, { screens: 2 }));
     b.shelf(0, -5.2, 0, 1, 9, 1.8, "curtain");
+    { const a = b.at(6.4, 2.2, -1, 0); a.add("rbox", "light", 0, 0.38, 0, 0.7, 0.76, 0.55); a.add("rbox", "white", 0, 0.92, 0, 0.6, 0.32, 0.5); a.add("box", "led", 0.22, 1.06, 0.26, 0.04, 0.04, 0.02); }
     b.plant(7.0, 4.6, 0.9);
   },
   laboratoire: (b) => {
@@ -437,6 +495,11 @@ const L: Record<string, Fn> = {
       for (let i = 0; i < 6; i++) add("cyl", "curtain", -3.3 + i * 1.4, 1.0, 0.18, 0.09, 0.18, 0.09);
     }
     b.staff.push(b.desk(6.0, 3.2, -1, 0, { screens: 1 }), b.stand(-3.0, -2.75, 0, -1), b.stand(1.6, 1.05, 0, -1));
+    // centrifuges, microscopes, sample racks, fridges
+    for (const [u, v] of [[-5.5, -3.75], [2.5, -3.75], [-4.5, 0.05]] as const) { const a = b.at(u, v, 0, 1); a.add("cyl", "white", 0, 1.08, 0, 0.42, 0.32, 0.42); a.add("cyl", "grey", 0, 1.25, 0, 0.36, 0.03, 0.36); a.add("box", "led", 0.15, 1.05, 0.21, 0.04, 0.04, 0.02); }
+    for (const u of [-1.5, 4.5]) { const a = b.at(u, 0.05, 0, 1); a.add("box", "grey", 0, 1.0, 0, 0.18, 0.2, 0.25); a.add("box", "grey", 0, 1.22, -0.06, 0.06, 0.34, 0.06); a.add("cyl", "dark", 0, 1.38, 0.02, 0.12, 0.12, 0.12); }
+    for (const u of [0.5, 5.5]) { const a = b.at(u, -3.65, 0, 1); a.add("box", "light", 0, 0.98, 0, 0.5, 0.1, 0.22); for (let k = 0; k < 6; k++) a.add("cyl", "coral", -0.2 + k * 0.08, 1.07, 0, 0.04, 0.12, 0.04); }
+    b.fridge(-7.4, 4.6, 0, -1); b.fridge(-6.5, 4.6, 0, -1, false);
   },
 
   // ===== 2nd floor
@@ -462,6 +525,13 @@ const L: Record<string, Fn> = {
     b.trolley(-2.5, -3.6, -1, 0, "steel", 0.7);
     b.staff.push(b.stand(-2.2, -2.5, -1, 0.2), b.stand(-3.4, -0.4, -0.6, -1), b.path(-8, 4.2, 8, 4.2));
     for (let i = 0; i < 3; i++) b.at(-9.5 + i * 1.2, 5.6, 0, -1).add("rbox", "steel", 0, 0.5, 0, 1.0, 1.0, 0.55);
+    // anaesthesia machine, instrument tables, boom monitors in both theatres
+    for (const u of [-5.0, 7.0]) {
+      { const a = b.at(u - 1.6, -3.4, 1, 0); a.add("rbox", "white", 0, 0.6, 0, 0.7, 1.2, 0.6); a.add("box", "ecg", 0, 1.45, 0.05, 0.5, 0.36, 0.04, { pitch: -0.15 }); a.add("box", "led", 0.25, 1.05, 0.31, 0.05, 0.05, 0.02); }
+      { const a = b.at(u + 1.4, -0.3, -1, 0); a.add("box", "steel", 0, 0.88, 0, 1.2, 0.04, 0.6); a.add("box", "steel", 0, 0.45, 0, 0.05, 0.85, 0.05); a.add("box", "light", 0, 0.92, 0, 0.9, 0.03, 0.4); }
+      { const a = b.at(u + 1.2, -3.6, 0, 1); a.add("box", "grey", 0, 2.7, 0, 0.12, 0.6, 0.12); a.add("box", "grey", -0.5, 2.4, 0, 1.0, 0.08, 0.08); a.add("box", "ecg", -1.0, 2.05, 0.05, 0.6, 0.4, 0.05); }
+    }
+    for (let i = 0; i < 2; i++) { const a = b.at(-0.8 + i * 1.1, 5.7, 0, -1); a.add("rbox", "steel", 0, 0.9, 0, 0.9, 0.35, 0.5); a.add("box", "steel", 0, 0.45, 0, 0.8, 0.9, 0.45); }
   },
   reanimation: (b) => {
     b.room();
@@ -473,6 +543,9 @@ const L: Record<string, Fn> = {
     b.counter(0, 3.6, 0, -1, 6);
     b.staff.push(b.stand(-1.6, -2.4, -1, -0.3));
     b.staff.push(b.stand(-7.4, -2.2, -1, -0.5), b.desk(1.6, 4.3, 0, -1, { screens: 2, chair: true, paper: true }), b.path(-10, 0.6, 10, 0.6));
+    // ventilators and IV pumps at every bay, a medication cart at the station
+    for (const u of [-9, -3, 3, 9]) { b.ventilator(u + 1.1, -4.6, 0, 1); b.ivPole(u - 1.0, -2.0); }
+    b.cart(-2.2, 3.6, 0, -1, "light", true);
   },
   maternite: (b) => {
     b.room();
@@ -483,6 +556,9 @@ const L: Record<string, Fn> = {
       if (i < 2) b.wall(u + 4, -6, u + 4, 1.0);
     });
     b.staff.push(b.stand(-6.6, -1.8, -1, -0.3), b.stand(1.4, -1.8, -1, -0.4), b.path(-10, 3.4, 10, 3.4));
+    // neonatal incubator and a nursing cart
+    { const a = b.at(9.8, 2.4, -1, 0); a.add("box", "steel", 0, 0.45, 0, 0.6, 0.9, 0.9); a.add("rbox", "white", 0, 0.95, 0, 0.75, 0.12, 1.0); a.add("rbox", "glassp", 0, 1.22, 0, 0.66, 0.42, 0.9); a.add("box", "led", 0.3, 0.75, 0.46, 0.05, 0.05, 0.02); }
+    b.cart(-10.4, 2.4, 1, 0, "light");
     b.plant(11.3, 5.0, 0.9);
   },
   reserve: (b) => {
@@ -517,6 +593,13 @@ const L: Record<string, Fn> = {
     b.staff.push(b.stand(-hw + rw * 1.5 + 0.2, -7.6, -1, -1));
     b.trolley(-5.5, 0.4, 1, 0, "light", 0.9);
     b.plant(10.8, 0, 0.9);
+    // a TV facing each bed, screens on the nurse station, a medication cart
+    for (const side of [-1, 1]) for (let k = 0; k < 3; k++) {
+      const u = -hw + rw * (k + 0.5);
+      const a = b.at(u - 1.2, side * 4.85, 0, side); a.add("box", "dark", 0, 1.9, 0, 0.9, 0.52, 0.05); a.add("box", "grey", 0, 1.5, -0.03, 0.05, 0.3, 0.05);
+    }
+    { const a = b.at(1.4, 0.35, 0, -1); a.add("box", "screen", -0.6, 1.3, 0, 0.5, 0.32, 0.03); a.add("box", "screen", 0.6, 1.3, 0, 0.5, 0.32, 0.03); }
+    b.cart(3.6, -1.8, 0, 1, "light", true);
   },
   lits: (b) => {
     b.room();
@@ -529,7 +612,7 @@ const L: Record<string, Fn> = {
   cadres: (b) => {
     b.room();
     b.staff.push(b.desk(-6.5, -1.5, 0, 1, { screens: 1, phone: true }));
-    b.table(3.0, 0.2, 1, 0, 4.0, 1.6);
+    b.table(3.0, 0.2, 0, 1, 4.0, 1.6);
     for (const [du, dv, fu, fv] of [[-1.2, -1.2, 0, 1], [1.2, -1.2, 0, 1], [-1.2, 1.2, 0, -1], [1.2, 1.2, 0, -1]] as const) b.chair(3.0 + du, 0.2 + dv, fu, fv);
     const { add } = b.at(3.0, -5.6, 0, 1);
     add("box", "white", 0, 1.5, 0, 3.2, 1.2, 0.05);
@@ -544,7 +627,7 @@ const L: Record<string, Fn> = {
     // meeting room (partitioned) with the quality wall screen at the back
     b.wall(-b.w / 2, -3.0, 3.0, -3.0, [[0.78, 1.6]], 1.0);
     b.partition(3.0, -12.5, 3.0, -3.0, 1.0);
-    b.table(-4.5, -7.6, 1, 0, 6.0, 2.0);
+    b.table(-4.5, -7.6, 0, 1, 6.0, 2.0);
     const seats: Slot[] = [];
     for (let i = 0; i < 3; i++) {
       const u = -6.6 + i * 2.1;
@@ -608,14 +691,14 @@ const L: Record<string, Fn> = {
     b.staff.push(b.desk(-6.4, -3.0, 0, 1, { phone: true }), b.desk(-4.8, -3.0, 0, 1, { phone: true }), b.desk(-5.6, 1.4, 0, 1, { screens: 2 }));
     b.wall(1.5, -8.5, 1.5, 2.0, [[0.8, 1.4]], 2.2);
     b.wall(1.5, 2.0, 10.5, 2.0, [], 2.2);
-    b.table(6.0, -3.2, 1, 0, 3.6, 1.6);
+    b.table(6.0, -3.2, 0, 1, 3.6, 1.6);
     for (const [du, dv, fu, fv] of [[-1, -1.25, 0, 1], [1, -1.25, 0, 1], [-1, 1.25, 0, -1], [1, 1.25, 0, -1]] as const) b.chair(6.0 + du, -3.2 + dv, fu, fv);
     b.staff.push(b.at(7.0, -1.95, 0, -1).slot(0, 0.02, "sit"));
     b.plant(-9.6, 7.6, 1.0);
   },
   "siege-pilotage": (b) => {
     b.room();
-    b.table(0, 0.6, 1, 0, 7.5, 2.2);
+    b.table(0, 0.6, 0, 1, 7.5, 2.2); // long side along u, chairs on both long sides facing it
     const seats: Slot[] = [];
     for (let i = 0; i < 4; i++) {
       const u = -2.7 + i * 1.8;

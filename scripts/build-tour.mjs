@@ -68,7 +68,21 @@ const sel = (kind, id, at) => ({ do: "select", kind, id, ...(at !== undefined ? 
 const kase = (id, at) => ({ do: "case", id, ...(at !== undefined ? { at } : {}) });
 const zoom = (g, at) => ({ do: "zoom", g, ...(at !== undefined ? { at } : {}) });
 const SETUP = [{ do: "section", section: "explorer", silent: true }, { do: "year", year: 2029, silent: true }, { do: "view", perSite: false, silent: true }, { do: "level", level: "hospital" }, { do: "home", silent: true }];
-const YEARS = [{ do: "home" }, { do: "year", year: 2026, atSentence: 1 }, { do: "year", year: 2027, atSentence: 2 }, { do: "year", year: 2028, atSentence: 3 }, { do: "year", year: 2029, atSentence: 4 }];
+// time-lapse choreography: fly INTO the ground floor (Admissions, where Youssef works: desks and people in view), fold
+// the side panel so the scene is in full view, then step the years on the narration's own sentences
+// (2026 → 2027 → 2028 → 2029, each held while the narrator tells that year; the cursor stays on the scene, the year
+// changes instantly on the sentence), and end on a second close look (Standard).
+const YEARS = [
+  { do: "section", section: "explorer", silent: true },
+  { do: "select", kind: "dept", id: "admissions" },
+  { do: "panel", open: false, silent: true },
+  { do: "year", year: 2026, atSentence: 1, silent: true },
+  { do: "year", year: 2027, atSentence: 2, silent: true },
+  { do: "year", year: 2028, atSentence: 3, silent: true },
+  { do: "year", year: 2029, atSentence: 4, silent: true },
+  { do: "select", kind: "dept", id: "standard", atSentence: 5 },
+  { do: "panel", open: false, silent: true },
+];
 
 // ---------------------------------------------------------------- shared story beats
 // Recurring characters, fictional and announced as such: Amina (54, knee surgery), Youssef (admissions), Salma (nurse).

@@ -131,6 +131,33 @@ export default function UnifiedWorld() {
     return () => el.removeEventListener("wheel", onWheel);
   }, [gl, tmp]);
 
+  // keyboard / nav-pad camera moves: orbit, tilt, pan (orbit the globe when the pivot is the Earth's centre), and "north up"
+  useEffect(() => {
+    const onOrbit = (e: Event) => {
+      const c = controls.current; if (!c) return;
+      rig.cancel(); st.current.intro = false;
+      const d = (e as CustomEvent<{ az?: number; pol?: number; panX?: number; panY?: number }>).detail || {};
+      const centre = c.getTarget(tmp.t).distanceTo(EARTH_CENTER) < 2e5;
+      if (d.az || d.pol) void c.rotate(d.az ?? 0, d.pol ?? 0, true);
+      if (d.panX || d.panY) {
+        if (centre) void c.rotate((d.panX ?? 0) * -0.18, (d.panY ?? 0) * -0.12, true);
+        // ground: slide like a map (up = forward on the ground, not toward the sky)
+        else { const k = c.distance * 0.12; void c.truck((d.panX ?? 0) * k, 0, true); void c.forward((d.panY ?? 0) * k, true); }
+      }
+    };
+    const onNorth = () => {
+      const c = controls.current; if (!c) return;
+      rig.cancel();
+      const centre = c.getTarget(tmp.t).distanceTo(EARTH_CENTER) < 2e5;
+      // ground: look north (camera south of the target) with a comfortable tilt; globe: north is already up, so bring Morocco back to the centre
+      if (centre) rig.flyTo(EARTH_CENTER, c.distance, { polar: shots.worldPolar, azimuth: shots.worldAz, duration: 1.1 });
+      else void c.rotateTo(0, Math.min(Math.max(c.polarAngle, 0.5), 1.05), true);
+    };
+    window.addEventListener("atlas:orbit", onOrbit);
+    window.addEventListener("atlas:north", onNorth);
+    return () => { window.removeEventListener("atlas:orbit", onOrbit); window.removeEventListener("atlas:north", onNorth); };
+  }, [tmp]);
+
   // zoom slider / shortcuts / tour requests
   useEffect(() => {
     let last = 0;

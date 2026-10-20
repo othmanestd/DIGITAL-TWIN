@@ -115,7 +115,7 @@ export default function Shortcuts() {
   return <HelpOverlay />;
 }
 
-const ROWS: [string, [string, string][]][] = [
+export const ROWS: [string, [string, string][]][] = [
   ["Zoom et caméra", [
     ["Molette · deux doigts", "Zoomer vers le curseur (rapide)"],
     ["Maj + molette", "Zoom fin"],
@@ -125,7 +125,8 @@ const ROWS: [string, [string, string][]][] = [
     ["+ / −", "Zoomer / dézoomer"],
     ["Q / E", "Tourner à gauche / à droite"],
     ["R / F", "Incliner haut / bas"],
-    ["A D Z S", "Déplacer la vue"],
+    ["A D Z S · flèches du pavé", "Déplacer la vue"],
+    ["Boussole", "Remettre le nord en haut"],
     ["0", "Recadrer la vue d'ensemble"],
     ["Continuer à dézoomer", "Hôpital → Maroc → Monde"],
   ]],

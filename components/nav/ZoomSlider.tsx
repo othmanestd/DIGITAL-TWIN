@@ -51,7 +51,7 @@ export default function ZoomSlider() {
   const nearest = MARKS.reduce((a, m) => (Math.abs(m.g - zoom) < Math.abs(a.g - zoom) ? m : a), MARKS[0]);
   const btn = "grid place-items-center rounded-full text-[var(--txt-2)] hover:text-white hover:bg-white/10 transition-colors";
   return (
-    <div className="glass pointer-events-auto absolute right-4 top-1/2 z-20 flex -translate-y-1/2 flex-col items-center rounded-full py-2" style={{ width: 44, height: "clamp(250px, 50dvh, 460px)" }} aria-label="Zoom">
+    <div className="glass pointer-events-auto relative z-20 flex min-h-0 flex-col items-center rounded-full py-2" style={{ width: 44, height: "clamp(190px, 42dvh, 420px)" }} aria-label="Zoom">
       <button className={`${btn} h-8 w-8`} onClick={() => requestZoom({ delta: -0.16 })} data-anchor="zoom:in" title="Zoomer (+)"><Icon k="plus" /></button>
       <div ref={track} className="relative my-2 w-full flex-1 cursor-ns-resize" onPointerDown={(e) => { const v = fromEvent(e.clientY); setDrag(v); send(v); }}>
         <div className="absolute left-1/2 top-0 h-full w-[3px] -translate-x-1/2 rounded-full bg-white/10" />

@@ -22,7 +22,8 @@ export type Op =
   | { do: "year"; year: Year; silent?: boolean }
   | { do: "view"; perSite: boolean; silent?: boolean }
   | { do: "point"; anchor: string; silent?: boolean }
-  | { do: "zoom"; level?: Level; value?: number; delta?: number; g?: number; silent?: boolean };
+  | { do: "zoom"; level?: Level; value?: number; delta?: number; g?: number; silent?: boolean }
+  | { do: "panel"; open: boolean; silent?: boolean };
 
 const LEVEL_OF: Partial<Record<SelKind, Level>> = { floor: "hospital", dept: "hospital", person: "hospital", case: "hospital", xp: "hospital", city: "morocco", site: "morocco", country: "world" };
 
@@ -121,6 +122,11 @@ export async function perform(op: Op): Promise<void> {
       if (f) await cursorTo([op.anchor]);
       return;
     }
+    case "panel":
+      // keeps the selection (and its camera framing) but folds the side panel so the scene stays in full view
+      S().setPanelOpen(op.open);
+      await sleep(silent ? 30 : 400);
+      return;
     case "zoom": {
       await ensureExplorer(silent);
       const anchors = op.level ? [`zoom:level:${op.level}`, `nav:level:${op.level}`] : op.g !== undefined ? ["zoom:out"] : [(op.delta ?? 0) < 0 ? "zoom:in" : "zoom:out"];
@@ -163,6 +169,7 @@ export function opLabel(op: Op): string {
     case "year": return String(op.year);
     case "view": return op.perSite ? "Un établissement" : "Tout le groupe";
     case "point": return op.anchor;
+    case "panel": return op.open ? "Panneau" : "Plein écran";
     case "zoom": return op.level === "world" ? "Vue monde" : op.level === "morocco" ? "Vue Maroc" : "Zoom";
   }
 }

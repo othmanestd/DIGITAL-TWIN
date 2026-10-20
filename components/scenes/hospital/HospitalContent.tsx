@@ -10,7 +10,7 @@ import { FLOOR_H } from "@/lib/hospital";
 import { share } from "@/lib/model";
 import { useApp } from "@/lib/store";
 import { FLOOR_LAYOUTS, PERSON_BY_ID } from "./layout";
-import { PAL, rt } from "./mats";
+import { PAL, rt, tickEcg } from "./mats";
 import { focusOf, CAMPUS_OFFSET, toLocal } from "./nav";
 import Floor from "./Floor";
 import { Roof, Site, Skybridge } from "./Site";
@@ -47,7 +47,8 @@ export function HospitalContent({ standalone = false }: { standalone?: boolean }
 
   // the programme ramp (agents, paper stacks) follows the timeline smoothly
   const first = useRef(true);
-  useFrame((_, dt) => {
+  useFrame((st, dt) => {
+    tickEcg(st.clock.elapsedTime);
     const target = share(year).eco;
     if (first.current) { rt.eco = target; first.current = false; }
     rt.eco += (target - rt.eco) * (1 - Math.exp(-Math.min(dt, 0.25) * 1.8));

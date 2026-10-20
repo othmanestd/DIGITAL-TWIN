@@ -188,27 +188,54 @@
           "speech": "Revenons à l'hôpital, et faisons défiler le temps. 2026 : Youssef ressaisit toute la journée, et la file s'allonge. 2027 : ses premiers agents arrivent ; il vérifie au lieu de taper, et les premières vagues couvrent déjà leur coût. 2028 : Salma retrouve son quart d'heure, et le gain net dépasse 80 millions de dirhams. 2029 : Youssef pilote ses agents ; deux guichets ouverts au lieu de quatre, et personne n'a été licencié. Au plein régime, 142 millions de dirhams nets par an : près de deux dirhams économisés pour chaque dirham investi.",
           "actions": [
             {
-              "do": "home"
+              "do": "section",
+              "section": "explorer",
+              "silent": true
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "admissions"
+            },
+            {
+              "do": "panel",
+              "open": false,
+              "silent": true
             },
             {
               "do": "year",
               "year": 2026,
-              "atSentence": 1
+              "atSentence": 1,
+              "silent": true
             },
             {
               "do": "year",
               "year": 2027,
-              "atSentence": 2
+              "atSentence": 2,
+              "silent": true
             },
             {
               "do": "year",
               "year": 2028,
-              "atSentence": 3
+              "atSentence": 3,
+              "silent": true
             },
             {
               "do": "year",
               "year": 2029,
-              "atSentence": 4
+              "atSentence": 4,
+              "silent": true
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "standard",
+              "atSentence": 5
+            },
+            {
+              "do": "panel",
+              "open": false,
+              "silent": true
             }
           ]
         },

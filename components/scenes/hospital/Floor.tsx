@@ -13,6 +13,7 @@ import { GEO, PAL, makeFloorMats, rt, setFloorOpacity, type FloorMats, type Faca
 import { FloorFacade } from "./Facade";
 import Experiences from "./Experiences";
 import { FourthFloor } from "./Twin";
+import { Ambient } from "./Ambient";
 import People, { THREE_STATE } from "./People";
 import { isHidden } from "./nav";
 
@@ -36,6 +37,12 @@ function Inst({ geo, mat, parts, shadow = true }: { geo: THREE.BufferGeometry; m
 
 const mix = (a: string, b: string, t: number) => new THREE.Color(a).lerp(new THREE.Color(b), t);
 const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
+/** Floor-marking colour bands along the corridors of a main-building floor: [x, z, w, d]. */
+function corridorBands(floor: number): [number, number, number, number][] {
+  if (floor === 4) return [[0, 0, 0.8, 25.5]];
+  if (floor === 3) return [[13, 0, 25.5, 0.8]];
+  return [[0, 0, 51.5, 0.8]];
+}
 /** desk fold factor from its person's presence: folds while the person walks away */
 const deskFold = (pr: number) => { const t = Math.min(1, Math.max(0, (pr - 0.2) / 0.5)); return t * t * (3 - 2 * t); };
 
@@ -146,6 +153,11 @@ export default function Floor({ fl, openKey, focusDept }: { fl: FloorLayout; ope
     mats.glass.userData.baseOpacity += (gb - mats.glass.userData.baseOpacity) * k;
     mats.louvre.userData.baseOpacity = 1 - xr;
     mats.glass.emissiveIntensity = (1 - rt.day) * 0.55;
+    // level of detail: the furnished interior is drawn for the open floor, or when the camera is close
+    if (content.current) content.current.visible = openRef.current || dist < 120;
+    // calm signs of life: blinking status LEDs, softly flickering screens
+    const tt = performance.now() / 1000;
+    mats.parts.led.emissiveIntensity = 0.55 + 0.55 * Math.max(0, Math.sin(tt * 2.6 + fl.floor));
     setFloorOpacity(allMats, 1 - e);
     // zone tints
     for (const z of zones) {
@@ -191,7 +203,7 @@ export default function Floor({ fl, openKey, focusDept }: { fl: FloorLayout; ope
       });
     }
     // screens glow a touch bluer when agents are at work
-    mats.parts.screen.emissiveIntensity = 0.3 + 0.35 * rt.eco;
+    mats.parts.screen.emissiveIntensity = 0.3 + 0.35 * rt.eco + 0.025 * Math.sin(performance.now() / 160 + fl.floor * 1.7);
   });
 
   // anchors: floor + departments
@@ -306,6 +318,12 @@ export default function Floor({ fl, openKey, focusDept }: { fl: FloorLayout; ope
       {fl.key === "main:0" && <Experiences mats={mats} />}
       {fl.key === "main:4" && <FourthFloor mats={mats} />}
       <People fl={fl} mats={mats} group={group} active={active} />
+      {fl.building === "main" && <Ambient floor={fl.floor} mats={mats} />}
+      {fl.building === "main" && corridorBands(fl.floor).map(([x, z, w, d], i) => (
+        <mesh key={"band" + i} position={[x, 0.014, z]} rotation-x={-Math.PI / 2} material={mats.parts.band} receiveShadow>
+          <planeGeometry args={[w, d]} />
+        </mesh>
+      ))}
       </group>
       <SelectedOutline fl={fl} focusDept={isOpen ? focusDept : null} />
     </group>

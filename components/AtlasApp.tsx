@@ -8,6 +8,7 @@ import SidePanel from "@/components/panels/SidePanel";
 import SectionView from "@/components/sections/SectionView";
 import Assistant from "@/components/ai/Assistant";
 import ZoomSlider from "@/components/nav/ZoomSlider";
+import NavPad from "@/components/nav/NavPad";
 import Shortcuts from "@/components/nav/Shortcuts";
 
 const SceneRoot = dynamic(() => import("@/components/scenes/SceneRoot"), { ssr: false });
@@ -28,7 +29,12 @@ export default function AtlasApp() {
       >
         <SceneRoot />
         {section === "explorer" && <Timeline />}
-        {section === "explorer" && <ZoomSlider />}
+        {section === "explorer" && (
+          <div className="pointer-events-none absolute bottom-[104px] right-4 top-[84px] z-20 flex flex-col items-center justify-center gap-3">
+            <NavPad />
+            <ZoomSlider />
+          </div>
+        )}
       </div>
       {section === "explorer" && <Sidebar />}
       <SidePanel />

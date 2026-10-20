@@ -21,7 +21,7 @@ export const GEO: Record<G, THREE.BufferGeometry> = {
   torus: new THREE.TorusGeometry(0.95, 0.3, 14, 40),
 };
 
-const SPEC: Record<M, { color: string; rough?: number; metal?: number; emissive?: string; ei?: number; flat?: boolean }> = {
+const SPEC: Record<M, { color: string; rough?: number; metal?: number; emissive?: string; ei?: number; flat?: boolean; op?: number }> = {
   white: { color: "#F3F4F7", rough: 0.85 },
   wall: { color: "#F6F7FA", rough: 0.9 },
   light: { color: "#DEE2EA", rough: 0.8 },
@@ -37,6 +37,11 @@ const SPEC: Record<M, { color: string; rough?: number; metal?: number; emissive?
   lamp: { color: "#FFFFFF", rough: 0.4, emissive: "#FFF4E2", ei: 0.75 },
   carton: { color: "#D8CAB2", rough: 0.9 },
   curtain: { color: "#C9D6DE", rough: 0.95 },
+  ecg: { color: "#0E1A2E", rough: 0.35, emissive: "#FFFFFF", ei: 0.9 },        // bedside monitors (animated ECG line)
+  glassp: { color: "#CFE0EC", rough: 0.1, metal: 0.1, op: 0.38 },              // lead-glass / incubator / partitions
+  led: { color: "#5FD3A6", rough: 0.4, emissive: "#5FD3A6", ei: 1.1 },          // status LEDs (blinking)
+  coral: { color: "#D58B7E", rough: 0.6 },                                       // crash cart, sanitiser accents
+  band: { color: "#C9D9E6", rough: 0.9 },                                        // corridor floor bands
 };
 
 export type FloorMats = {
@@ -48,6 +53,34 @@ export type FloorMats = {
   orb: THREE.MeshStandardMaterial; halo: THREE.MeshBasicMaterial;
   all: THREE.Material[];
 };
+
+// one shared animated ECG trace for every bedside monitor (redrawn ~12 fps by tickEcg)
+let ecg: { tex: THREE.CanvasTexture; g: CanvasRenderingContext2D; last: number } | null = null;
+export function ecgTexture() {
+  if (ecg) return ecg.tex;
+  const c = document.createElement("canvas");
+  c.width = 256; c.height = 128;
+  const g = c.getContext("2d")!;
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  ecg = { tex, g, last: -1 };
+  tickEcg(0);
+  return tex;
+}
+export function tickEcg(t: number) {
+  if (!ecg || t - ecg.last < 0.08) return;
+  ecg.last = t;
+  const g = ecg.g;
+  g.fillStyle = "#0B1426"; g.fillRect(0, 0, 256, 128);
+  const beat = (x: number) => { const p = ((x / 64 + t * 1.2) % 1); return p < 0.05 ? -Math.sin(p / 0.05 * Math.PI) * 34 : p < 0.09 ? Math.sin((p - 0.05) / 0.04 * Math.PI) * 10 : p > 0.3 && p < 0.42 ? -Math.sin((p - 0.3) / 0.12 * Math.PI) * 7 : 0; };
+  g.strokeStyle = "#5FD3A6"; g.lineWidth = 3; g.beginPath();
+  for (let x = 0; x <= 256; x += 2) { const y = 52 + beat(x); if (x) g.lineTo(x, y); else g.moveTo(x, y); }
+  g.stroke();
+  g.strokeStyle = "#7D97FF"; g.lineWidth = 2; g.beginPath();
+  for (let x = 0; x <= 256; x += 4) { const y = 100 + 8 * Math.sin(x / 18 + t * 2); if (x) g.lineTo(x, y); else g.moveTo(x, y); }
+  g.stroke();
+  ecg.tex.needsUpdate = true;
+}
 
 let haloTex: THREE.Texture | null = null;
 export function haloTexture() {
@@ -81,8 +114,10 @@ export function makeFloorMats(style: FacadeStyle = "main"): FloorMats {
     parts[k] = new THREE.MeshStandardMaterial({
       color: C(s.color), roughness: s.rough ?? 0.8, metalness: s.metal ?? 0, flatShading: !!s.flat,
       emissive: s.emissive ? C(s.emissive) : C("#000000"), emissiveIntensity: s.ei ?? 0,
+      transparent: s.op !== undefined, opacity: s.op ?? 1, depthWrite: s.op === undefined,
     });
   }
+  parts.ecg.emissiveMap = ecgTexture();
   const slabTop = new THREE.MeshStandardMaterial({ color: C(PAL.slabTop), roughness: 0.92 });
   const slabEdge = new THREE.MeshStandardMaterial({ color: C(PAL.slabEdge), roughness: 0.85 });
   const gs = GLASS[style];

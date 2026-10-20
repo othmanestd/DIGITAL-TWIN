@@ -28,7 +28,8 @@ export function shotLocal(sel: Sel, aspect: number): { pos: THREE.Vector3; look:
     const rec = PERSON_BY_ID[f.person];
     if (rec) {
       const s = rec.p.slot;
-      const w = rt.pos.get(f.person);
+      // live position only if the person's floor is in place (a lifted / hidden floor keeps stale positions)
+      const w = (rt.lift[rec.floor.key] ?? 0) < 0.01 ? rt.pos.get(f.person) : undefined;
       const look = w ? toLocal(w.clone()) : new THREE.Vector3(rec.floor.ox + s.x, rec.floor.floor * FLOOR_H + 1.1, rec.floor.oz + s.z);
       const lie = s.pose === "lie";
       const dir = lie ? new THREE.Vector3(0.45, 1.25, 1) : new THREE.Vector3(0.5, 0.62, 1);
