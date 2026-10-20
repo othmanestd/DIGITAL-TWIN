@@ -3,6 +3,7 @@
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useRef } from "react";
 import UnifiedWorld from "./UnifiedWorld";
+import ToneSampler from "./ToneSampler";
 import JabbEgg from "@/components/nav/JabbEgg";
 import { frame, fadeIn } from "@/lib/world";
 
@@ -37,6 +38,7 @@ export default function SceneRoot() {
         <Suspense fallback={null}>
           <UnifiedWorld />
         </Suspense>
+        <ToneSampler />
       </Canvas>
       <JabbEgg />
     </div>

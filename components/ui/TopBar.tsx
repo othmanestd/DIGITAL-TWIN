@@ -1,5 +1,5 @@
 "use client";
-// Top bar: Mibtech × JABB × AKDITAL, live KPI ticker for the selected year, liquid-glass search (centre), section menu (right).
+// Top bar: AKDITAL with mibtech × JABB underneath, live KPI ticker for the selected year, liquid-glass search (centre), section menu (right).
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useApp, type Section } from "@/lib/store";
@@ -24,17 +24,19 @@ export function JabbMark({ size = 18, color = "#fff" }: { size?: number; color?:
 }
 
 export function Brand({ compact = false }: { compact?: boolean }) {
+  // Akdital first (the client), the two partners smaller underneath: same order as the zoomed-out logo
   return (
-    <div className="flex items-center gap-3.5 text-white" aria-label="JABB × Akdital × Mibtech">
-      <span className="flex items-end gap-[2px] leading-none">
-        <JabbMark size={compact ? 16 : 18} />
-        <span className={`font-[800] italic leading-[0.8] tracking-[-0.02em] ${compact ? "text-[15px]" : "text-[17px]"}`}>ABB</span>
+    <div className="flex flex-col items-center gap-[5px] text-white" aria-label="Akdital, avec Mibtech × JABB">
+      <AkditalLogo size={compact ? 20 : 22} />
+      <span className="flex items-center gap-1.5 leading-none">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/mibtech-reverse.svg" alt="Mibtech" className={compact ? "h-[8.5px] w-auto" : "h-[9.5px] w-auto"} />
+        <span className="text-[9px] font-light text-white/35">×</span>
+        <span className="flex items-end gap-[1px]">
+          <JabbMark size={compact ? 9 : 10} />
+          <span className={`font-[800] italic leading-[0.8] tracking-[-0.02em] ${compact ? "text-[8.5px]" : "text-[9.5px]"}`}>ABB</span>
+        </span>
       </span>
-      <span className="text-[13px] font-light text-white/35">×</span>
-      <AkditalLogo size={compact ? 17 : 19} />
-      <span className="text-[13px] font-light text-white/35">×</span>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/brand/mibtech-reverse.svg" alt="Mibtech" className={compact ? "h-[12px] w-auto" : "h-[14px] w-auto"} />
     </div>
   );
 }
@@ -112,7 +114,7 @@ export default function TopBar() {
   const fullLabels = vw >= 2100;
   // room left of the centred search: half the free width, minus the brand
   const side = (vw - 40 - 40 - width) / 2;
-  const brandW = compactBrand ? 290 : 335;
+  const brandW = compactBrand ? 135 : 150;
   const tickerMode: "full" | "compact" | null = side - brandW - 40 >= 320 ? "full" : side - brandW - 40 >= 150 ? "compact" : null;
 
   return (

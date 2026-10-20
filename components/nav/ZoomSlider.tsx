@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/lib/store";
 import { altToG, MAX_ALT } from "@/lib/world";
+import { tone } from "@/lib/ui/tone";
 
 type Mark = { key: "hospital" | "morocco" | "world" | "jabb"; label: string; g: number; alt: number };
 const MARKS: Mark[] = [
@@ -49,32 +50,32 @@ export default function ZoomSlider() {
   }, [drag !== null]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const nearest = MARKS.reduce((a, m) => (Math.abs(m.g - zoom) < Math.abs(a.g - zoom) ? m : a), MARKS[0]);
-  const btn = "grid place-items-center rounded-full text-[var(--txt-2)] hover:text-white hover:bg-white/10 transition-colors";
+  const btn = "tone-adapt grid place-items-center rounded-full";
   return (
     <div className="glass pointer-events-auto relative z-20 flex min-h-0 flex-col items-center rounded-full py-2" style={{ width: 44, height: "clamp(190px, 42dvh, 420px)" }} aria-label="Zoom">
-      <button className={`${btn} h-8 w-8`} onClick={() => requestZoom({ delta: -0.16 })} data-anchor="zoom:in" title="Zoomer (+)"><Icon k="plus" /></button>
+      <button className={`${btn} h-8 w-8`} onClick={() => requestZoom({ delta: -0.16 })} ref={tone} data-anchor="zoom:in" title="Zoomer (+)"><Icon k="plus" /></button>
       <div ref={track} className="relative my-2 w-full flex-1 cursor-ns-resize" onPointerDown={(e) => { const v = fromEvent(e.clientY); setDrag(v); send(v); }}>
-        <div className="absolute left-1/2 top-0 h-full w-[3px] -translate-x-1/2 rounded-full bg-white/10" />
+        <div ref={tone} className="tone-line absolute left-1/2 top-0 h-full w-[3px] -translate-x-1/2 rounded-full" />
         <div className="absolute left-1/2 top-0 w-[3px] -translate-x-1/2 rounded-full bg-[var(--blue)]/70" style={{ height: `${g * 100}%` }} />
         {MARKS.map((m) => (
           <button
             key={m.key}
-            data-anchor={`zoom:level:${m.key}`}
+            ref={tone} data-anchor={`zoom:level:${m.key}`}
             title={m.label}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => (m.key === "jabb" ? requestZoom({ g: m.g }) : requestZoom({ level: m.key, value: m.key === "hospital" ? 0.62 : m.key === "morocco" ? 0.92 : 0.55 }))}
-            className={`${btn} absolute left-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 ${nearest.key === m.key ? "!text-white" : "opacity-55"}`}
+            className={`${btn} absolute left-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 ${nearest.key === m.key ? "tone-on" : "tone-dim"}`}
             style={{ top: `${m.g * 100}%` }}
           >
             <Icon k={m.key} />
           </button>
         ))}
-        <div className="pointer-events-none absolute left-1/2 h-[14px] w-[26px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/70 bg-white/90 shadow-[0_2px_10px_rgba(0,0,0,.5)]"
+        <div ref={tone} className="tone-thumb pointer-events-none absolute left-1/2 h-[14px] w-[26px] -translate-x-1/2 -translate-y-1/2 rounded-full border bg-white/90 shadow-[0_2px_10px_rgba(0,0,0,.5)]"
           style={{ top: `${g * 100}%`, transition: drag === null ? "top .12s linear" : "none" }} />
       </div>
-      <button className={`${btn} h-8 w-8`} onClick={() => requestZoom({ delta: 0.16 })} data-anchor="zoom:out" title="Dézoomer (−)"><Icon k="minus" /></button>
-      <div className="my-1 h-px w-5 bg-white/15" />
-      <button className={`${btn} h-8 w-8`} onClick={() => setHelpOpen(true)} title="Raccourcis clavier (?)" data-anchor="help"><Icon k="keys" /></button>
+      <button className={`${btn} h-8 w-8`} onClick={() => requestZoom({ delta: 0.16 })} ref={tone} data-anchor="zoom:out" title="Dézoomer (−)"><Icon k="minus" /></button>
+      <div ref={tone} className="tone-line my-1 h-px w-5" />
+      <button className={`${btn} h-8 w-8`} onClick={() => setHelpOpen(true)} title="Raccourcis clavier (?)" ref={tone} data-anchor="help"><Icon k="keys" /></button>
     </div>
   );
 }

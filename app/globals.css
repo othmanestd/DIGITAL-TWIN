@@ -62,6 +62,22 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 
 @layer components {
+/* ---------------------------------------------------------------- adaptive ink (lib/ui/tone.ts, set by ToneSampler)
+   icons over the 3D scene: white over dark ground, dark over light ground */
+.tone-adapt { color: var(--txt-2); transition: color .3s ease, background-color .2s ease, opacity .3s ease; }
+.tone-adapt:hover, .tone-adapt.tone-on { color: #fff; }
+.tone-adapt:hover { background-color: rgba(255, 255, 255, .1); }
+.tone-adapt:active { background-color: rgba(255, 255, 255, .18); }
+.tone-adapt[data-tone="light"] { color: rgba(6, 10, 24, .9); }
+.tone-adapt[data-tone="light"]:hover, .tone-adapt[data-tone="light"].tone-on { color: #000; }
+.tone-dim { opacity: .55; }
+.tone-dim[data-tone="light"] { opacity: .8; }
+.tone-adapt[data-tone="light"]:hover { background-color: rgba(9, 14, 32, .09); }
+.tone-adapt[data-tone="light"]:active { background-color: rgba(9, 14, 32, .16); }
+.tone-line { background-color: rgba(255, 255, 255, .12); transition: background-color .3s ease; }
+.tone-line[data-tone="light"] { background-color: rgba(9, 14, 32, .22); }
+.tone-thumb { border-color: rgba(255, 255, 255, .7); transition: border-color .3s ease; }
+.tone-thumb[data-tone="light"] { border-color: rgba(9, 14, 32, .45); }
 /* ---------------------------------------------------------------- liquid glass (macOS / visionOS style) */
 .glass {
   /* tinted liquid glass: readable over the bright white city as well as over deep space */

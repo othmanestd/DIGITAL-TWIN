@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/lib/store";
 import * as THREE from "three";
 import { rig, EARTH_CENTER } from "@/lib/rig";
+import { tone } from "@/lib/ui/tone";
 const tgt = new THREE.Vector3();
 const NAV_HELP: [string, string][] = [
   ["Molette · 2 doigts", "Zoomer vers le curseur"],
@@ -62,8 +63,8 @@ export default function NavPad() {
   const release = () => { if (hold.current) { clearInterval(hold.current); hold.current = null; } };
   useEffect(() => release, []);
 
-  const btn = "absolute grid h-7 w-7 place-items-center rounded-full text-[var(--txt-2)] transition-colors hover:bg-white/12 hover:text-white active:bg-white/20";
-  const pill = "grid h-7 w-7 place-items-center rounded-full text-[15px] font-semibold text-[var(--txt-2)] transition-colors hover:bg-white/12 hover:text-white";
+  const btn = "tone-adapt absolute grid h-7 w-7 place-items-center rounded-full";
+  const pill = "tone-adapt grid h-7 w-7 place-items-center rounded-full text-[15px] font-semibold";
   return (
     <div className="pointer-events-auto relative flex flex-col items-center gap-1.5" aria-label="Navigation">
       {help && (
@@ -80,10 +81,10 @@ export default function NavPad() {
       )}
       {/* direction pad + compass */}
       <div className="glass relative rounded-full" style={{ width: 96, height: 96 }} onPointerUp={release} onPointerLeave={release}>
-        <button className={`${btn} left-1/2 top-1 -translate-x-1/2`} onPointerDown={() => press({ panY: 1 })} data-anchor="nav:up" title="Déplacer vers le haut (Z)"><Arrow dir="up" /></button>
-        <button className={`${btn} bottom-1 left-1/2 -translate-x-1/2`} onPointerDown={() => press({ panY: -1 })} data-anchor="nav:down" title="Déplacer vers le bas (S)"><Arrow dir="down" /></button>
-        <button className={`${btn} left-1 top-1/2 -translate-y-1/2`} onPointerDown={() => press({ panX: -1 })} data-anchor="nav:left" title="Déplacer vers la gauche (A)"><Arrow dir="left" /></button>
-        <button className={`${btn} right-1 top-1/2 -translate-y-1/2`} onPointerDown={() => press({ panX: 1 })} data-anchor="nav:right" title="Déplacer vers la droite (D)"><Arrow dir="right" /></button>
+        <button className={`${btn} left-1/2 top-1 -translate-x-1/2`} onPointerDown={() => press({ panY: 1 })} ref={tone} data-anchor="nav:up" title="Déplacer vers le haut (Z)"><Arrow dir="up" /></button>
+        <button className={`${btn} bottom-1 left-1/2 -translate-x-1/2`} onPointerDown={() => press({ panY: -1 })} ref={tone} data-anchor="nav:down" title="Déplacer vers le bas (S)"><Arrow dir="down" /></button>
+        <button className={`${btn} left-1 top-1/2 -translate-y-1/2`} onPointerDown={() => press({ panX: -1 })} ref={tone} data-anchor="nav:left" title="Déplacer vers la gauche (A)"><Arrow dir="left" /></button>
+        <button className={`${btn} right-1 top-1/2 -translate-y-1/2`} onPointerDown={() => press({ panX: 1 })} ref={tone} data-anchor="nav:right" title="Déplacer vers la droite (D)"><Arrow dir="right" /></button>
         <button
           className="absolute left-1/2 top-1/2 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-[rgba(8,12,30,.55)] ring-1 ring-white/15 transition hover:ring-[var(--blue)]"
           onClick={() => window.dispatchEvent(new Event("atlas:north"))}
@@ -102,10 +103,10 @@ export default function NavPad() {
       </div>
       {/* zoom + help */}
       <div className="glass flex items-center gap-0.5 rounded-full px-1 py-0.5">
-        <button className={pill} onClick={() => requestZoom({ delta: 0.16 })} title="Dézoomer (−)" data-anchor="nav:zoom-out">−</button>
-        <button className={pill} onClick={() => requestZoom({ delta: -0.16 })} title="Zoomer (+)" data-anchor="nav:zoom-in">+</button>
+        <button className={pill} onClick={() => requestZoom({ delta: 0.16 })} title="Dézoomer (−)" ref={tone} data-anchor="nav:zoom-out">−</button>
+        <button className={pill} onClick={() => requestZoom({ delta: -0.16 })} title="Zoomer (+)" ref={tone} data-anchor="nav:zoom-in">+</button>
         <span onMouseEnter={() => setHelp(true)} onMouseLeave={() => setHelp(false)}>
-          <button className={pill} data-anchor="nav:help" aria-label="Raccourcis de navigation" onClick={() => useApp.getState().setHelpOpen(true)}>?</button>
+          <button className={pill} ref={tone} data-anchor="nav:help" aria-label="Raccourcis de navigation" onClick={() => useApp.getState().setHelpOpen(true)}>?</button>
         </span>
       </div>
     </div>
