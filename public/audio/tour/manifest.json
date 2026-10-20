@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-20T22:14:03.511Z",
+  "generated": "2026-10-20T22:17:38.694Z",
   "voice": "Iapetus",
   "beats": {
     "c-twin": {
@@ -67,8 +67,8 @@
     },
     "s-ligne": {
       "file": "s-ligne.mp3",
-      "duration": 9.39,
-      "hash": "07f8ddebce47",
+      "duration": 16.37,
+      "hash": "8e1b5a4fa570",
       "model": "gemini-2.5-flash-preview-tts",
       "voice": "Iapetus"
     },
