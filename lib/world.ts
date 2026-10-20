@@ -2,7 +2,7 @@
 import type { Level } from "./store";
 
 export const MIN_ALT = 12;        // metres — closest view (inside a department)
-export const MAX_ALT = 8e8;       // metres — the Earth is the dot of the JABB "J" (whole lockup fits the screen)
+export const MAX_ALT = 4e8;       // metres — the Earth hides inside the top drop of the Akdital mark (whole lockup centred)
 
 /** Altitude bands (metres) of each level, used by the zoom slider, shortcuts, level sync and fades. */
 export const BANDS: Record<Level | "jabb", [number, number]> = {
@@ -29,7 +29,13 @@ export function fadeIn(alt: number, a: number, b: number) {
 export const frame = {
   alt: 300,
   earth: { x: 0, y: 0, r: 0, visible: false }, // Earth centre and radius on screen (CSS px, relative to the stage)
-  egg: 0,                                       // 0 … 1 visibility of the JABB easter egg
-  eggW: 0,                                      // width of the one-line lockup, in J-mark units (measured by JabbEgg)
-  eggDot: 32.7,                                 // x of the J's dot (= the Earth) inside the lockup, in J units
+  egg: 0,                                       // 0 … 1 progress of the Akdital easter egg (1 = whole logo, Earth hidden)
+  eggW: 0,                                      // lockup width, in Akdital-mark units (measured by JabbEgg)
+  eggDX: 0, eggDY: 0,                           // top drop centre relative to the lockup centre, in mark units
+  eggK: 0,                                      // px per mark unit this frame (set by the scene, 0 = egg off)
 };
+
+/** Akdital mark (620 × 620): its top drop's round head, where the Earth hides. */
+export const EGG_DROP = { x: 310, y: 186, r: 82 };
+/** Egg progress by altitude: starts just past the world view, whole logo from EGG_FULL. */
+export const EGG_IN = 9e7, EGG_FULL = 3e8;

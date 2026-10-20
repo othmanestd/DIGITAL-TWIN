@@ -9,7 +9,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { CameraControls, Environment, Lightformer } from "@react-three/drei";
 import { useApp } from "@/lib/store";
 import { rig, EARTH_R, GLOBE_DROP, EARTH_CENTER } from "@/lib/rig";
-import { MAX_ALT, altToG, gToAlt, bandAlt, levelForAlt, fadeIn, frame } from "@/lib/world";
+import { MAX_ALT, altToG, gToAlt, bandAlt, levelForAlt, fadeIn, frame, EGG_DROP, EGG_IN, EGG_FULL } from "@/lib/world";
 import { HospitalContent, HOSPITAL_BOX, HOSPITAL_TIME } from "./hospital/HospitalContent";
 import { CityContent } from "./city/CityContent";
 import { MoroccoContent, MAP_UNITS_PER_KM, MOROCCO_CENTER_LONLAT, mapProject } from "./geo/MoroccoContent";
@@ -231,20 +231,30 @@ export default function UnifiedWorld() {
     if (Math.abs(m - mapOp) > 0.02 || (m === 0) !== (mapOp === 0) || (m === 1) !== (mapOp === 1)) setMapOp(m);
     if (Math.abs(g - globeOp) > 0.02 || (g === 0) !== (globeOp === 0) || (g === 1) !== (globeOp === 1)) setGlobeOp(g);
 
-    // Earth on screen (for the JABB easter egg) and the egg's visibility
-    const dc = cam.distanceTo(EARTH_CENTER);
+    // Akdital easter egg: the Earth hides inside the top drop of the Akdital mark (components/nav/JabbEgg.tsx).
+    // Scale: the Earth fills `fill` of the drop's head, so the opaque drop masks it (and its glow) far out.
+    // Placement: far out the whole lockup is centred; zooming in slides the view to the drop, then dives through it.
+    const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const rOnScreen = (d: number) => (Math.tan(Math.asin(Math.min(1, EARTH_R / d))) / tanH) * (size.height / 2);
+    frame.earth.r = rOnScreen(cam.distanceTo(EARTH_CENTER));
+    frame.egg = fadeIn(alt, EGG_IN, EGG_FULL);
+    if (frame.egg > 0.001 && frame.eggW > 0) {
+      // whole lockup ≈ half the screen width at the farthest zoom
+      const fill = THREE.MathUtils.clamp((rOnScreen(R_TOP + MAX_ALT) * frame.eggW) / (EGG_DROP.r * 0.5 * size.width), 0.55, 0.8);
+      const k = frame.earth.r / (EGG_DROP.r * fill);
+      const t = Math.min(1, Math.max(0, (frame.egg - 0.35) / 0.6)), w = t * t * (3 - 2 * t);
+      camera.setViewOffset(size.width, size.height, -frame.eggDX * k * w, -frame.eggDY * k * w, size.width, size.height);
+      s.offset = true;
+      frame.eggK = k;
+    } else {
+      frame.eggK = 0;
+      if (s.offset) { camera.clearViewOffset(); s.offset = false; }
+    }
+    // Earth centre on screen, after the view offset
     const p = tmp.p.copy(EARTH_CENTER).project(camera);
-    const ang = Math.asin(Math.min(1, EARTH_R / dc));
     frame.earth.x = (p.x * 0.5 + 0.5) * size.width;
     frame.earth.y = (-p.y * 0.5 + 0.5) * size.height;
-    frame.earth.r = (Math.tan(ang) / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))) * (size.height / 2);
     frame.earth.visible = p.z < 1;
-    frame.egg = fadeIn(alt, 1.1e8, 3.6e8);
-    // centre the one-line lockup "J(Earth)ABB × mibtech × AKDITAL": slide the view so the lockup, not the Earth, is centred
-    const k = frame.earth.r / 25;
-    // the Earth (the Akdital top drop) stays at the centre of the screen: zoom in / out grows from it
-    void k;
-    if (s.offset) { camera.clearViewOffset(); s.offset = false; }
 
     // report to the store (slider, level-dependent UI, sounds)
     const now = performance.now();

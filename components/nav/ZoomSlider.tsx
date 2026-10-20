@@ -1,16 +1,16 @@
 "use client";
-// Vertical altitude slider over the whole continuous world: Hôpital (top, closest) → Maroc → Monde → JABB (bottom).
+// Vertical altitude slider over the whole continuous world: Hôpital (top, closest) → Maroc → Monde → Akdital logo (bottom).
 // The thumb follows the real camera altitude; dragging glides the camera through the powers of ten.
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/lib/store";
-import { altToG } from "@/lib/world";
+import { altToG, MAX_ALT } from "@/lib/world";
 
 type Mark = { key: "hospital" | "morocco" | "world" | "jabb"; label: string; g: number; alt: number };
 const MARKS: Mark[] = [
   { key: "hospital", label: "Hôpital", alt: 260, g: altToG(260) },
   { key: "morocco", label: "Maroc", alt: 1.9e6, g: altToG(1.9e6) },
   { key: "world", label: "Monde", alt: 2.1e7, g: altToG(2.1e7) },
-  { key: "jabb", label: "JABB", alt: 8e8, g: 1 },
+  { key: "jabb", label: "Akdital", alt: MAX_ALT, g: 1 },
 ];
 
 function Icon({ k }: { k: Mark["key"] | "plus" | "minus" | "keys" }) {
@@ -22,7 +22,7 @@ function Icon({ k }: { k: Mark["key"] | "plus" | "minus" | "keys" }) {
       {k === "hospital" && <><path d="M4 21V7l8-4 8 4v14" /><path d="M9 21v-5h6v5M12 8v4M10 10h4" /></>}
       {k === "morocco" && <><path d="M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11z" /><circle cx="12" cy="10" r="2.2" /></>}
       {k === "world" && <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3 3.3 3 14.7 0 18M12 3c-3 3.3-3 14.7 0 18" /></>}
-      {k === "jabb" && <><path d="M15 4v9.5a4.5 4.5 0 0 1-9 0V12" /><circle cx="7.5" cy="6" r="2" fill="currentColor" stroke="none" /></>}
+      {k === "jabb" && <><circle cx="12" cy="12" r="9.5" /><path d="M12 5.2c-1.6 2-2.4 3.2-2.4 4.4a2.4 2.4 0 0 0 4.8 0c0-1.2-.8-2.4-2.4-4.4zM8.4 10.6c-1.4 1.8-2.1 2.9-2.1 4a2.1 2.1 0 0 0 4.2 0c0-1.1-.7-2.2-2.1-4zM15.6 10.6c-1.4 1.8-2.1 2.9-2.1 4a2.1 2.1 0 0 0 4.2 0c0-1.1-.7-2.2-2.1-4z" fill="currentColor" stroke="none" /></>}
       {k === "keys" && <><rect x="3" y="6" width="18" height="12" rx="2.5" /><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" /></>}
     </svg>
   );
