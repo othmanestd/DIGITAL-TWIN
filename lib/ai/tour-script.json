@@ -1,16 +1,16 @@
 {
-  "version": 3,
+  "version": 4,
   "mode": "express",
   "chapters": [
     {
       "id": "pression",
-      "title": "La pression d'aujourd'hui",
+      "title": "Un appel sans réponse",
       "beats": [
         {
           "id": "s-pression",
           "title": "La pression",
-          "text": "Chez Akdital, la croissance a un revers. Au premier semestre 2026, les charges de personnel ont bondi de 28 %, quand le chiffre d'affaires progressait de 21 %. Elles pèsent désormais 22,5 % des ventes, contre 21,2 % un an plus tôt. Chaque nouvelle clinique ajoute des guichets, des saisies, des appels. Notre réponse : des agents IA qui reprennent ce travail répétitif. Au plein régime, 302 MDH de masse salariale libérés chaque année, pour 160 MDH de coût d'agents : 142 MDH nets, sans aucun licenciement.",
-          "speech": "Chez Akdital, la croissance a un revers. Au premier semestre 2026, les charges de personnel ont bondi de 28 %, quand le chiffre d'affaires progressait de 21 %. Elles pèsent désormais 22 et demi pour cent des ventes, contre 21 pour cent un an plus tôt. Chaque nouvelle clinique ajoute des guichets, des saisies, des appels. Notre réponse : des agents IA qui reprennent ce travail répétitif. Au plein régime, 302 millions de dirhams de masse salariale libérés chaque année, pour 160 millions de coût d'agents : 142 millions nets, sans aucun licenciement.",
+          "text": "Mardi, sept heures et demie : le téléphone sonne au standard d'une clinique Akdital, et personne ne décroche. Au bout du fil, Amina, 54 ans, qui doit se faire opérer du genou. Ce n'est la faute de personne : la croissance a un revers. Au premier semestre 2026, les charges de personnel ont bondi de 28 %, quand le chiffre d'affaires progressait de 21 % ; elles pèsent désormais 22,5 % des ventes. Chaque nouvelle clinique ajoute des guichets, des saisies, des appels. Notre réponse : des agents IA qui reprennent ce travail répétitif. Au plein régime, 302 MDH de masse salariale libérés chaque année, pour 160 MDH de coût d'agents : 142 MDH nets, sans aucun licenciement.",
+          "speech": "Mardi, sept heures et demie : le téléphone sonne au standard d'une clinique Akdital, et personne ne décroche. Au bout du fil, Amina, 54 ans, qui doit se faire opérer du genou. Ce n'est la faute de personne : la croissance a un revers. Au premier semestre 2026, les charges de personnel ont bondi de 28 %, quand le chiffre d'affaires progressait de 21 % ; elles pèsent désormais 22 et demi pour cent des ventes. Chaque nouvelle clinique ajoute des guichets, des saisies, des appels. Notre réponse : des agents IA qui reprennent ce travail répétitif. Au plein régime, 302 millions de dirhams de masse salariale libérés chaque année, pour 160 millions de coût d'agents : 142 millions nets, sans aucun licenciement.",
           "actions": [
             {
               "do": "section",
@@ -36,9 +36,10 @@
               "silent": true
             },
             {
-              "do": "point",
-              "anchor": "stage",
-              "at": 0.3
+              "do": "select",
+              "kind": "dept",
+              "id": "standard",
+              "at": 0.08
             }
           ]
         }
@@ -46,63 +47,49 @@
     },
     {
       "id": "journee",
-      "title": "Une journée à l'hôpital type",
+      "title": "Le parcours d'Amina",
       "beats": [
         {
-          "id": "x-hall",
-          "title": "Accueil et admissions",
-          "text": "Entrons dans l'hôpital type : tout le groupe, ramené à un seul bâtiment. Chaque jour, plus de trois mille patients franchissent les portes d'une clinique Akdital ; suivons l'une d'entre elles. Au hall, les Expériences IA l'accueillent en darija et l'orientent. Au guichet, son dossier est déjà pré-rempli : la chargée d'admission vérifie et fait signer, au lieu de ressaisir. Pour le groupe, c'est l'équivalent de 174 postes d'admission, près de quatre par clinique.",
-          "speech": "Entrons dans l'hôpital type : tout le groupe, ramené à un seul bâtiment. Chaque jour, plus de trois mille patients franchissent les portes d'une clinique Akdital ; suivons l'une d'entre elles. Au hall, les Expériences IA l'accueillent en darija et l'orientent. Au guichet, son dossier est déjà pré-rempli : la chargée d'admission vérifie et fait signer, au lieu de ressaisir. Pour le groupe, c'est l'équivalent de 174 postes d'admission, près de quatre par clinique.",
-          "actions": [
-            {
-              "do": "select",
-              "kind": "floor",
-              "id": "main:0",
-              "at": 0.05
-            },
-            {
-              "do": "select",
-              "kind": "xp",
-              "id": "xp-guide",
-              "at": 0.2
-            },
-            {
-              "do": "select",
-              "kind": "dept",
-              "id": "admissions",
-              "at": 0.48
-            },
-            {
-              "do": "case",
-              "id": "A-02",
-              "at": 0.58
-            }
-          ]
-        },
-        {
-          "id": "x-standard",
-          "title": "Le standard",
-          "text": "Au standard, un agent vocal répond jour et nuit, en darija, en français et en arabe, et confirme les rendez-vous. À Paris, une fondation hospitalière traite déjà ainsi trois appels sur quatre sans personnel.",
-          "speech": "Au standard, un agent vocal répond jour et nuit, en darija, en français et en arabe, et confirme les rendez-vous. À Paris, une fondation hospitalière traite déjà ainsi trois appels sur quatre sans personnel.",
+          "id": "x-appel",
+          "title": "L'appel et l'arrivée",
+          "text": "Suivons Amina dans l'hôpital type. Amina, Youssef et Salma sont des personnages fictifs ; les chiffres, eux, sont réels. Cette fois, au téléphone, un agent vocal décroche, jour et nuit, en darija, en français ou en arabe : à Paris, une fondation hospitalière traite déjà ainsi trois appels sur quatre sans personnel. Le jour venu, au guichet, Youssef ne ressaisit plus rien : le dossier est pré-rempli, il vérifie et fait signer. Amina n'attend plus ; pour le groupe, c'est l'équivalent de 174 postes d'admission, près de quatre par clinique.",
+          "speech": "Suivons Amina dans l'hôpital type. Amina, Youssef et Salma sont des personnages fictifs ; les chiffres, eux, sont réels. Cette fois, au téléphone, un agent vocal décroche, jour et nuit, en darija, en français ou en arabe : à Paris, une fondation hospitalière traite déjà ainsi trois appels sur quatre sans personnel. Le jour venu, au guichet, Youssef ne ressaisit plus rien : le dossier est pré-rempli, il vérifie et fait signer. Amina n'attend plus ; pour le groupe, c'est l'équivalent de 174 postes d'admission, près de quatre par clinique.",
           "actions": [
             {
               "do": "select",
               "kind": "dept",
               "id": "standard",
-              "at": 0.03
+              "at": 0.05
             },
             {
               "do": "case",
               "id": "A-06",
-              "at": 0.15
+              "at": 0.22
+            },
+            {
+              "do": "select",
+              "kind": "floor",
+              "id": "main:0",
+              "at": 0.52
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "admissions",
+              "at": 0.58
+            },
+            {
+              "do": "case",
+              "id": "A-02",
+              "at": 0.64
             }
           ]
         },
         {
           "id": "x-pec",
-          "title": "Prises en charge et facturation",
-          "text": "Premier étage, là où se joue la trésorerie : les prises en charge sont préparées dès la programmation, les pièces manquantes réclamées par l'agent, la facture pré-clôturée avant la sortie. Dans un hôpital américain, le délai entre la prescription et la programmation est passé de onze jours à un peu plus de deux.",
-          "speech": "Premier étage, là où se joue la trésorerie : les prises en charge sont préparées dès la programmation, les pièces manquantes réclamées par l'agent, la facture pré-clôturée avant la sortie. Dans un hôpital américain, le délai entre la prescription et la programmation est passé de onze jours à un peu plus de deux.",
+          "title": "La prise en charge",
+          "text": "Premier étage, là où se joue la trésorerie : l'agent prépare la prise en charge de son opération du genou et réclame à la mutuelle la pièce manquante. Dans un hôpital américain, le délai entre la prescription et la programmation est passé de onze jours à un peu plus de deux.",
+          "speech": "Premier étage, là où se joue la trésorerie : l'agent prépare la prise en charge de son opération du genou et réclame à la mutuelle la pièce manquante. Dans un hôpital américain, le délai entre la prescription et la programmation est passé de onze jours à un peu plus de deux.",
           "actions": [
             {
               "do": "select",
@@ -119,20 +106,14 @@
               "do": "case",
               "id": "A-08",
               "at": 0.14
-            },
-            {
-              "do": "select",
-              "kind": "dept",
-              "id": "facturation",
-              "at": 0.42
             }
           ]
         },
         {
           "id": "x-chambre",
           "title": "La chambre",
-          "text": "Troisième étage. L'infirmière dicte son dossier de soins au lit du patient : fini, la double saisie. Dans quatorze établissements allemands, elle y a gagné un quart d'heure par poste. Ce qui reste humain ? Tout ce qui compte : le soin, l'écoute, la décision. Les agents préparent ; les équipes décident et signent. Pour les soignants, c'est un dixième de leur temps, celui de la paperasse, qui retourne au patient.",
-          "speech": "Troisième étage. L'infirmière dicte son dossier de soins au lit du patient : fini, la double saisie. Dans quatorze établissements allemands, elle y a gagné un quart d'heure par poste. Ce qui reste humain ? Tout ce qui compte : le soin, l'écoute, la décision. Les agents préparent ; les équipes décident et signent. Pour les soignants, c'est un dixième de leur temps, celui de la paperasse, qui retourne au patient.",
+          "text": "Troisième étage. Salma, son infirmière, dicte son dossier de soins au lit d'Amina, au lieu de le ressaisir en fin de garde. Dans quatorze établissements allemands, ce geste a rendu un quart d'heure par poste : un quart d'heure passé avec les patients. Ce qui reste humain ? Tout ce qui compte : le soin, l'écoute, la décision. Les agents préparent ; les équipes décident.",
+          "speech": "Troisième étage. Salma, son infirmière, dicte son dossier de soins au lit d'Amina, au lieu de le ressaisir en fin de garde. Dans quatorze établissements allemands, ce geste a rendu un quart d'heure par poste : un quart d'heure passé avec les patients. Ce qui reste humain ? Tout ce qui compte : le soin, l'écoute, la décision. Les agents préparent ; les équipes décident.",
           "actions": [
             {
               "do": "select",
@@ -154,43 +135,43 @@
               "do": "select",
               "kind": "person",
               "id": "hospitalisation/infirmier/0",
-              "at": 0.62
+              "at": 0.66
             }
           ]
         },
         {
-          "id": "x-twin",
-          "title": "Le jumeau et le siège",
-          "text": "Plus haut, la salle de contrôle du JABB Twin, le jumeau numérique de l'hôpital, veille sur les équipements, l'énergie et la voix des patients : il voit la panne venir avant l'arrêt. Au siège, la paie est vérifiée avant le calcul et les factures fournisseurs contrôlées par l'agent. Et dans l'Agentic Command Center, la direction ne compte qu'une chose : l'économie constatée en paie.",
-          "speech": "Plus haut, la salle de contrôle du Jabb Twin, le jumeau numérique de l'hôpital, veille sur les équipements, l'énergie et la voix des patients : il voit la panne venir avant l'arrêt. Au siège, la paie est vérifiée avant le calcul et les factures fournisseurs contrôlées par l'agent. Et dans l'Agentic Command Center, la direction ne compte qu'une chose : l'économie constatée en paie.",
+          "id": "x-sortie",
+          "title": "La sortie",
+          "text": "Trois jours plus tard, Amina rentre chez elle, soulagée : sa facture était prête avant sa sortie, et le lendemain, un appel prend de ses nouvelles. Plus haut, le JABB Twin veille sur les équipements et l'énergie ; au siège, la paie et les factures sont contrôlées par les agents ; et l'Agentic Command Center ne compte qu'une chose : l'économie constatée en paie.",
+          "speech": "Trois jours plus tard, Amina rentre chez elle, soulagée : sa facture était prête avant sa sortie, et le lendemain, un appel prend de ses nouvelles. Plus haut, le Jabb Twin veille sur les équipements et l'énergie ; au siège, la paie et les factures sont contrôlées par les agents ; et l'Agentic Command Center ne compte qu'une chose : l'économie constatée en paie.",
           "actions": [
             {
               "do": "select",
               "kind": "floor",
-              "id": "main:4"
+              "id": "main:1"
+            },
+            {
+              "do": "case",
+              "id": "A-11",
+              "at": 0.06
             },
             {
               "do": "select",
               "kind": "dept",
               "id": "technique",
-              "at": 0.05
+              "at": 0.42
             },
             {
               "do": "select",
               "kind": "dept",
               "id": "siege-rh",
-              "at": 0.4
-            },
-            {
-              "do": "case",
-              "id": "S-06",
-              "at": 0.46
+              "at": 0.6
             },
             {
               "do": "select",
               "kind": "dept",
               "id": "siege-pilotage",
-              "at": 0.75
+              "at": 0.8
             }
           ]
         }
@@ -198,13 +179,13 @@
     },
     {
       "id": "temps",
-      "title": "2026 → 2029 : la transformation",
+      "title": "2026 → 2029 : Youssef, Salma, et les autres",
       "beats": [
         {
           "id": "s-temps",
           "title": "2026 → 2029",
-          "text": "Revenons à l'hôpital, et faisons défiler le temps. 2026. 2027. 2028. 2029. Regardez l'hôpital se transformer : moins de guichets, plus de pilotes d'agents. Dès 2027, les premières vagues couvrent leur coût ; en 2028, le gain net dépasse 80 MDH ; en 2029, c'est le plein régime : 142 MDH nets par an, près de deux dirhams économisés pour chaque dirham investi.",
-          "speech": "Revenons à l'hôpital, et faisons défiler le temps. 2026. 2027. 2028. 2029. Regardez l'hôpital se transformer : moins de guichets, plus de pilotes d'agents. Dès 2027, les premières vagues couvrent leur coût ; en 2028, le gain net dépasse 80 millions de dirhams ; en 2029, c'est le plein régime : 142 millions de dirhams nets par an, près de deux dirhams économisés pour chaque dirham investi.",
+          "text": "Revenons à l'hôpital, et faisons défiler le temps. 2026 : Youssef ressaisit toute la journée, et la file s'allonge. 2027 : ses premiers agents arrivent ; il vérifie au lieu de taper, et les premières vagues couvrent déjà leur coût. 2028 : Salma retrouve son quart d'heure, et le gain net dépasse 80 MDH. 2029 : Youssef pilote ses agents ; deux guichets ouverts au lieu de quatre, et personne n'a été licencié. Au plein régime, 142 MDH nets par an : près de deux dirhams économisés pour chaque dirham investi.",
+          "speech": "Revenons à l'hôpital, et faisons défiler le temps. 2026 : Youssef ressaisit toute la journée, et la file s'allonge. 2027 : ses premiers agents arrivent ; il vérifie au lieu de taper, et les premières vagues couvrent déjà leur coût. 2028 : Salma retrouve son quart d'heure, et le gain net dépasse 80 millions de dirhams. 2029 : Youssef pilote ses agents ; deux guichets ouverts au lieu de quatre, et personne n'a été licencié. Au plein régime, 142 millions de dirhams nets par an : près de deux dirhams économisés pour chaque dirham investi.",
           "actions": [
             {
               "do": "home"
@@ -234,8 +215,8 @@
         {
           "id": "x-emplois",
           "title": "Zéro licenciement",
-          "text": "Et personne n'est licencié. Environ 458 départs naturels par an, non remplacés, et la mobilité vers les nouvelles cliniques absorbent les 1 410 postes libérés, en un peu plus de trois ans. Le déploiement avance par vagues : une clinique et le siège dès la mi-décembre, puis trois cliniques, une région, et tout le groupe. Les données de santé, elles, restent au Maroc.",
-          "speech": "Et personne n'est licencié. Environ 458 départs naturels par an, non remplacés, et la mobilité vers les nouvelles cliniques absorbent les 1 410 postes libérés, en un peu plus de trois ans. Le déploiement avance par vagues : une clinique et le siège dès la mi-décembre, puis trois cliniques, une région, et tout le groupe. Les données de santé, elles, restent au Maroc.",
+          "text": "Personne n'est licencié. Environ 458 départs naturels par an, non remplacés, et la mobilité vers les nouvelles cliniques absorbent les 1 410 postes libérés, en un peu plus de trois ans. Le déploiement avance par vagues, d'une clinique et du siège jusqu'à tout le groupe ; et les données de santé restent au Maroc.",
+          "speech": "Personne n'est licencié. Environ 458 départs naturels par an, non remplacés, et la mobilité vers les nouvelles cliniques absorbent les 1 410 postes libérés, en un peu plus de trois ans. Le déploiement avance par vagues, d'une clinique et du siège jusqu'à tout le groupe ; et les données de santé restent au Maroc.",
           "actions": [
             {
               "do": "section",
@@ -287,8 +268,8 @@
         {
           "id": "s-decision",
           "title": "La décision",
-          "text": "Le chemin est tracé, et il commence petit : une clinique et le siège, sans contact patient, mesurés chaque mois dans l'Agentic Command Center. La décision qui vous revient aujourd'hui : lancer le cadrage en novembre.",
-          "speech": "Le chemin est tracé, et il commence petit : une clinique et le siège, sans contact patient, mesurés chaque mois dans l'Agentic Command Center. La décision qui vous revient aujourd'hui : lancer le cadrage en novembre.",
+          "text": "Le chemin est tracé, et il commence petit : une clinique et le siège, sans contact patient, mesurés chaque mois dans l'Agentic Command Center. Pour qu'Amina n'attende plus jamais au bout du fil, et que Salma garde son temps pour ses patients, la décision qui vous revient aujourd'hui : lancer le cadrage en novembre.",
+          "speech": "Le chemin est tracé, et il commence petit : une clinique et le siège, sans contact patient, mesurés chaque mois dans l'Agentic Command Center. Pour qu'Amina n'attende plus jamais au bout du fil, et que Salma garde son temps pour ses patients, la décision qui vous revient aujourd'hui : lancer le cadrage en novembre.",
           "actions": [
             {
               "do": "point",
@@ -300,12 +281,12 @@
         {
           "id": "s-ligne",
           "title": "JABB × AKDITAL × mibtech",
-          "text": "JABB × AKDITAL × mibtech : 302 MDH libérés chaque année, 142 MDH nets, sans un seul licenciement.",
-          "speech": "Jabb, Akdital et Mibtech : 302 millions de dirhams libérés chaque année, 142 millions de dirhams nets, sans un seul licenciement.",
+          "text": "Et la Terre devient la goutte du logo Akdital : JABB × AKDITAL × mibtech, ensemble. 302 MDH libérés chaque année, 142 MDH nets, sans un seul licenciement.",
+          "speech": "Et la Terre devient la goutte du logo Akdital : Jabb, Akdital et Mibtech, ensemble. 302 millions de dirhams libérés chaque année, 142 millions de dirhams nets, sans un seul licenciement.",
           "actions": [
             {
               "do": "zoom",
-              "g": 0.99,
+              "g": 1,
               "at": 0.02
             }
           ]

@@ -215,9 +215,9 @@ export default function UnifiedWorld() {
     frame.egg = fadeIn(alt, 1.1e8, 3.6e8);
     // centre the one-line lockup "J(Earth)ABB × mibtech × AKDITAL": slide the view so the lockup, not the Earth, is centred
     const k = frame.earth.r / 25;
-    const shift = frame.egg * (frame.eggW / 2 - frame.eggDot) * k;
-    if (Math.abs(shift) > 0.5) { camera.setViewOffset(size.width, size.height, shift, 0, size.width, size.height); s.offset = true; }
-    else if (s.offset) { camera.clearViewOffset(); s.offset = false; }
+    // the Earth (the Akdital top drop) stays at the centre of the screen: zoom in / out grows from it
+    void k;
+    if (s.offset) { camera.clearViewOffset(); s.offset = false; }
 
     // report to the store (slider, level-dependent UI, sounds)
     const now = performance.now();

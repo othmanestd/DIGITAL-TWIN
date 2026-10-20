@@ -1,10 +1,12 @@
-// Pre-generates the guided-tour narration with Gemini TTS.
-//   node scripts/gen-narration.mjs            → only beats whose text changed (hash in the manifest)
-//   node scripts/gen-narration.mjs --force    → every beat
-//   node scripts/gen-narration.mjs --uniform  → also redoes beats voiced by a fallback model (after a quota refusal)
-//   node scripts/gen-narration.mjs --verify   → also transcribes each file back (checks nothing extra was read aloud)
-//   TTS_MODEL=… TTS_VOICE=… to try another model / voice.
-// Reads lib/ai/tour-script.json (chapters → beats), writes public/audio/tour/<id>.mp3 (or .wav when ffmpeg is missing) + manifest.json (durations).
+// Records the narration of BOTH guided visits (lib/ai/tour-script.json = express, lib/ai/tour-complete.json = complete)
+// with ONE model and ONE voice, into public/audio/tour/<id>.mp3 + manifest.json (duration, text hash, model, voice).
+// The player plays from these files only when every beat of a visit matches (same model, same voice, current text);
+// otherwise that visit is spoken live by one browser voice. Nothing is ever mixed.
+//   node scripts/build-tour.mjs && node scripts/gen-narration.mjs --uniform   ← all it takes once the Gemini cap is raised
+//   --uniform  also redoes beats recorded with another model or voice   · --force  redoes every beat
+//   --verify   transcribes each file back (checks nothing extra was read aloud)
+//   TTS_MODEL=… TTS_VOICE=… to choose the model / voice (default gemini-3.8-flash-tts / Iapetus) · TTS_WORKERS=3
+// Exit code 1 and a "NOT READY" verdict when any beat is missing, out of date or from another model/voice.
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -69,7 +71,11 @@ async function tts(text) {
         const p = (j?.candidates?.[0]?.content?.parts || []).find((x) => x?.inlineData?.data);
         if (p) return { pcm: pcmOf(Buffer.from(p.inlineData.data, "base64")), model };
         last = JSON.stringify(j).slice(0, 200);
-        if (j?.error?.code === 429) break; // daily quota of this model: go to the next model at once
+        if (j?.error?.code === 429) {
+          // daily quota or spending cap: no point retrying today; per-minute limit: wait and retry
+          if (/per.?day|spending cap|monthly/i.test(String(j?.error?.message))) break;
+          await new Promise((r) => setTimeout(r, 20000));
+        }
       } catch (e) { last = String(e.message || e); }
       await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
     }
@@ -139,10 +145,35 @@ async function worker() {
     console.log(`  #${b.id} ${dur.toFixed(1)} s  (${model}, ${Date.now() - t0} ms)${check}`);
   }
 }
-await Promise.all(Array.from({ length: Number(process.env.TTS_WORKERS || 6) }, worker));
+await Promise.all(Array.from({ length: Number(process.env.TTS_WORKERS || 3) }, worker));
 // drop beats no longer in the script
 for (const id of Object.keys(manifest.beats)) if (!BEATS.some((b) => String(b.id) === id)) delete manifest.beats[id];
 fs.writeFileSync(manPath, JSON.stringify(manifest, null, 2));
 const total = Object.values(manifest.beats).reduce((s, b) => s + b.duration, 0);
 console.log(`done · ${Object.keys(manifest.beats).length} beats · ${total.toFixed(0)} s of narration · ${manPath}`);
-if (failed.length) { console.log(`${failed.length} beat(s) failed (${failed.join(", ")}): the player keeps the whole visit live until every beat has audio from the same model and voice.`); process.exitCode = 1; }
+// remove audio files no longer referenced (keeps the committed folder clean)
+const keepFiles = new Set(Object.values(manifest.beats).map((b) => b.file).concat("manifest.json"));
+for (const f of fs.readdirSync(OUT)) if (!keepFiles.has(f) && /\.(mp3|wav)$/.test(f)) fs.unlinkSync(path.join(OUT, f));
+// final verdict, per visit: every beat present, ONE model, ONE voice, hash of the current text
+const visits = [["Visite express", flat(SCRIPT)], ["Visite complète", fs.existsSync(COMPLETE_PATH) ? flat(JSON.parse(fs.readFileSync(COMPLETE_PATH, "utf8"))) : []]];
+let ok = !failed.length;
+for (const [name, beats] of visits) {
+  const missing = [], models = new Set(), voices = new Set();
+  let dur = 0;
+  for (const b of beats) {
+    const e = manifest.beats[String(b.id)];
+    const h = crypto.createHash("sha1").update(VOICE + "|" + (b.speech || b.text)).digest("hex").slice(0, 12);
+    if (!e || e.hash !== h || !fs.existsSync(path.join(OUT, e.file))) { missing.push(b.id); continue; }
+    models.add(e.model); voices.add(e.voice ?? manifest.voice); dur += e.duration + 0.6;
+  }
+  const ready = !missing.length && models.size === 1 && voices.size === 1;
+  ok = ok && ready;
+  console.log(ready
+    ? `READY  ${name}: ${beats.length} beats from files, ${[...models][0]} / ${[...voices][0]}, ${Math.floor(dur / 60)} min ${String(Math.round(dur % 60)).padStart(2, "0")} s`
+    : `NOT READY  ${name}: ${missing.length} beat(s) missing or out of date${models.size > 1 ? `, ${models.size} models mixed` : ""}${voices.size > 1 ? `, ${voices.size} voices mixed` : ""} — the visit will play LIVE (browser voice) until this is fixed`);
+}
+if (!ok) {
+  console.error(`
+✗ NARRATION INCOMPLETE${failed.length ? ` (${failed.length} beat(s) failed: ${failed.join(", ")})` : ""}. Nothing is mixed: an incomplete visit plays live. Re-run: node scripts/gen-narration.mjs --uniform`);
+  process.exitCode = 1;
+}

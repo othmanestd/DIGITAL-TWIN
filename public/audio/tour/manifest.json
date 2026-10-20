@@ -1,372 +1,216 @@
 {
-  "generated": "2026-10-20T21:19:15.191Z",
+  "generated": "2026-10-20T22:14:03.511Z",
   "voice": "Iapetus",
   "beats": {
-    "1": {
-      "file": "1.mp3",
-      "duration": 18.44,
-      "hash": "64abce9fdcea",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "6": {
-      "file": "6.mp3",
-      "duration": 14.76,
-      "hash": "add5baa99382",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "9": {
-      "file": "9.mp3",
-      "duration": 23.28,
-      "hash": "40494c7f5567",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "10": {
-      "file": "10.mp3",
-      "duration": 16.24,
-      "hash": "074d8df9d479",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "11": {
-      "file": "11.mp3",
-      "duration": 14.18,
-      "hash": "8e7f5795db4b",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "12": {
-      "file": "12.mp3",
-      "duration": 17.35,
-      "hash": "0bf6555ff2b7",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "13": {
-      "file": "13.mp3",
-      "duration": 16.98,
-      "hash": "ceb2eff7bdd1",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "14": {
-      "file": "14.mp3",
-      "duration": 11.43,
-      "hash": "725dc6b7be86",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "15": {
-      "file": "15.mp3",
-      "duration": 16.24,
-      "hash": "a61d41c1f259",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "e-s01": {
-      "file": "e-s01.mp3",
-      "duration": 14.02,
-      "hash": "961681e88936",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "e-a06": {
-      "file": "e-a06.mp3",
-      "duration": 17.08,
-      "hash": "e7d4a477b1e3",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "e-a02": {
-      "file": "e-a02.mp3",
-      "duration": 15.4,
-      "hash": "949089da0b23",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "e-out": {
-      "file": "e-out.mp3",
-      "duration": 23.14,
-      "hash": "9fa5f59b6b08",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "e-a08": {
-      "file": "e-a08.mp3",
-      "duration": 22.47,
-      "hash": "6d2a817619c4",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "e-p01": {
-      "file": "e-p01.mp3",
-      "duration": 19.61,
-      "hash": "f218aead0246",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "c-open": {
-      "file": "c-open.mp3",
-      "duration": 20.56,
-      "hash": "f7eb9ec55695",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "c-bionettoyage-1": {
-      "file": "c-bionettoyage-1.mp3",
-      "duration": 17.58,
-      "hash": "c4c7ecce4cd9",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "c-pharmacie-1": {
-      "file": "c-pharmacie-1.mp3",
-      "duration": 33.56,
-      "hash": "1c7423ef62b6",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "c-logistique-1": {
-      "file": "c-logistique-1.mp3",
-      "duration": 28.87,
-      "hash": "2b3f9f5ddb0a",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "c-brancardage-1": {
-      "file": "c-brancardage-1.mp3",
-      "duration": 18.13,
-      "hash": "162ce1e5dee3",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "c-linge-1": {
-      "file": "c-linge-1.mp3",
-      "duration": 32.72,
-      "hash": "8bcdb8fdb598",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "c-pec-1": {
-      "file": "c-pec-1.mp3",
-      "duration": 32.97,
-      "hash": "eb3640b01d2b",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "c-facturation-2": {
-      "file": "c-facturation-2.mp3",
-      "duration": 10.77,
-      "hash": "135c70c2498f",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "c-facturation-1": {
-      "file": "c-facturation-1.mp3",
-      "duration": 49.58,
-      "hash": "9ed5c992f416",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "c-codage-1": {
-      "file": "c-codage-1.mp3",
-      "duration": 21.63,
-      "hash": "c53e493aaae5",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "c-reserve-1": {
-      "file": "c-reserve-1.mp3",
-      "duration": 21.96,
-      "hash": "9403a3656527",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "c-bloc-1": {
-      "file": "c-bloc-1.mp3",
-      "duration": 42.53,
-      "hash": "832330f776ca",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "c-lits-1": {
-      "file": "c-lits-1.mp3",
-      "duration": 18.04,
-      "hash": "3fb2f18a3e40",
-      "model": "gemini-3.8-flash-tts"
-    },
-    "c-hospitalisation-1": {
-      "file": "c-hospitalisation-1.mp3",
-      "duration": 60.06,
-      "hash": "4bab1df0f0ae",
-      "model": "gemini-3.8-flash-tts"
-    },
     "c-twin": {
       "file": "c-twin.mp3",
-      "duration": 10.5,
-      "hash": "ff833c0aa9bc",
-      "model": "gemini-3.8-flash-tts"
+      "duration": 39.12,
+      "hash": "38f8e8be8fa2",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-cadres-2": {
-      "file": "c-cadres-2.mp3",
-      "duration": 45.45,
-      "hash": "8cd1003759c3",
-      "model": "gemini-3.8-flash-tts"
+    "x-pec": {
+      "file": "x-pec.mp3",
+      "duration": 17.6,
+      "hash": "11291e82a8c3",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-cadres-1": {
-      "file": "c-cadres-1.mp3",
-      "duration": 56.93,
-      "hash": "872b0bdb81b7",
-      "model": "gemini-3.8-flash-tts"
+    "x-appel": {
+      "file": "x-appel.mp3",
+      "duration": 35.72,
+      "hash": "67cd7ad623d4",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-hospitalisation-2": {
-      "file": "c-hospitalisation-2.mp3",
-      "duration": 48.33,
-      "hash": "3dcb9a04098d",
-      "model": "gemini-3.8-flash-tts"
+    "s-pression": {
+      "file": "s-pression.mp3",
+      "duration": 44.76,
+      "hash": "3fa2408deb7d",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-siege-generaux-2": {
-      "file": "c-siege-generaux-2.mp3",
-      "duration": 42,
-      "hash": "16b0e247c2ce",
-      "model": "gemini-3.8-flash-tts"
+    "x-chambre": {
+      "file": "x-chambre.mp3",
+      "duration": 23.46,
+      "hash": "47d1f449ab59",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-siege-finance-1": {
-      "file": "c-siege-finance-1.mp3",
-      "duration": 42.73,
-      "hash": "53b51212438f",
-      "model": "gemini-3.8-flash-tts"
+    "x-sortie": {
+      "file": "x-sortie.mp3",
+      "duration": 25.62,
+      "hash": "3350b3503018",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-siege-finance-2": {
-      "file": "c-siege-finance-2.mp3",
-      "duration": 38.54,
-      "hash": "2dd6f0fcfe4c",
-      "model": "gemini-3.8-flash-tts"
+    "s-temps": {
+      "file": "s-temps.mp3",
+      "duration": 37.03,
+      "hash": "b6c67a825c22",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-siege-generaux-1": {
-      "file": "c-siege-generaux-1.mp3",
-      "duration": 60.1,
-      "hash": "f6e3412c55a7",
-      "model": "gemini-3.8-flash-tts"
+    "x-emplois": {
+      "file": "x-emplois.mp3",
+      "duration": 20.81,
+      "hash": "c85e4e363b14",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-siege-finance-3": {
-      "file": "c-siege-finance-3.mp3",
-      "duration": 48.81,
-      "hash": "1fcf89fe0650",
-      "model": "gemini-3.8-flash-tts"
+    "x-reseau": {
+      "file": "x-reseau.mp3",
+      "duration": 19.26,
+      "hash": "c9e190e47141",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-siege-rh-3": {
-      "file": "c-siege-rh-3.mp3",
-      "duration": 24.62,
-      "hash": "9d2e980ac6a6",
-      "model": "gemini-3.8-flash-tts"
+    "s-ligne": {
+      "file": "s-ligne.mp3",
+      "duration": 9.39,
+      "hash": "07f8ddebce47",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-siege-rh-1": {
-      "file": "c-siege-rh-1.mp3",
-      "duration": 45.86,
-      "hash": "27e1e380ccdd",
-      "model": "gemini-3.8-flash-tts"
+    "s-decision": {
+      "file": "s-decision.mp3",
+      "duration": 19.35,
+      "hash": "4692957a890d",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-casa": {
-      "file": "c-casa.mp3",
-      "duration": 8.91,
-      "hash": "7e99b8f12e2d",
-      "model": "gemini-3.8-flash-tts"
+    "c-agents": {
+      "file": "c-agents.mp3",
+      "duration": 26.93,
+      "hash": "6041b43d974b",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-siege-pilotage-1": {
-      "file": "c-siege-pilotage-1.mp3",
-      "duration": 41.88,
-      "hash": "9a26041ed08a",
-      "model": "gemini-3.8-flash-tts"
+    "c-entree": {
+      "file": "c-entree.mp3",
+      "duration": 20.49,
+      "hash": "f79bffcbca7c",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-siege-rh-2": {
-      "file": "c-siege-rh-2.mp3",
-      "duration": 55.97,
-      "hash": "fdd805b36001",
-      "model": "gemini-3.8-flash-tts"
+    "c-standard": {
+      "file": "c-standard.mp3",
+      "duration": 36.57,
+      "hash": "8c152fa99053",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-siege-pilotage-3": {
-      "file": "c-siege-pilotage-3.mp3",
-      "duration": 53.31,
-      "hash": "1c76c050d85f",
-      "model": "gemini-3.8-flash-tts"
+    "c-hall": {
+      "file": "c-hall.mp3",
+      "duration": 39.91,
+      "hash": "e1710f3031f3",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-final": {
-      "file": "c-final.mp3",
-      "duration": 11.46,
-      "hash": "072ab6084cad",
-      "model": "gemini-3.8-flash-tts"
+    "c-bloc": {
+      "file": "c-bloc.mp3",
+      "duration": 23.14,
+      "hash": "2100d32e754b",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-siege-pilotage-2": {
-      "file": "c-siege-pilotage-2.mp3",
-      "duration": 42.27,
-      "hash": "77e07ad42793",
-      "model": "gemini-3.8-flash-tts"
+    "c-consult": {
+      "file": "c-consult.mp3",
+      "duration": 26.93,
+      "hash": "ba413e0b5279",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-archives-1": {
-      "file": "c-archives-1.mp3",
-      "duration": 11.72,
-      "hash": "1062ae39df57",
-      "model": "gemini-3.8-flash-tts"
+    "c-pec": {
+      "file": "c-pec.mp3",
+      "duration": 28.61,
+      "hash": "91338b1de47e",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-admissions-1": {
-      "file": "c-admissions-1.mp3",
-      "duration": 52.4,
-      "hash": "9dbcafa0416f",
-      "model": "gemini-3.8-flash-tts"
+    "c-chambre": {
+      "file": "c-chambre.mp3",
+      "duration": 26.96,
+      "hash": "07d9ec6fdaf1",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-urgences-1": {
-      "file": "c-urgences-1.mp3",
-      "duration": 35.1,
-      "hash": "1c35163c0ae2",
-      "model": "gemini-3.8-flash-tts"
+    "c-humain": {
+      "file": "c-humain.mp3",
+      "duration": 36.13,
+      "hash": "5d1a9a8a7784",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-accueil-1": {
-      "file": "c-accueil-1.mp3",
-      "duration": 32.38,
-      "hash": "e6618e2fdd73",
-      "model": "gemini-2.5-flash-preview-tts"
+    "c-sortie": {
+      "file": "c-sortie.mp3",
+      "duration": 22.36,
+      "hash": "5d2904433d92",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-caisse-1": {
-      "file": "c-caisse-1.mp3",
-      "duration": 30.56,
-      "hash": "64294a0fe7de",
-      "model": "gemini-2.5-flash-preview-tts"
+    "c-coulisses": {
+      "file": "c-coulisses.mp3",
+      "duration": 28.75,
+      "hash": "6cd8150e6872",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-standard-1": {
-      "file": "c-standard-1.mp3",
-      "duration": 43.61,
-      "hash": "20493f7447d2",
-      "model": "gemini-2.5-flash-preview-tts"
+    "c-bilan": {
+      "file": "c-bilan.mp3",
+      "duration": 22.58,
+      "hash": "3bed34c115fc",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-imagerie-1": {
-      "file": "c-imagerie-1.mp3",
-      "duration": 29.28,
-      "hash": "011627dd6b69",
-      "model": "gemini-2.5-flash-preview-tts"
+    "c-command": {
+      "file": "c-command.mp3",
+      "duration": 31.18,
+      "hash": "22890962aa91",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-documents-1": {
-      "file": "c-documents-1.mp3",
-      "duration": 20.11,
-      "hash": "2b01f64baea7",
-      "model": "gemini-2.5-flash-preview-tts"
+    "c-siege": {
+      "file": "c-siege.mp3",
+      "duration": 37.9,
+      "hash": "4a2f283d54bb",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-consultations-1": {
-      "file": "c-consultations-1.mp3",
-      "duration": 70.09,
-      "hash": "ebe75652d5ad",
-      "model": "gemini-2.5-flash-preview-tts"
+    "s-casa": {
+      "file": "s-casa.mp3",
+      "duration": 16.62,
+      "hash": "f4278afdb8e2",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-qualite-1": {
-      "file": "c-qualite-1.mp3",
-      "duration": 73.46,
-      "hash": "c33f3f91cd2f",
-      "model": "gemini-2.5-flash-preview-tts"
+    "c-confiance": {
+      "file": "c-confiance.mp3",
+      "duration": 21.23,
+      "hash": "da1e0c226a8f",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-qualite-2": {
-      "file": "c-qualite-2.mp3",
-      "duration": 66.7,
-      "hash": "91de3d903ee1",
-      "model": "gemini-2.5-flash-preview-tts"
+    "s-emplois": {
+      "file": "s-emplois.mp3",
+      "duration": 32.83,
+      "hash": "6aa76a96430a",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-technique-2": {
-      "file": "c-technique-2.mp3",
-      "duration": 71.67,
-      "hash": "0091f911cbb9",
-      "model": "gemini-2.5-flash-preview-tts"
+    "s-monde": {
+      "file": "s-monde.mp3",
+      "duration": 13.6,
+      "hash": "d296552f2031",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     },
-    "c-network": {
-      "file": "c-network.mp3",
-      "duration": 14.38,
-      "hash": "15bc2e0a3926",
-      "model": "gemini-2.5-flash-preview-tts"
-    },
-    "c-technique-3": {
-      "file": "c-technique-3.mp3",
-      "duration": 58,
-      "hash": "225b66cb376e",
-      "model": "gemini-2.5-flash-preview-tts"
-    },
-    "c-technique-1": {
-      "file": "c-technique-1.mp3",
-      "duration": 64.54,
-      "hash": "e2d2d3e3a235",
-      "model": "gemini-2.5-flash-preview-tts"
+    "s-maroc": {
+      "file": "s-maroc.mp3",
+      "duration": 20.03,
+      "hash": "30545639db75",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
     }
   }
 }

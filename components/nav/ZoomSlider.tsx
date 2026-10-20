@@ -10,7 +10,7 @@ const MARKS: Mark[] = [
   { key: "hospital", label: "Hôpital", alt: 260, g: altToG(260) },
   { key: "morocco", label: "Maroc", alt: 1.9e6, g: altToG(1.9e6) },
   { key: "world", label: "Monde", alt: 2.1e7, g: altToG(2.1e7) },
-  { key: "jabb", label: "JABB", alt: 6.5e8, g: altToG(6.5e8) },
+  { key: "jabb", label: "JABB", alt: 8e8, g: 1 },
 ];
 
 function Icon({ k }: { k: Mark["key"] | "plus" | "minus" | "keys" }) {
