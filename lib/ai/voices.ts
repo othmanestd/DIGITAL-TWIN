@@ -9,7 +9,8 @@ const PREF: RegExp[] = [
   /Microsoft \w+ Online \(Natural\).*(French|France)/i,
   /^Google français$/i,
 ];
-export const LIVE_RATE = 1;
+/** One rate for the whole session: natural (online) voices at 1, older local voices slightly faster (they speak slowly). */
+export let LIVE_RATE = 1;
 export const LIVE_PITCH = 1;
 /** Speaking speed used to estimate live durations (characters per second). */
 export const CPS = 14.5;
@@ -32,7 +33,7 @@ export function frenchVoice(): Promise<SpeechSynthesisVoice | null> {
     if (typeof speechSynthesis === "undefined") { chosen = null; return resolve(null); }
     const done = () => {
       const v = rank(speechSynthesis.getVoices());
-      if (v || performance.now() - t0 > 1500) { chosen = v; clearInterval(id); speechSynthesis.removeEventListener?.("voiceschanged", done); resolve(v); }
+      if (v || performance.now() - t0 > 1500) { chosen = v; LIVE_RATE = v && !/natural|online|google/i.test(v.name) ? 1.12 : 1; clearInterval(id); speechSynthesis.removeEventListener?.("voiceschanged", done); resolve(v); }
     };
     const t0 = performance.now();
     const id = window.setInterval(done, 150);
