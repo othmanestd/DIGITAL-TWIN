@@ -1,0 +1,299 @@
+"use client";
+// The continuous "powers of ten" world: one camera from a department (≈ 10 m) to space (≈ 260 000 km).
+// Hospital (1 unit = 1 m) at the origin = Casablanca → Morocco map around it → the Earth under the map → the Earth becomes
+// the dot of the JABB "J" (DOM overlay JabbEgg). Long moves are log-space flights (lib/rig), the pivot hands over from the
+// ground to the Earth's centre above ~3 000 km so the globe spins naturally, and every content fades by altitude.
+import * as THREE from "three";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import { CameraControls, Environment, Lightformer } from "@react-three/drei";
+import { useApp } from "@/lib/store";
+import { rig, EARTH_R, GLOBE_DROP, EARTH_CENTER } from "@/lib/rig";
+import { MAX_ALT, altToG, gToAlt, bandAlt, levelForAlt, fadeIn, frame } from "@/lib/world";
+import { HospitalContent, HOSPITAL_BOX, HOSPITAL_TIME } from "./hospital/HospitalContent";
+import { CityContent } from "./city/CityContent";
+import { MoroccoContent, MAP_UNITS_PER_KM, MOROCCO_CENTER_LONLAT, mapProject } from "./geo/MoroccoContent";
+import { GlobeContent, GLOBE_RADIUS, GLOBE_VIEW_LONLAT, globePoint } from "./geo/GlobeContent";
+import { CASA_LONLAT } from "@/lib/geo/projection";
+
+const MAP_SCALE_M = 1000 / MAP_UNITS_PER_KM;          // metres per map unit (≈ 7 580)
+const GLOBE_SCALE_M = EARTH_R / GLOBE_RADIUS;          // metres per globe unit (63 710)
+const PIVOT_IN = 3.3e6;   // above this altitude the camera orbits the Earth's centre
+const PIVOT_OUT = 2.5e6;  // below this it orbits the ground again (hysteresis)
+const R_TOP = EARTH_R + GLOBE_DROP;                    // distance centre → ground (y = 0) under Casablanca
+const SPEED = 0.0032, PINCH = 6, LN095 = Math.log(0.95);
+if (typeof window !== "undefined") Object.assign(window as unknown as Record<string, unknown>, { __rig: rig, __frame: frame });
+
+/** Rotation that puts Casablanca on top of the globe (+Y) with north towards −Z, like the map. */
+function globeQuaternion() {
+  const up = globePoint(CASA_LONLAT[0], CASA_LONLAT[1]).normalize();
+  const q = new THREE.Quaternion().setFromUnitVectors(up, new THREE.Vector3(0, 1, 0));
+  const north = globePoint(CASA_LONLAT[0], CASA_LONLAT[1] + 0.05).sub(globePoint(CASA_LONLAT[0], CASA_LONLAT[1])).normalize().applyQuaternion(q);
+  const a = Math.atan2(north.x, -north.z);
+  return new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), a).multiply(q);
+}
+
+export default function UnifiedWorld() {
+  const controls = useRef<CameraControls>(null);
+  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const size = useThree((s) => s.size);
+  const hosp = useRef<THREE.Group>(null);
+  const [mapOp, setMapOp] = useState(1);
+  const [globeOp, setGlobeOp] = useState(0);
+  const st = useRef({ dragging: false, lastReport: 0, intro: true, over: 0, overT: 0, offset: false });
+  const gq = useMemo(globeQuaternion, []);
+  const gpos = useMemo(() => EARTH_CENTER.clone(), []);
+  /** the Earth's north-pole axis in world space: camera up while orbiting the Earth, so north stays up on screen */
+  const POLE = useMemo(() => new THREE.Vector3(0, 1, 0).applyQuaternion(gq).normalize(), [gq]);
+  const tmp = useMemo(() => ({ t: new THREE.Vector3(), d: new THREE.Vector3(), p: new THREE.Vector3() }), []);
+
+  // world-space anchors of the three overviews
+  const shots = useMemo(() => {
+    const [mx, mz] = mapProject(MOROCCO_CENTER_LONLAT[0], MOROCCO_CENTER_LONLAT[1]);
+    const morocco = new THREE.Vector3(mx * MAP_SCALE_M, 0, mz * MAP_SCALE_M - 170_000); // a little north: the tilt compresses the far side
+    // world view: between Morocco and the Gulf, Morocco well inside the disc (not on the limb)
+    const VIEW: [number, number] = [GLOBE_VIEW_LONLAT[0] * 0.45, GLOBE_VIEW_LONLAT[1] * 0.85 + 4];
+    const n = globePoint(VIEW[0], VIEW[1]).normalize().applyQuaternion(gq);
+    return { morocco, worldPolar: Math.acos(THREE.MathUtils.clamp(n.y, -1, 1)), worldAz: Math.atan2(n.x, n.z) };
+  }, [gq]);
+
+  // renderer look (neutral tone mapping keeps the white maquette white), transparent background
+  useEffect(() => {
+    gl.toneMapping = THREE.NeutralToneMapping; gl.toneMappingExposure = 1;
+    scene.background = null;
+  }, [gl, scene]);
+
+  // controls → rig; drag state
+  useEffect(() => {
+    const c = controls.current;
+    if (!c) return;
+    camera.fov = 38; camera.near = 0.5; camera.far = 4e9; camera.updateProjectionMatrix();
+    rig.attach(c, camera);
+    rig.upFor = (t: THREE.Vector3) => (t.distanceTo(EARTH_CENTER) < 2e5 ? POLE : new THREE.Vector3(0, 1, 0));
+    c.smoothTime = 0.16; c.draggingSmoothTime = 0.06; c.dollySpeed = 1; c.infinityDolly = false;
+    c.mouseButtons.wheel = 0; // handled below
+    const s = st.current;
+    const on = () => { s.dragging = true; rig.cancel(); s.intro = false; };
+    const off = () => { s.dragging = false; };
+    c.addEventListener("controlstart", on); c.addEventListener("controlend", off);
+    return () => { c.removeEventListener("controlstart", on); c.removeEventListener("controlend", off); rig.attach(null); };
+  }, [camera]);
+
+  // overview flights for the three levels (contents handle their own selections)
+  const go = (level: "hospital" | "morocco" | "world", o: { duration?: number } = {}) => {
+    if (level === "hospital") rig.fitBox(HOSPITAL_BOX.clone(), { polar: 1.02, azimuth: 0.72, padding: 0.02, ...o });
+    else if (level === "morocco") rig.flyTo(shots.morocco, 2.55e6, { polar: 0.5, azimuth: 0.04, ...o });
+    else rig.flyTo(EARTH_CENTER, R_TOP + 2.1e7, { polar: shots.worldPolar, azimuth: shots.worldAz, ...o });
+  };
+  const focusNonce = useApp((s) => s.focusNonce);
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) { first.current = false; return; }
+    const sel = useApp.getState().sel;
+    if (sel?.kind === "overview") { st.current.intro = false; go(sel.id as "hospital" | "morocco" | "world"); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusNonce]);
+
+  // intro: from space, dive into Morocco, then land on the typical hospital
+  useLayoutEffect(() => {
+    rig.flyTo(EARTH_CENTER, R_TOP + 2.6e7, { polar: shots.worldPolar, azimuth: shots.worldAz, transition: false });
+    const s = st.current;
+    const t1 = setTimeout(() => { if (s.intro) go("morocco", { duration: 3.2 }); }, 1200);
+    const t2 = setTimeout(() => { if (s.intro) go("hospital", { duration: 3.6 }); }, 4700);
+    const t3 = setTimeout(() => { s.intro = false; }, 8600);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // wheel / trackpad: fast, smooth, toward the cursor (straight to the centre when orbiting the Earth)
+  useEffect(() => {
+    const el = gl.domElement;
+    const onWheel = (e: WheelEvent) => {
+      const c = controls.current as unknown as (CameraControls & { _sphericalEnd: { radius: number }; _dollyInternal: (d: number, x: number, y: number) => void }) | null;
+      if (!c) return;
+      e.preventDefault();
+      rig.cancel(); st.current.intro = false;
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.2 && !e.ctrlKey) { c.rotate((-e.deltaX * Math.PI) / 1800, 0, true); return; }
+      let dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
+      if (e.ctrlKey) dy *= PINCH;
+      dy = Math.max(-240, Math.min(240, dy));
+      const lnS = dy * SPEED * (e.shiftKey ? 0.35 : 1);
+      const centre = c.getTarget(tmp.t).distanceTo(EARTH_CENTER) < 2e5;
+      c.dollyToCursor = !centre;
+      const rect = el.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      c._dollyInternal(lnS / -LN095, x, y);
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [gl, tmp]);
+
+  // zoom slider / shortcuts / tour requests
+  useEffect(() => {
+    let last = 0;
+    return useApp.subscribe((s) => {
+      const cmd = s.zoomCmd, c = controls.current;
+      if (!cmd || !c || cmd.nonce === last) return;
+      last = cmd.nonce; st.current.intro = false;
+      const alt = frame.alt;
+      let want = alt;
+      let fast = false;
+      if (cmd.g !== undefined) { want = gToAlt(cmd.g); fast = true; }
+      else if (cmd.value !== undefined) want = bandAlt(cmd.level, cmd.value);
+      else if (cmd.delta) want = alt * Math.exp(cmd.delta * 4.6);
+      want = Math.min(MAX_ALT, Math.max(14, want));
+      const centre = c.getTarget(tmp.t).distanceTo(EARTH_CENTER) < 2e5;
+      const dur = fast ? 0.5 : undefined;
+      if (want > PIVOT_IN) {
+        rig.flyTo(EARTH_CENTER, R_TOP + want, centre ? { duration: dur } : { polar: shots.worldPolar, azimuth: shots.worldAz, duration: dur });
+      } else if (centre) {
+        rig.flyTo(shots.morocco, want, { polar: want < 3000 ? 1.0 : 0.62, azimuth: 0.06, duration: dur });
+      } else {
+        // descending: glide towards Casablanca (the city, then the hospital), like Google Maps homing in
+        const t = c.getTarget(new THREE.Vector3());
+        const w = want < alt ? 1 - fadeIn(want, 3e4, 6e5) : 0;
+        t.lerp(new THREE.Vector3(0, 8, 0), w);
+        const pol = want < 3000 ? Math.max(c.polarAngle, 0.9) : c.polarAngle;
+        rig.flyTo(t, c.distance * (want / Math.max(alt, 1)), { duration: dur, polar: Math.min(pol, 1.2) });
+      }
+    });
+  }, [shots, tmp]);
+
+  useFrame(() => {
+    const c = controls.current;
+    if (!c) return;
+    const flying = rig.tick();
+    const s = st.current;
+    const cam = camera.position;
+    const alt = Math.max(1, cam.distanceTo(EARTH_CENTER) - R_TOP);
+    frame.alt = alt;
+
+    // pivot hand-over: ground ⇄ Earth centre (the view direction passes through both, so nothing swings)
+    const tgt = c.getTarget(tmp.t);
+    const centre = tgt.distanceTo(EARTH_CENTER) < 2e5;
+    if (!flying && !s.dragging) {
+      if (!centre && alt > PIVOT_IN) {
+        void c.setTarget(EARTH_CENTER.x, EARTH_CENTER.y, EARTH_CENTER.z, false);
+        camera.up.copy(POLE); c.updateCameraUp();
+      } else if (centre && alt < PIVOT_OUT) {
+        const dir = tmp.d.copy(EARTH_CENTER).sub(cam).normalize();
+        const k = dir.y < -1e-3 ? cam.y / -dir.y : alt;
+        const p = tmp.p.copy(cam).addScaledVector(dir, k);
+        void c.setTarget(p.x, 0, p.z, false);
+        camera.up.set(0, 1, 0); c.updateCameraUp();
+      }
+    }
+    // limits per pivot mode; at high altitude the ground view straightens up so the map flattens into the globe
+    const centreNow = c.getTarget(tmp.t).distanceTo(EARTH_CENTER) < 2e5;
+    if (centreNow) {
+      c.minDistance = R_TOP + 1.8e6; c.maxDistance = R_TOP + MAX_ALT;
+      c.minPolarAngle = 0; c.maxPolarAngle = Math.PI;
+    } else {
+      c.minDistance = 8; c.maxDistance = 4.6e6;
+      c.minPolarAngle = 0;
+      c.maxPolarAngle = flying ? Math.PI : THREE.MathUtils.lerp(1.42, 0.06, fadeIn(alt, 2.0e6, 3.4e6));
+    }
+
+    // contents by altitude
+    if (hosp.current) hosp.current.visible = alt < 60_000;
+    const m = 1 - fadeIn(alt, 2.5e6, 3.7e6);
+    const g = fadeIn(alt, 1.6e6, 3.1e6);
+    if (Math.abs(m - mapOp) > 0.02 || (m === 0) !== (mapOp === 0) || (m === 1) !== (mapOp === 1)) setMapOp(m);
+    if (Math.abs(g - globeOp) > 0.02 || (g === 0) !== (globeOp === 0) || (g === 1) !== (globeOp === 1)) setGlobeOp(g);
+
+    // Earth on screen (for the JABB easter egg) and the egg's visibility
+    const dc = cam.distanceTo(EARTH_CENTER);
+    const p = tmp.p.copy(EARTH_CENTER).project(camera);
+    const ang = Math.asin(Math.min(1, EARTH_R / dc));
+    frame.earth.x = (p.x * 0.5 + 0.5) * size.width;
+    frame.earth.y = (-p.y * 0.5 + 0.5) * size.height;
+    frame.earth.r = (Math.tan(ang) / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))) * (size.height / 2);
+    frame.earth.visible = p.z < 1;
+    frame.egg = fadeIn(alt, 1.1e8, 3.6e8);
+    // centre the one-line lockup "J(Earth)ABB × mibtech × AKDITAL": slide the view so the lockup, not the Earth, is centred
+    const k = frame.earth.r / 25;
+    const shift = frame.egg * (frame.eggW / 2 - frame.eggDot) * k;
+    if (Math.abs(shift) > 0.5) { camera.setViewOffset(size.width, size.height, shift, 0, size.width, size.height); s.offset = true; }
+    else if (s.offset) { camera.clearViewOffset(); s.offset = false; }
+
+    // report to the store (slider, level-dependent UI, sounds)
+    const now = performance.now();
+    if (now - s.lastReport > 90) {
+      s.lastReport = now;
+      const app = useApp.getState();
+      app.setZoom(altToG(alt));
+      app.syncLevel(levelForAlt(alt), alt);
+    }
+  });
+
+  return (
+    <>
+      <CameraControls ref={controls} makeDefault />
+      <Lights />
+      <Environment resolution={128} frames={1} environmentIntensity={0.3}>
+        <Lightformer form="rect" intensity={2.2} color="#FFFFFF" position={[0, 12, 0]} rotation-x={Math.PI / 2} scale={[24, 24, 1]} />
+        <Lightformer form="rect" intensity={1.1} color="#DCE6FF" position={[-14, 4, 6]} rotation-y={Math.PI / 2} scale={[20, 6, 1]} />
+        <Lightformer form="rect" intensity={0.9} color="#FFF3E6" position={[14, 4, -6]} rotation-y={-Math.PI / 2} scale={[20, 6, 1]} />
+      </Environment>
+      <Stars />
+      <group ref={hosp}>
+        <HospitalContent />
+        <CityContent />
+      </group>
+      {/* the map lies under the campus base (basement pit to −5.9 m) so the plaza never flickers against it */}
+      <group position={[0, -6.5, 0]} scale={MAP_SCALE_M}>
+        <MoroccoContent opacity={mapOp} />
+      </group>
+      <group position={gpos} quaternion={gq} scale={GLOBE_SCALE_M}>
+        <GlobeContent opacity={globeOp} />
+      </group>
+    </>
+  );
+}
+
+/** Key light with shadows over the campus + hemisphere fill, following the hospital's day/night time-lapse. */
+function Lights() {
+  const tgt = useMemo(() => new THREE.Object3D(), []);
+  const key = useRef<THREE.DirectionalLight>(null);
+  const hemi = useRef<THREE.HemisphereLight>(null);
+  const warm = useMemo(() => ({ day: new THREE.Color("#FFF8EE"), dusk: new THREE.Color("#FFB07A"), night: new THREE.Color("#9FB2FF") }), []);
+  useFrame(() => {
+    const d = HOSPITAL_TIME.day;
+    if (key.current) {
+      key.current.intensity = 2.9 * (0.1 + 0.9 * d);
+      key.current.color.copy(warm.night).lerp(warm.dusk, Math.min(1, d * 2)).lerp(warm.day, Math.max(0, d * 2 - 1));
+    }
+    if (hemi.current) hemi.current.intensity = 0.7 * (0.38 + 0.62 * d);
+  });
+  useLayoutEffect(() => { const l = key.current; if (l) { l.shadow.camera.updateProjectionMatrix(); l.shadow.needsUpdate = true; } }, []);
+  return (
+    <>
+      <hemisphereLight ref={hemi} args={["#E9EEFF", "#2B3558", 0.7]} />
+      <primitive object={tgt} position={[0, 0, -2]} />
+      <directionalLight ref={key} target={tgt} position={[-52, 105, 62]} intensity={2.9} color="#FFF8EE" castShadow
+        shadow-mapSize={[2048, 2048]} shadow-bias={-0.0004} shadow-normalBias={0.04}
+        shadow-camera-left={-80} shadow-camera-right={80} shadow-camera-top={72} shadow-camera-bottom={-72} shadow-camera-near={20} shadow-camera-far={320} />
+      <directionalLight position={[70, 40, -52]} intensity={0.3} color="#C9D5FF" />
+    </>
+  );
+}
+
+/** Deep-space stars, far beyond the Earth, fading in with altitude. */
+function Stars() {
+  const pts = useRef<THREE.Points>(null);
+  const geo = useMemo(() => {
+    const n = 3200, a = new Float32Array(n * 3), v = new THREE.Vector3();
+    for (let i = 0; i < n; i++) { v.randomDirection().multiplyScalar(1.2e9 + Math.random() * 1.2e9); a.set([v.x, v.y, v.z], i * 3); }
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(a, 3)); return g;
+  }, []);
+  const mat = useMemo(() => new THREE.PointsMaterial({ color: "#C9D6FF", size: 1.6, sizeAttenuation: false, transparent: true, opacity: 0, depthWrite: false }), []);
+  useFrame(() => {
+    const o = fadeIn(frame.alt, 4e5, 4e6) * 0.75;
+    mat.opacity = o;
+    if (pts.current) { pts.current.visible = o > 0.01; pts.current.position.copy(EARTH_CENTER); }
+  });
+  return <points ref={pts} geometry={geo} material={mat} frustumCulled={false} />;
+}

@@ -1,0 +1,6 @@
+.env*
+.next
+node_modules
+scripts/shot.cjs
+scripts/shots.cjs
+*.log

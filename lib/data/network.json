@@ -1,0 +1,2437 @@
+{
+ "meta": {
+  "pending": false,
+  "source": "_source/atlas_research/akdital_network.json",
+  "generated": "2026-10-20T19:34:08.308Z",
+  "counts": {
+   "sites": 54,
+   "operational": 45,
+   "cities": 29,
+   "international": 10
+  }
+ },
+ "asOf": "2026-10-19 (interview du PDG dans TelQuel, source la plus récente). Chiffres officiels au 30 juin 2026 (communiqué S1 2026 publié le 30 sept. 2026); pages akdital.ma consultées le 20 oct. 2026.",
+ "group": {
+  "establishments": 45,
+  "beds": 4864,
+  "cities": 25,
+  "notes": "Au 30 juin 2026 (communiqué S1 2026): 45 établissements, 4 864 lits (+359 depuis début 2026), 25 villes, 10 256 collaborateurs, 4 186 praticiens partenaires, 590 842 admissions au S1 2026, CA S1 2026 = 2 532 MMAD (oncologie 36 %, multidisciplinaire 64 %), 71 % des admissions et 68 % des lits hors axe Casablanca-Rabat; présent dans les 12 régions du Maroc depuis le T3 2025. Plan officiel (présentation de mars 2026): 41 établissements/4 505 lits/24 villes (2025), 45/4 900/25 (2026), 53/5 446/29 (2027), 59/6 005/29 (2028). Historique: 21 établissements à fin 2023, 33 à fin 2024 (12 ouvertures), 41 à fin 2025 (8 ouvertures). Le comptage officiel compte Anfa Prime Hospital, Onco Prime Hospital et Cardio Prime Hospital comme 3 établissements. Statuts du dataset: 45 opérationnels, 3 en construction (finition), 6 projets annoncés (dont une extension); international: 11 projets identifiés dans la présentation de mars 2026 (objectif 2030: 15 établissements, 2 000 lits, 3 pays, 35 % du CA) + Médine et Afrique subsaharienne évoqués par le PDG.",
+  "source": "https://akdital.ma/wp-content/uploads/2026/09/CP-Akdital-S1-2026-29092202-22h16.pdf"
+ },
+ "brands": [
+  {
+   "name": "Hôpital Privé (HP)",
+   "positioning": "Hôpitaux régionaux multidisciplinaires (médecine, chirurgie, maternité, cardiologie interventionnelle, réanimation, souvent oncologie): Casablanca Aïn Sebaâ, El Jadida, Tanger, Salé, Béni Mellal, Meknès, Tétouan, Guelmim, Nador, Oujda, Rabat (Ibn Yassine). Description de site: « structure médicale polyvalente, érigée selon les normes hospitalières internationales ».",
+   "source": "https://akdital.ma/fr/nos-etablissements/"
+  },
+  {
+   "name": "Hôpital International (HI)",
+   "positioning": "Grands hôpitaux multidisciplinaires de métropoles régionales (Agadir, Fès, Kénitra) et Hôpital International Ibn Nafis à Marrakech (spécialisé en oncologie, 100 lits). Aucune source lue ne définit officiellement la différence entre « Privé » et « International ».",
+   "source": "https://akdital.ma/fr/nos-etablissements/"
+  },
+  {
+   "name": "Clinique Internationale / Polyclinique Internationale",
+   "positioning": "Cliniques multidisciplinaires de 100 à 240 lits dans des villes moyennes et éloignées (Khouribga, Errachidia, Taroudant, Essaouira-Mogador, Dakhla, Mohammédia, Inezgane, Laâyoune): accès local aux soins lourds (cardiologie interventionnelle, maternité, oncologie).",
+   "source": "https://akdital.ma/fr/nos-etablissements/"
+  },
+  {
+   "name": "Centre International d'Oncologie (CIO) / Centre d'Oncologie Privé",
+   "positioning": "Centres d'oncologie (radiothérapie, chimiothérapie, immunothérapie, curiethérapie, médecine nucléaire, hématologie, greffe de moelle) à Casablanca, Rabat, Salé, Kénitra, Meknès, Fès, Tanger, Agadir, El Jadida, Oujda, Benguérir. L'oncologie = 36 % du CA du S1 2026 (31 % au S1 2025).",
+   "source": "https://akdital.ma/wp-content/uploads/2026/09/CP-Akdital-S1-2026-29092202-22h16.pdf"
+  },
+  {
+   "name": "Cliniques historiques et de spécialités (Jerrada Oasis, Ain Borja, Longchamps, Panorama, Clinique de Spécialités de Safi, Atfal)",
+   "positioning": "Premières cliniques de Casablanca (2011-2022), cardio-vasculaire/neurologie (Longchamps), pédiatrie exclusive (Atfal: « première structure hospitalière privée exclusivement dédiée à l'enfant »), spécialités à Safi.",
+   "source": "https://akdital.ma/who-we-are/"
+  },
+  {
+   "name": "AKDITALIFE - Clinique du Bien-Être",
+   "positioning": "Clinique multidisciplinaire orientée bien-être (check-up, médecine esthétique, nutrition, gériatrie, rééducation MOBILI+) à Bouskoura (Golf City Prestigia). Aucun terme VIP/suite trouvé.",
+   "source": "https://akditalife-bouskoura.ma/"
+  },
+  {
+   "name": "Prime (Anfa Prime Hospital, Onco Prime Hospital, Cardio Prime Hospital)",
+   "positioning": "Nouveau format premium / « 3e génération » inauguré en avril 2026 à Casablanca: robotique, IA, offre « Prime Signature » (circuits d'accueil dédiés, accompagnement individualisé), à déployer à Fès, Tanger, Agadir, Marrakech (villes Coupe du monde 2030).",
+   "source": "https://lematin.ma/societe/akdital-inaugure-anfa-prime-hospital-a-casablanca/342996"
+  },
+  {
+   "name": "AKDITAL Hospitals / AKDITAL International (Arabie saoudite, EAU, Tunisie en projet)",
+   "positioning": "Marque internationale pilotée par AKDITAL International Company (holding basée à Riyad, 15 % Arab Invest): marché mid-to-high-end sous-équipé (< 2 lits / 1 000 habitants), modèle « asset light ».",
+   "source": "https://akdital.ma/wp-content/uploads/2026/04/20260330-Akdital-Presentation-Conf-analystes-Mars-2026-vENG.pdf"
+  }
+ ],
+ "sites": [
+  {
+   "slug": "clinique-jerrada-oasis",
+   "name": "Clinique Jerrada Oasis",
+   "brand": "Clinique Akdital (historique)",
+   "city": "Casablanca",
+   "citySlug": "casablanca",
+   "locality": "Casablanca",
+   "region": "Casablanca-Settat",
+   "lat": 33.5731,
+   "lon": -7.5898,
+   "noCoords": false,
+   "type": "clinique multidisciplinaire",
+   "specialties": [
+    "cardiologie interventionnelle",
+    "chirurgie cardiaque",
+    "rythmologie",
+    "neurologie/neurochirurgie",
+    "centre de traitement de l'AVC",
+    "endoscopie",
+    "ophtalmologie",
+    "radiologie",
+    "réanimation cardiovasculaire et polyvalente"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 100,
+   "status": "opérationnel",
+   "opening_year": 2011,
+   "source": "https://cliniquejerrada.ma/",
+   "sources": [
+    "https://cliniquejerrada.ma/"
+   ],
+   "notes": "Premier établissement du groupe; 113 Bd Abderrahim Bouabid, Oasis. Site: « Depuis son ouverture en 2011 ». Page « Who we are » d'akdital.ma: 2011 = 50 lits, 2015 = extension à 100 lits (capacité actuelle non republiée -> 100 lits à confirmer)."
+  },
+  {
+   "slug": "clinique-ain-borja",
+   "name": "Clinique Ain Borja",
+   "brand": "Clinique Akdital (historique)",
+   "city": "Casablanca",
+   "citySlug": "casablanca",
+   "locality": "Casablanca",
+   "region": "Casablanca-Settat",
+   "lat": 33.5731,
+   "lon": -7.5898,
+   "noCoords": false,
+   "type": "clinique multidisciplinaire",
+   "specialties": [
+    "maternité",
+    "réanimation néonatale",
+    "cardiologie interventionnelle",
+    "chirurgie générale",
+    "traumatologie-orthopédie",
+    "gastro-entérologie",
+    "réanimation et soins intensifs",
+    "radiologie",
+    "urgences"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 100,
+   "status": "opérationnel",
+   "opening_year": 2018,
+   "source": "https://www.cliniqueainborja.ma/",
+   "sources": [
+    "https://www.cliniqueainborja.ma/"
+   ],
+   "notes": "« deuxième établissement de santé du Groupe AKDITAL, opérationnel depuis 2018 ». Page « Who we are » d'akdital.ma: « 2018: Ain Borja Clinic opens with 100 beds » (capacité actuelle non republiée -> 100 lits à confirmer). Plateau du site: 7 salles opératoires, 52 lits de soins intensifs, 15 boxes de réanimation, 15 lits d'hospitalisation. 25 Bd Ifni."
+  },
+  {
+   "slug": "centre-international-doncologie-casablanca",
+   "name": "Centre International d'Oncologie Casablanca",
+   "brand": "Centre International d'Oncologie (CIO)",
+   "city": "Casablanca",
+   "citySlug": "casablanca",
+   "locality": "Casablanca",
+   "region": "Casablanca-Settat",
+   "lat": 33.5731,
+   "lon": -7.5898,
+   "noCoords": false,
+   "type": "centre d'oncologie",
+   "specialties": [
+    "sénologie",
+    "chimiothérapie",
+    "radiothérapie et radiochirurgie",
+    "médecine nucléaire",
+    "hématologie",
+    "curiethérapie",
+    "immunothérapie",
+    "greffe de moelle osseuse",
+    "soins intensifs"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": null,
+   "status": "opérationnel",
+   "opening_year": 2019,
+   "source": "https://ciocasablanca.ma/",
+   "sources": [
+    "https://ciocasablanca.ma/"
+   ],
+   "notes": "4 route de l'Oasis. Accréditation Platine Qmentum International (Accréditation Canada) obtenue en 2025 (communiqué annuel 2025). Année 2019: page « Who we are » d'akdital.ma (« 2019: three Casablanca facilities open, adding 400 beds », soit CIO Casablanca + Clinique Longchamps + HPC Aïn Sebaâ; 220 lits pour HPC => ~180 lits pour CIO + Longchamps ensemble, répartition non publiée)."
+  },
+  {
+   "slug": "clinique-longchamps",
+   "name": "Clinique Longchamps",
+   "brand": "Clinique Akdital (historique)",
+   "city": "Casablanca",
+   "citySlug": "casablanca",
+   "locality": "Casablanca",
+   "region": "Casablanca-Settat",
+   "lat": 33.5731,
+   "lon": -7.5898,
+   "noCoords": false,
+   "type": "clinique spécialisée cardio-vasculaire / neurologie",
+   "specialties": [
+    "cardio-vasculaire",
+    "neurologie",
+    "soins médicaux et chirurgicaux",
+    "radiologie"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": null,
+   "status": "opérationnel",
+   "opening_year": 2019,
+   "source": "https://cliniquelongchamps.ma/",
+   "sources": [
+    "https://cliniquelongchamps.ma/"
+   ],
+   "notes": "4 Bd Ghandi. Description groupe: « vise à offrir aux patients atteints de maladies cardio-vasculaires ou neurologiques l'accès à une gamme complète de soins médicaux et chirurgicaux ». Année 2019: page « Who we are » d'akdital.ma (3 établissements casablancais en 2019, +400 lits au total avec CIO Casablanca et HPC)."
+  },
+  {
+   "slug": "hopital-prive-de-casablanca-ain-sebaa",
+   "name": "Hôpital Privé de Casablanca Aïn Sebaâ",
+   "brand": "Hôpital Privé",
+   "city": "Casablanca",
+   "citySlug": "casablanca",
+   "locality": "Casablanca",
+   "region": "Casablanca-Settat",
+   "lat": 33.5731,
+   "lon": -7.5898,
+   "noCoords": false,
+   "type": "hôpital privé multidisciplinaire",
+   "specialties": [
+    "multidisciplinaire",
+    "oncologie (aile d'oncologie: hôpital de jour + radiothérapie)",
+    "réanimation",
+    "maternité"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 220,
+   "status": "opérationnel",
+   "opening_year": 2019,
+   "source": "https://akdital.ma/who-we-are/",
+   "sources": [
+    "https://akdital.ma/who-we-are/"
+   ],
+   "notes": "Capacité 220 lits selon un article Infomediaire relayé par recherche (non revérifié). Accréditation Platine Qmentum International en 2025 (communiqué annuel 2025). Site hpc.ma inaccessible (403)."
+  },
+  {
+   "slug": "clinique-atfal",
+   "name": "Clinique Atfal",
+   "brand": "Clinique Akdital (pédiatrique)",
+   "city": "Casablanca",
+   "citySlug": "casablanca",
+   "locality": "Casablanca",
+   "region": "Casablanca-Settat",
+   "lat": 33.5731,
+   "lon": -7.5898,
+   "noCoords": false,
+   "type": "clinique pédiatrique",
+   "specialties": [
+    "pédiatrie",
+    "néonatologie",
+    "chirurgie ambulatoire de l'enfant",
+    "soins intensifs pédiatriques"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 37,
+   "status": "opérationnel",
+   "opening_year": 2021,
+   "source": "https://www.infomediaire.net/?p=119781",
+   "sources": [
+    "https://www.infomediaire.net/?p=119781"
+   ],
+   "notes": "Acquisition annoncée le 25 mai 2021 après accord du Conseil de la Concurrence; clinique ouverte en 2000 par ses propriétaires historiques. 37 lits = 14 hospitalisation + 7 hôpital de jour + 12 néonatalogie + 4 soins intensifs. « première structure hospitalière privée exclusivement dédiée à l'enfant » (site Akdital). L'année 2021 est celle de l'entrée dans le groupe, pas de l'ouverture. Page « Who we are »: en 2021 les cliniques « Vinci » (Da Vinci, cédée fin 2023 selon le communiqué du 14 déc. 2023) et Atfal sont acquises (92 lits au total)."
+  },
+  {
+   "slug": "clinique-panorama-sidi-maarouf",
+   "name": "Clinique Panorama Sidi Maarouf",
+   "brand": "Clinique Akdital (historique)",
+   "city": "Casablanca",
+   "citySlug": "casablanca",
+   "locality": "Casablanca",
+   "region": "Casablanca-Settat",
+   "lat": 33.5731,
+   "lon": -7.5898,
+   "noCoords": false,
+   "type": "clinique multidisciplinaire",
+   "specialties": [
+    "multidisciplinaire",
+    "cardiologie interventionnelle (2 salles de cathétérisme)",
+    "maternité (2 salles d'accouchement)",
+    "réanimation adulte et néonatale",
+    "radiologie (échographie, scanner, IRM)",
+    "urgences 24h/24"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 100,
+   "status": "opérationnel",
+   "opening_year": 2022,
+   "source": "https://fr.le360.ma/entreprise/panorama-sidi-maarouf-le-groupe-akdital-met-en-service-sa-douzieme-clinique-a-casablanca-267698/",
+   "sources": [
+    "https://fr.le360.ma/entreprise/panorama-sidi-maarouf-le-groupe-akdital-met-en-service-sa-douzieme-clinique-a-casablanca-267698/"
+   ],
+   "notes": "12e infrastructure du groupe, mise en service en septembre 2022; ~6 000 m²; 7 blocs opératoires; 100 lits (Le360/Le Matin via résumé de recherche)."
+  },
+  {
+   "slug": "anfa-prime-hospital",
+   "name": "Anfa Prime Hospital",
+   "brand": "Prime",
+   "city": "Casablanca",
+   "citySlug": "casablanca",
+   "locality": "Casablanca",
+   "region": "Casablanca-Settat",
+   "lat": 33.5731,
+   "lon": -7.5898,
+   "noCoords": false,
+   "type": "hôpital multidisciplinaire de 3e génération (format « Prime »)",
+   "specialties": [
+    "chirurgie robotique",
+    "chirurgie critique",
+    "maternité et PMA (Anfa Prime Fertility)",
+    "imagerie (IRM 3 Tesla, scanner, radiologie interventionnelle)",
+    "laboratoire",
+    "urgences 24h/24 7j/7",
+    "réanimation (21 boxes dont 7 néonatalogie)",
+    "soins intensifs (54 lits)"
+   ],
+   "premium": true,
+   "premium_evidence": "« Prime Signature »: offre haut de gamme avec « circuits d'accueil dédiés » et « accompagnement individualisé » (Le Matin, 29 avr. 2026); Medias24 (publi-reportage) le titre « le nouveau vaisseau amiral d'AKDITAL ».",
+   "beds": 191,
+   "status": "opérationnel",
+   "opening_year": 2026,
+   "source": "https://lematin.ma/societe/akdital-inaugure-anfa-prime-hospital-a-casablanca/342996",
+   "sources": [
+    "https://lematin.ma/societe/akdital-inaugure-anfa-prime-hospital-a-casablanca/342996"
+   ],
+   "notes": "191 lits = capacité du complexe Anfa Prime (incluant Onco Prime et Cardio Prime); 14 blocs opératoires dont 1 robotique; boulevard Ghandi. Communiqué S1 2026: premier hôpital du format « Prime » à déployer dans les grandes villes; première gastrectomie longitudinale robotisée au Maroc et en Afrique. Inauguration fin avril 2026 (visite presse 14 avril)."
+  },
+  {
+   "slug": "onco-prime-hospital",
+   "name": "Onco Prime Hospital",
+   "brand": "Prime",
+   "city": "Casablanca",
+   "citySlug": "casablanca",
+   "locality": "Casablanca",
+   "region": "Casablanca-Settat",
+   "lat": 33.5731,
+   "lon": -7.5898,
+   "noCoords": false,
+   "type": "centre d'oncologie (pôle d'Anfa Prime)",
+   "specialties": [
+    "radiothérapie (accélérateur Radixact/Accuray)",
+    "chimiothérapie ambulatoire (15 fauteuils)",
+    "hématologie clinique",
+    "soins intensifs oncologiques"
+   ],
+   "premium": true,
+   "premium_evidence": "Fait partie du format « Prime » (offre « Prime Signature » d'Anfa Prime Hospital, Le Matin 29 avr. 2026).",
+   "beds": null,
+   "status": "opérationnel",
+   "opening_year": 2026,
+   "source": "https://lematin.ma/societe/akdital-inaugure-anfa-prime-hospital-a-casablanca/342996",
+   "sources": [
+    "https://lematin.ma/societe/akdital-inaugure-anfa-prime-hospital-a-casablanca/342996"
+   ],
+   "notes": "Entité consolidée séparément (Onco Prime Hospital intégré au périmètre au T4 2025). Lits inclus dans les 191 du complexe."
+  },
+  {
+   "slug": "cardio-prime-hospital",
+   "name": "Cardio Prime Hospital",
+   "brand": "Prime",
+   "city": "Casablanca",
+   "citySlug": "casablanca",
+   "locality": "Casablanca",
+   "region": "Casablanca-Settat",
+   "lat": 33.5731,
+   "lon": -7.5898,
+   "noCoords": false,
+   "type": "centre cardiovasculaire (pôle d'Anfa Prime)",
+   "specialties": [
+    "cardiologie médicale et interventionnelle",
+    "rythmologie",
+    "chirurgie cardiovasculaire",
+    "2 salles de cathétérisme",
+    "soins intensifs cardiologiques"
+   ],
+   "premium": true,
+   "premium_evidence": "Fait partie du format « Prime » (offre « Prime Signature » d'Anfa Prime Hospital, Le Matin 29 avr. 2026).",
+   "beds": null,
+   "status": "opérationnel",
+   "opening_year": 2026,
+   "source": "https://lematin.ma/societe/akdital-inaugure-anfa-prime-hospital-a-casablanca/342996",
+   "sources": [
+    "https://lematin.ma/societe/akdital-inaugure-anfa-prime-hospital-a-casablanca/342996"
+   ],
+   "notes": "Comptés au S1 2026: 4 ouvertures = Anfa Prime Hospital + Onco Prime + Cardio Prime + Clinique Internationale d'Inezgane (communiqué T2 2026: Anfa Prime « structuré autour de trois entités »). Lits inclus dans les 191 du complexe."
+  },
+  {
+   "slug": "akditalife-clinique-du-bien-etre-bouskoura",
+   "name": "AKDITALIFE - Clinique du Bien-Être Bouskoura",
+   "brand": "AKDITALIFE (bien-être)",
+   "city": "Casablanca",
+   "citySlug": "casablanca",
+   "locality": "Bouskoura",
+   "region": "Casablanca-Settat",
+   "lat": 33.4489,
+   "lon": -7.6486,
+   "noCoords": false,
+   "type": "clinique multidisciplinaire / bien-être",
+   "specialties": [
+    "médecine esthétique",
+    "chirurgie esthétique et reconstructrice",
+    "check-up",
+    "nutrition",
+    "gériatrie",
+    "pédiatrie",
+    "gynécologie-obstétrique",
+    "cardiologie",
+    "urologie",
+    "MOBILI+ (rééducation)",
+    "radiologie",
+    "urgences 24h/7j"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 100,
+   "status": "opérationnel",
+   "opening_year": 2023,
+   "source": "https://akditalife-bouskoura.ma/",
+   "sources": [
+    "https://akditalife-bouskoura.ma/"
+   ],
+   "notes": "Golf City Prestigia, Bouskoura. Positionnement « bien-être » (check-up, médecine esthétique); aucun terme VIP/suite trouvé sur le site. 100 lits selon un résumé de recherche (non revérifié). Bouskoura semble comptée avec Casablanca dans les « 25 villes » du groupe (inférence)."
+  },
+  {
+   "slug": "clinique-internationale-de-mohammedia",
+   "name": "Clinique Internationale de Mohammédia",
+   "brand": "Clinique Internationale",
+   "city": "Mohammedia",
+   "citySlug": "mohammedia",
+   "locality": "Mohammedia",
+   "region": "Casablanca-Settat",
+   "lat": 33.6866,
+   "lon": -7.383,
+   "noCoords": false,
+   "type": "clinique multidisciplinaire",
+   "specialties": [
+    "chirurgie cardiaque et vasculaire",
+    "urologie",
+    "chirurgie néonatale",
+    "chirurgie thoracique",
+    "ORL et maxillo-facial",
+    "chirurgie plastique",
+    "neurochirurgie",
+    "orthopédie",
+    "ophtalmologie",
+    "gynécologie-obstétrique",
+    "néphrologie",
+    "pneumologie",
+    "gastro-entérologie",
+    "rythmologie-neurologie",
+    "réanimation polyvalente et néonatale",
+    "radiologie (IRM)",
+    "urgences"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 100,
+   "status": "opérationnel",
+   "opening_year": 2023,
+   "source": "https://clinique-internationale-mohammadia.ma/",
+   "sources": [
+    "https://clinique-internationale-mohammadia.ma/"
+   ],
+   "notes": "Capacité officielle 100 lits; mise en service en mars 2023 (Boursenews 14 mars 2023, résumé de recherche). Bd Mohamed VI."
+  },
+  {
+   "slug": "hopital-prive-ibn-yassine-rabat",
+   "name": "Hôpital Privé Ibn Yassine Rabat",
+   "brand": "Hôpital Privé",
+   "city": "Rabat",
+   "citySlug": "rabat",
+   "locality": "Rabat",
+   "region": "Rabat-Salé-Kénitra",
+   "lat": 34.0209,
+   "lon": -6.8416,
+   "noCoords": false,
+   "type": "hôpital privé multidisciplinaire",
+   "specialties": [
+    "médecine, chirurgie et oncologie",
+    "cardiologie interventionnelle",
+    "urgences 24h/24",
+    "réanimation et soins intensifs",
+    "pôle mère-enfant",
+    "centre d'imagerie médicale",
+    "10 blocs opératoires"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 155,
+   "status": "opérationnel",
+   "opening_year": 2025,
+   "source": "https://fr.hespress.com/457626-457626.html",
+   "sources": [
+    "https://fr.hespress.com/457626-457626.html"
+   ],
+   "notes": "155 lits = capacité de l'ensemble (HP + CIO) selon Hespress (9 janv. 2026) et +155 lits au T4 2025 (communiqué T4 2025). Dates: annonce de l'ouverture le 17-18 juin 2025 (titre Médias24), ouverture officielle après autorisations annoncée le 9 janv. 2026, intégration au réseau au T4 2025 (communiqué T4 2025) -> date exacte incertaine."
+  },
+  {
+   "slug": "centre-international-doncologie-rabat",
+   "name": "Centre International d'Oncologie Rabat",
+   "brand": "Centre International d'Oncologie (CIO)",
+   "city": "Rabat",
+   "citySlug": "rabat",
+   "locality": "Rabat",
+   "region": "Rabat-Salé-Kénitra",
+   "lat": 34.0209,
+   "lon": -6.8416,
+   "noCoords": false,
+   "type": "centre d'oncologie (dans l'Hôpital Privé Ibn Yassine)",
+   "specialties": [
+    "chimiothérapie en hôpital de jour (18 fauteuils)",
+    "radiothérapie (accélérateur)",
+    "unité de greffe de moelle osseuse",
+    "soins intensifs"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": null,
+   "status": "opérationnel",
+   "opening_year": 2025,
+   "source": "https://fr.hespress.com/457626-457626.html",
+   "sources": [
+    "https://fr.hespress.com/457626-457626.html"
+   ],
+   "notes": "Hébergé dans l'Hôpital Privé Ibn Yassine; le site centre-oncologie-sale.ma est titré « Oncologie à Salé et Rabat ». Lits comptés dans les 155 de l'ensemble."
+  },
+  {
+   "slug": "hopital-prive-de-sale",
+   "name": "Hôpital Privé de Salé",
+   "brand": "Hôpital Privé",
+   "city": "Salé",
+   "citySlug": "sale",
+   "locality": "Salé",
+   "region": "Rabat-Salé-Kénitra",
+   "lat": 34.0531,
+   "lon": -6.7985,
+   "noCoords": false,
+   "type": "hôpital privé multidisciplinaire",
+   "specialties": [
+    "chirurgie (néonatale, urologique, plastique, neurochirurgie, ORL/maxillo-facial, orthopédique, viscérale, cardiaque et vasculaire, thoracique)",
+    "maternité",
+    "cardiologie pédiatrique",
+    "rythmologie-neurologie",
+    "gastro-entérologie",
+    "pneumologie",
+    "néphrologie",
+    "endocrinologie",
+    "rhumatologie",
+    "ophtalmologie",
+    "gynécologie-obstétrique",
+    "radiologie (IRM)",
+    "urgences et réanimation"
+   ],
+   "premium": null,
+   "premium_evidence": "Page Modalités du site: « prestations hôtelières : suites, mini-suites, chambres individuelles ou chambres doubles » (wording standard, partagé avec Agadir et Tanger).",
+   "beds": 170,
+   "status": "opérationnel",
+   "opening_year": 2022,
+   "source": "https://hopital-prive-sale.ma/",
+   "sources": [
+    "https://hopital-prive-sale.ma/"
+   ],
+   "notes": "Capacité officielle 170 lits (page plateau technique) alors que la page de présentation indique « plus de 220 lits » (probablement HP + centre d'oncologie: « deux ouvertures à Salé (220 lits) », Telquel 22 nov. 2022) -> divergence. Ouverture: fin 2022 (« finalise son programme 2022 avec deux établissements »)."
+  },
+  {
+   "slug": "centre-doncologie-prive-de-sale",
+   "name": "Centre d'Oncologie Privé de Salé",
+   "brand": "Centre International d'Oncologie (CIO)",
+   "city": "Salé",
+   "citySlug": "sale",
+   "locality": "Salé",
+   "region": "Rabat-Salé-Kénitra",
+   "lat": 34.0531,
+   "lon": -6.7985,
+   "noCoords": false,
+   "type": "centre d'oncologie",
+   "specialties": [
+    "sénologie",
+    "oncologie",
+    "chimiothérapie",
+    "immunothérapie",
+    "curiethérapie",
+    "hématologie",
+    "médecine nucléaire",
+    "radiothérapie",
+    "réanimation",
+    "hôpital de jour chimiothérapie"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": null,
+   "status": "opérationnel",
+   "opening_year": 2022,
+   "source": "https://centre-oncologie-sale.ma/",
+   "sources": [
+    "https://centre-oncologie-sale.ma/"
+   ],
+   "notes": "Intersection av. Ben Guerrier / av. Mediouna, arrondissement Bettana, Salé. Ouvert avec l'Hôpital Privé de Salé (2 établissements, 2022)."
+  },
+  {
+   "slug": "hopital-international-de-kenitra",
+   "name": "Hôpital International de Kénitra",
+   "brand": "Hôpital International",
+   "city": "Kénitra",
+   "citySlug": "kenitra",
+   "locality": "Kénitra",
+   "region": "Rabat-Salé-Kénitra",
+   "lat": 34.261,
+   "lon": -6.5802,
+   "noCoords": false,
+   "type": "hôpital multidisciplinaire",
+   "specialties": [
+    "maternité",
+    "cardiologie interventionnelle",
+    "réanimation polyvalente et néonatale",
+    "imagerie et analyses",
+    "centre de radiologie",
+    "laboratoire"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 197,
+   "status": "opérationnel",
+   "opening_year": 2024,
+   "source": "https://hopital-international-kenitra.ma/",
+   "sources": [
+    "https://hopital-international-kenitra.ma/"
+   ],
+   "notes": "197 lits d'hospitalisation, 8 salles opératoires, 29 lits de soins intensifs, 12 boxes de réanimation (page plateau technique). Inauguré le 27 nov. 2024 avec le CIO Kénitra (309 MDH pour les deux, presse via résumé de recherche). Av. Mohammed VI."
+  },
+  {
+   "slug": "centre-international-doncologie-de-kenitra",
+   "name": "Centre International d'Oncologie de Kénitra",
+   "brand": "Centre International d'Oncologie (CIO)",
+   "city": "Kénitra",
+   "citySlug": "kenitra",
+   "locality": "Kénitra",
+   "region": "Rabat-Salé-Kénitra",
+   "lat": 34.261,
+   "lon": -6.5802,
+   "noCoords": false,
+   "type": "centre d'oncologie",
+   "specialties": [
+    "sénologie",
+    "chimiothérapie",
+    "immunothérapie",
+    "curiethérapie",
+    "hématologie",
+    "radiochirurgie et radiothérapie",
+    "réanimation",
+    "hôpital de jour chimiothérapie"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 47,
+   "status": "opérationnel",
+   "opening_year": 2024,
+   "source": "https://ciokenitra.ma/",
+   "sources": [
+    "https://ciokenitra.ma/"
+   ],
+   "notes": "Av. Mohammed VI, Kénitra. Inauguré le 27 nov. 2024: unité d'hospitalisation oncologique de 40 lits + 7 lits de soins intensifs oncologiques (=47, somme calculée), hôpital de jour de 14 fauteuils, accélérateur linéaire (presse via résumé de recherche)."
+  },
+  {
+   "slug": "hopital-prive-de-tanger",
+   "name": "Hôpital Privé de Tanger",
+   "brand": "Hôpital Privé",
+   "city": "Tanger",
+   "citySlug": "tanger",
+   "locality": "Tanger",
+   "region": "Tanger-Tétouan-Al Hoceïma",
+   "lat": 35.7595,
+   "lon": -5.834,
+   "noCoords": false,
+   "type": "hôpital privé multidisciplinaire",
+   "specialties": [
+    "chirurgie",
+    "réanimation (16 boxes, 13 lits néonatalogie)",
+    "maternité (23 lits)",
+    "médecine du sport et réhabilitation",
+    "rythmologie",
+    "cardiologie interventionnelle (1 salle de cathétérisme)",
+    "radiologie (IRM)",
+    "séjour médical (patients internationaux)"
+   ],
+   "premium": null,
+   "premium_evidence": "Page Modalités du site: « prestations hôtelières : suites, mini-suites, chambres individuelles ou chambres doubles » (wording standard, partagé avec Agadir et Salé).",
+   "beds": 210,
+   "status": "opérationnel",
+   "opening_year": 2022,
+   "source": "https://hptanger.ma/",
+   "sources": [
+    "https://hptanger.ma/"
+   ],
+   "notes": "Capacité officielle 210 lits, 12 blocs opératoires, 36 lits de soins intensifs; complexe de 21 000 m² (Tanger, Av. Moulay Rachid). Complexe inauguré avec le CIO Boughaz (investissement de 460 MDH annoncé selon les titres de presse du site). Année 2022 selon la liste d'infrastructures du prospectus d'introduction en bourse (Tanger (2) avant nov. 2022, Le Desk via résumé de recherche)."
+  },
+  {
+   "slug": "centre-international-doncologie-boughaz-de-tanger",
+   "name": "Centre International d'Oncologie Boughaz de Tanger",
+   "brand": "Centre International d'Oncologie (CIO)",
+   "city": "Tanger",
+   "citySlug": "tanger",
+   "locality": "Tanger",
+   "region": "Tanger-Tétouan-Al Hoceïma",
+   "lat": 35.7595,
+   "lon": -5.834,
+   "noCoords": false,
+   "type": "centre d'oncologie",
+   "specialties": [
+    "radiothérapie stéréotaxique",
+    "radiothérapie VMAT",
+    "radiothérapie IMRT",
+    "curiethérapie",
+    "chimiothérapie (14 fauteuils)",
+    "immunothérapie",
+    "hormonothérapie",
+    "soins palliatifs",
+    "séjour médical"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 35,
+   "status": "opérationnel",
+   "opening_year": 2022,
+   "source": "https://ciobt.ma/",
+   "sources": [
+    "https://ciobt.ma/"
+   ],
+   "notes": "Capacité officielle 35 lits, 14 lits de soins intensifs, 1 accélérateur de radiothérapie (page plateau technique). Intégré au complexe de l'Hôpital Privé de Tanger."
+  },
+  {
+   "slug": "hopital-prive-de-tetouan",
+   "name": "Hôpital Privé de Tétouan",
+   "brand": "Hôpital Privé",
+   "city": "Tétouan",
+   "citySlug": "tetouan",
+   "locality": "Tétouan",
+   "region": "Tanger-Tétouan-Al Hoceïma",
+   "lat": 35.5785,
+   "lon": -5.3684,
+   "noCoords": false,
+   "type": "hôpital privé multidisciplinaire",
+   "specialties": [
+    "multidisciplinaire",
+    "réanimation (9 boxes + 7 couveuses)",
+    "soins intensifs (35 lits)"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 130,
+   "status": "opérationnel",
+   "opening_year": 2024,
+   "source": "https://fr.le360.ma/societe/le-groupe-akdital-inaugure-lhopital-prive-de-tetouan-a-loccasion-de-la-fete-du-trone_7MHMSDCVR5BG7DURPCHEL2XE7A/",
+   "sources": [
+    "https://fr.le360.ma/societe/le-groupe-akdital-inaugure-lhopital-prive-de-tetouan-a-loccasion-de-la-fete-du-trone_7MHMSDCVR5BG7DURPCHEL2XE7A/"
+   ],
+   "notes": "« 25e établissement » du groupe, inauguré à l'occasion de la Fête du Trône (juillet-août 2024); 130 lits selon la presse (Le Matin/Le360 via résumé de recherche). Site hopital-prive-tetouan.ma inaccessible."
+  },
+  {
+   "slug": "hopital-international-de-fes",
+   "name": "Hôpital International de Fès",
+   "brand": "Hôpital International",
+   "city": "Fès",
+   "citySlug": "fes",
+   "locality": "Fès",
+   "region": "Fès-Meknès",
+   "lat": 34.0181,
+   "lon": -5.0078,
+   "noCoords": false,
+   "type": "hôpital multidisciplinaire",
+   "specialties": [
+    "chirurgie cardiaque et vasculaire",
+    "urologie",
+    "chirurgie néonatale",
+    "chirurgie thoracique",
+    "ORL et maxillo-facial",
+    "chirurgie plastique",
+    "neurochirurgie",
+    "orthopédie",
+    "ophtalmologie",
+    "gynécologie-obstétrique",
+    "néphrologie",
+    "pneumologie",
+    "gastro-entérologie",
+    "rythmologie-neurologie",
+    "réanimation polyvalente et néonatale",
+    "cardiologie pédiatrique",
+    "rhumatologie",
+    "endocrinologie",
+    "radiologie (IRM)",
+    "urgences et réanimation",
+    "séjour médical"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 170,
+   "status": "opérationnel",
+   "opening_year": 2023,
+   "source": "https://hopital-international-fes.ma/",
+   "sources": [
+    "https://hopital-international-fes.ma/"
+   ],
+   "notes": "170 lits (page de présentation du site et presse mai 2023) alors que la page plateau technique du site affiche « 130 capacité officielle » -> divergence. 10-11 blocs opératoires, 39 lits de soins intensifs. Lotissement Soluna II, route d'Immouzer. Inauguré le 24 mai 2023 par le wali de Fès-Meknès avec le CIO Fès (330 MDH pour les deux)."
+  },
+  {
+   "slug": "centre-international-doncologie-de-fes",
+   "name": "Centre International d'Oncologie de Fès",
+   "brand": "Centre International d'Oncologie (CIO)",
+   "city": "Fès",
+   "citySlug": "fes",
+   "locality": "Fès",
+   "region": "Fès-Meknès",
+   "lat": 34.0181,
+   "lon": -5.0078,
+   "noCoords": false,
+   "type": "centre d'oncologie",
+   "specialties": [
+    "radiothérapie (2 bunkers, accélérateur TrueBeam STX)",
+    "radiochirurgie (première de la région)",
+    "curiethérapie (projecteur de source HDR)",
+    "chimiothérapie (hôpital de jour, 15 fauteuils)",
+    "soins intensifs (9 lits)"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": null,
+   "status": "opérationnel",
+   "opening_year": 2023,
+   "source": "https://telquel.ma/2023/05/26/mr-said-zniber-wali-de-la-region-fes-meknes-inaugure-lhopital-international-de-fes-et-le-centre-international-doncologie-de-fes-du-groupe-akdital_1814153",
+   "sources": [
+    "https://telquel.ma/2023/05/26/mr-said-zniber-wali-de-la-region-fes-meknes-inaugure-lhopital-international-de-fes-et-le-centre-international-doncologie-de-fes-du-groupe-akdital_1814153"
+   ],
+   "notes": "Inauguré le 24 mai 2023 avec l'Hôpital International de Fès (presse via résumé de recherche). Site oncologie-fes.ma inaccessible (403). La page Akdital en anglais liste deux entrées « Fès » pour l'oncologie (probable doublon de la page)."
+  },
+  {
+   "slug": "hopital-prive-meknes",
+   "name": "Hôpital Privé Meknès",
+   "brand": "Hôpital Privé",
+   "city": "Meknès",
+   "citySlug": "meknes",
+   "locality": "Meknès",
+   "region": "Fès-Meknès",
+   "lat": 33.8935,
+   "lon": -5.5473,
+   "noCoords": false,
+   "type": "hôpital privé multidisciplinaire",
+   "specialties": [
+    "pôle maternité",
+    "pôle cardiologie",
+    "cardiologie interventionnelle (cathétérisme)",
+    "réanimation polyvalente et néonatale",
+    "imagerie et analyses",
+    "centre de radiologie",
+    "laboratoire"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 194,
+   "status": "opérationnel",
+   "opening_year": 2024,
+   "source": "https://hopital-prive-meknes.ma/",
+   "sources": [
+    "https://hopital-prive-meknes.ma/"
+   ],
+   "notes": "194 lits d'hospitalisation, 8 salles opératoires, 12 boxes de réanimation, unité mère-enfant de 17 lits; ~350 MDH; inauguré le mardi 17 déc. 2024 (article FNH du 18 déc. 2024, date déduite)."
+  },
+  {
+   "slug": "centre-international-doncologie-de-meknes",
+   "name": "Centre International d'Oncologie de Meknès",
+   "brand": "Centre International d'Oncologie (CIO)",
+   "city": "Meknès",
+   "citySlug": "meknes",
+   "locality": "Meknès",
+   "region": "Fès-Meknès",
+   "lat": 33.8935,
+   "lon": -5.5473,
+   "noCoords": false,
+   "type": "centre d'oncologie",
+   "specialties": [
+    "chimiothérapie (hôpital de jour, 20 fauteuils)",
+    "radiothérapie (accélérateur linéaire)",
+    "scanner de dosimétrie"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": null,
+   "status": "opérationnel",
+   "opening_year": 2024,
+   "source": "https://fnh.ma/article/actualites-marocaines/akdital-meknes-sante",
+   "sources": [
+    "https://fnh.ma/article/actualites-marocaines/akdital-meknes-sante"
+   ],
+   "notes": "Inauguré avec l'Hôpital Privé Meknès (article FNH du 18 déc. 2024): hôpital de jour de chimiothérapie de 20 fauteuils, radiothérapie avec accélérateur linéaire de dernière génération, scanner de dosimétrie. Nombre total de lits non publié. Site ciomeknes.ma inaccessible."
+  },
+  {
+   "slug": "hopital-prive-oujda",
+   "name": "Hôpital Privé Oujda",
+   "brand": "Hôpital Privé",
+   "city": "Oujda",
+   "citySlug": "oujda",
+   "locality": "Oujda",
+   "region": "L'Oriental",
+   "lat": 34.6867,
+   "lon": -1.9114,
+   "noCoords": false,
+   "type": "hôpital privé multidisciplinaire",
+   "specialties": [
+    "réanimation",
+    "maternité",
+    "urgences",
+    "cardiologie interventionnelle"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 121,
+   "status": "opérationnel",
+   "opening_year": 2025,
+   "source": "https://telquel.ma/2025/12/12/akdital-inaugure-trois-nouveaux-hôpitaux-a-oujda-et-nador_1965586",
+   "sources": [
+    "https://telquel.ma/2025/12/12/akdital-inaugure-trois-nouveaux-hôpitaux-a-oujda-et-nador_1965586"
+   ],
+   "notes": "121 lits (presse, résumé de recherche Telquel/Infomediaire). Ouverture au T3 2025 (communiqué T3 2025: Nador HP + Oujda HP + CIO Oujda), annonce presse fin août 2025."
+  },
+  {
+   "slug": "centre-international-doncologie-oujda",
+   "name": "Centre International d'Oncologie Oujda",
+   "brand": "Centre International d'Oncologie (CIO)",
+   "city": "Oujda",
+   "citySlug": "oujda",
+   "locality": "Oujda",
+   "region": "L'Oriental",
+   "lat": 34.6867,
+   "lon": -1.9114,
+   "noCoords": false,
+   "type": "centre d'oncologie",
+   "specialties": [
+    "radiothérapie",
+    "médecine nucléaire",
+    "chimiothérapie (21 lits)",
+    "soins intensifs (12 lits)"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 33,
+   "status": "opérationnel",
+   "opening_year": 2025,
+   "source": "https://telquel.ma/2025/12/12/akdital-inaugure-trois-nouveaux-hôpitaux-a-oujda-et-nador_1965586",
+   "sources": [
+    "https://telquel.ma/2025/12/12/akdital-inaugure-trois-nouveaux-hôpitaux-a-oujda-et-nador_1965586"
+   ],
+   "notes": "33 lits au total = 12 soins intensifs + 21 chimiothérapie (Telquel via résumé de recherche)."
+  },
+  {
+   "slug": "hopital-prive-nador",
+   "name": "Hôpital Privé Nador",
+   "brand": "Hôpital Privé",
+   "city": "Nador",
+   "citySlug": "nador",
+   "locality": "Nador",
+   "region": "L'Oriental",
+   "lat": 35.1681,
+   "lon": -2.9335,
+   "noCoords": false,
+   "type": "hôpital privé multidisciplinaire",
+   "specialties": [
+    "disciplines médico-chirurgicales",
+    "oncologie et médecine nucléaire (premier centre de la province)",
+    "cardiologie interventionnelle (2 salles de cathétérisme)",
+    "urgences 24h/24 (15 lits)",
+    "soins intensifs (28 lits)"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 144,
+   "status": "opérationnel",
+   "opening_year": 2025,
+   "source": "https://telquel.ma/2025/12/12/akdital-inaugure-trois-nouveaux-hôpitaux-a-oujda-et-nador_1965586",
+   "sources": [
+    "https://telquel.ma/2025/12/12/akdital-inaugure-trois-nouveaux-hôpitaux-a-oujda-et-nador_1965586"
+   ],
+   "notes": "144 lits, 8 blocs opératoires (presse via résumé de recherche; site HP Nador inaccessible: 403/certificat)."
+  },
+  {
+   "slug": "hopital-international-agadir",
+   "name": "Hôpital International Agadir",
+   "brand": "Hôpital International",
+   "city": "Agadir",
+   "citySlug": "agadir",
+   "locality": "Agadir",
+   "region": "Souss-Massa",
+   "lat": 30.4278,
+   "lon": -9.5981,
+   "noCoords": false,
+   "type": "hôpital multidisciplinaire",
+   "specialties": [
+    "spécialités chirurgicales",
+    "spécialités médicales",
+    "spécialités médico-chirurgicales",
+    "radiologie",
+    "urgence et réanimation",
+    "maternité (23 lits)",
+    "séjour médical (patients internationaux)"
+   ],
+   "premium": null,
+   "premium_evidence": "Site (page Modalités, texte standard repris aussi par Tanger et Salé): « Une large gamme de prestations hôtelières : suites, mini-suites, chambres individuelles ou chambres doubles. Les chambres, les suites et les mini-suites sont équipées d'une télévision, d'un téléphone, d'un canapé lit et d'un minibar ». Preuve de l'existence de suites, pas d'un positionnement VIP distinctif (formulation de gabarit).",
+   "beds": 220,
+   "status": "opérationnel",
+   "opening_year": 2022,
+   "source": "https://hiagadir.ma/",
+   "sources": [
+    "https://hiagadir.ma/"
+   ],
+   "notes": "Inauguré le 2 sept. 2022 avec le CIO Agadir; 220 lits d'hospitalisation, 9 blocs (presse via résumé de recherche). Complexe de 14 700 m² (« la plus grande structure privée au Maroc » selon le site). Zone grand stade, Route N1, Ida Outanane. Les suites/mini-suites sont décrites dans les modalités de séjour; ne prouve pas à elle seule un positionnement « VIP » de l'établissement."
+  },
+  {
+   "slug": "centre-international-doncologie-agadir",
+   "name": "Centre International d'Oncologie Agadir",
+   "brand": "Centre International d'Oncologie (CIO)",
+   "city": "Agadir",
+   "citySlug": "agadir",
+   "locality": "Agadir",
+   "region": "Souss-Massa",
+   "lat": 30.4278,
+   "lon": -9.5981,
+   "noCoords": false,
+   "type": "centre d'oncologie",
+   "specialties": [
+    "oncologie médicale",
+    "radiothérapie",
+    "chimiothérapie"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": null,
+   "status": "opérationnel",
+   "opening_year": 2022,
+   "source": "https://medias24.com/2022/09/02/akdital-inaugure-deux-nouvelles-infrastructures-de-sante-a-agadir/",
+   "sources": [
+    "https://medias24.com/2022/09/02/akdital-inaugure-deux-nouvelles-infrastructures-de-sante-a-agadir/"
+   ],
+   "notes": "Site cioa.ma inaccessible. Inauguré le 2 sept. 2022 avec l'Hôpital International Agadir."
+  },
+  {
+   "slug": "clinique-internationale-dinezgane",
+   "name": "Clinique Internationale d'Inezgane",
+   "brand": "Clinique Internationale",
+   "city": "Inezgane",
+   "citySlug": "inezgane",
+   "locality": "Inezgane",
+   "region": "Souss-Massa",
+   "lat": 30.3556,
+   "lon": -9.5372,
+   "noCoords": false,
+   "type": "clinique multidisciplinaire",
+   "specialties": [
+    "chirurgie et anesthésie-réanimation",
+    "oncologie (hôpital de jour chimiothérapie, 22 fauteuils)",
+    "mère-enfant (maternité 19 lits)",
+    "cardiovasculaire (1 salle de cathétérisme)",
+    "imagerie (IRM, scanner, mammographie)",
+    "laboratoire automatisé",
+    "urgences 24h/24"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 156,
+   "status": "opérationnel",
+   "opening_year": 2026,
+   "source": "https://lematin.ma/economie/akdital-inaugure-la-clinique-internationale-dinezgane/348469",
+   "sources": [
+    "https://lematin.ma/economie/akdital-inaugure-la-clinique-internationale-dinezgane/348469"
+   ],
+   "notes": "Inaugurée le 1er juin 2026 (Le Matin); 156 lits = 30 médico-chirurgicaux + 9 hôpital de jour + 36 soins intensifs + 11 boxes réa adulte + 6 néonatals + 10 salle de réveil + 19 maternité (répartition telle que publiée, non sommable); 9 blocs. 25e ville du réseau (communiqué S1 2026)."
+  },
+  {
+   "slug": "clinique-internationale-de-taroudant",
+   "name": "Clinique Internationale de Taroudant",
+   "brand": "Clinique Internationale",
+   "city": "Taroudant",
+   "citySlug": "taroudant",
+   "locality": "Taroudant",
+   "region": "Souss-Massa",
+   "lat": 30.4703,
+   "lon": -8.8769,
+   "noCoords": false,
+   "type": "clinique multidisciplinaire",
+   "specialties": [
+    "pôle oncologie (chimiothérapie, radiothérapie)",
+    "pôle maternité",
+    "pôle cardiologie",
+    "cardiologie interventionnelle (cathétérisme)",
+    "imagerie et analyses",
+    "centre de radiologie",
+    "laboratoire"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 153,
+   "status": "opérationnel",
+   "opening_year": 2024,
+   "source": "https://clinique-internationale-taroudant.ma/",
+   "sources": [
+    "https://clinique-internationale-taroudant.ma/"
+   ],
+   "notes": "153 lits d'hospitalisation (site; le texte du site cite par erreur Errachidia comme ville)."
+  },
+  {
+   "slug": "hopital-international-ibn-nafis",
+   "name": "Hôpital International Ibn Nafis",
+   "brand": "Hôpital International",
+   "city": "Marrakech",
+   "citySlug": "marrakech",
+   "locality": "Marrakech",
+   "region": "Marrakech-Safi",
+   "lat": 31.6295,
+   "lon": -7.9811,
+   "noCoords": false,
+   "type": "hôpital spécialisé en oncologie",
+   "specialties": [
+    "oncologie (2 appareils de radiothérapie, 41 fauteuils de chimiothérapie)",
+    "réanimation (8 boxes)",
+    "6 blocs opératoires"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 100,
+   "status": "opérationnel",
+   "opening_year": 2024,
+   "source": "https://fr.le360.ma/entreprise/sante-akdital-inaugure-son-nouvel-hopital-international-ibn-nafis-a-marrakech_5O56KBZ5H5CTJEH33NUBRPQL6Q/",
+   "sources": [
+    "https://fr.le360.ma/entreprise/sante-akdital-inaugure-son-nouvel-hopital-international-ibn-nafis-a-marrakech_5O56KBZ5H5CTJEH33NUBRPQL6Q/"
+   ],
+   "notes": "Inauguré le 24 juin 2024; « Spécialisé en oncologie et doté d'une capacité de 100 lits » (Le360 via résumé de recherche); 194 emplois créés. Site inaccessible (certificat auto-signé)."
+  },
+  {
+   "slug": "centre-international-doncologie-de-benguerir",
+   "name": "Centre International d'Oncologie de Benguérir",
+   "brand": "Centre International d'Oncologie (CIO)",
+   "city": "Benguerir",
+   "citySlug": "benguerir",
+   "locality": "Benguerir",
+   "region": "Marrakech-Safi",
+   "lat": 32.236,
+   "lon": -7.9534,
+   "noCoords": false,
+   "type": "centre d'oncologie",
+   "specialties": [
+    "prise en charge des cancers",
+    "parcours de soins optimisé en oncologie"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 81,
+   "status": "opérationnel",
+   "opening_year": 2024,
+   "source": "https://fr.hespress.com/399180-akdital-inaugure-le-centre-international-doncologie-de-benguerir-au-coeur-de-la-health-care-city.html",
+   "sources": [
+    "https://fr.hespress.com/399180-akdital-inaugure-le-centre-international-doncologie-de-benguerir-au-coeur-de-la-health-care-city.html"
+   ],
+   "notes": "Inauguré début déc. 2024 dans la Health Care City (près de l'UM6P): 81 lits d'hospitalisation, 1 accélérateur de radiothérapie, 23 fauteuils de chimiothérapie, médecine nucléaire (PET-scan, gamma-caméra), 6 blocs, 18 lits de soins intensifs; ~226 MDH, > 160 emplois (Hespress/Yabiladi/Challenge via résumé de recherche). Site inaccessible (filtre réseau local)."
+  },
+  {
+   "slug": "clinique-internationale-de-mogador",
+   "name": "Clinique Internationale de Mogador",
+   "brand": "Clinique Internationale",
+   "city": "Essaouira",
+   "citySlug": "essaouira",
+   "locality": "Essaouira",
+   "region": "Marrakech-Safi",
+   "lat": 31.5085,
+   "lon": -9.7595,
+   "noCoords": false,
+   "type": "clinique multidisciplinaire",
+   "specialties": [
+    "pôle oncologie (chimiothérapie, radiothérapie)",
+    "pôle maternité (2 salles d'accouchement)",
+    "pôle cardiologie",
+    "cardiologie interventionnelle (cathétérisme)",
+    "imagerie et analyses",
+    "centre de radiologie",
+    "laboratoire",
+    "endoscopie"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 166,
+   "status": "opérationnel",
+   "opening_year": 2024,
+   "source": "https://clinique-internationale-mogador.ma/",
+   "sources": [
+    "https://clinique-internationale-mogador.ma/"
+   ],
+   "notes": "166 lits d'hospitalisation, 12 boxes de réanimation; 5 blocs opératoires (site) vs 8 salles (Médias24); inaugurée le 3 juillet 2024 en présence d'André Azoulay (3e établissement de l'année); 256 MDH, 194 emplois (presse via résumé de recherche). Avenue Mohamed V, Essaouira."
+  },
+  {
+   "slug": "clinique-de-specialites-de-safi",
+   "name": "Clinique de Spécialités de Safi",
+   "brand": "Clinique Akdital (spécialités)",
+   "city": "Safi",
+   "citySlug": "safi",
+   "locality": "Safi",
+   "region": "Marrakech-Safi",
+   "lat": 32.2994,
+   "lon": -9.2372,
+   "noCoords": false,
+   "type": "clinique de spécialités",
+   "specialties": [
+    "cardiologie et chirurgie cardiaque",
+    "cardiologie interventionnelle",
+    "chirurgie multidisciplinaire",
+    "gynécologie-obstétrique (14 lits maternité)",
+    "neurochirurgie",
+    "ophtalmologie",
+    "oncologie (radiothérapie, 13 fauteuils)",
+    "réanimation (polyvalente, néonatale)",
+    "radiologie (IRM)",
+    "urgences 24h/24"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 100,
+   "status": "opérationnel",
+   "opening_year": 2022,
+   "source": "https://clinique-specialite-safi.ma/",
+   "sources": [
+    "https://clinique-specialite-safi.ma/"
+   ],
+   "notes": "Capacité officielle 100 lits, 6 blocs, 25 lits de soins intensifs, 1 accélérateur. Av. Hassan II, quartier ABC. Ouverte en 2022 (comptée dans les 15 infrastructures avant le visa IPO de nov. 2022; inauguration dec. 2022 d'après les titres du site)."
+  },
+  {
+   "slug": "hopital-prive-el-jadida",
+   "name": "Hôpital Privé El Jadida",
+   "brand": "Hôpital Privé",
+   "city": "El Jadida",
+   "citySlug": "el-jadida",
+   "locality": "El Jadida",
+   "region": "Casablanca-Settat",
+   "lat": 33.2316,
+   "lon": -8.5007,
+   "noCoords": false,
+   "type": "hôpital privé multidisciplinaire",
+   "specialties": [
+    "cardiologie chirurgicale et interventionnelle",
+    "réanimation (25 boxes)",
+    "11 blocs opératoires",
+    "imagerie (échographie, mammographie, IRM, scanner)",
+    "laboratoire",
+    "stérilisation"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 220,
+   "status": "opérationnel",
+   "opening_year": 2021,
+   "source": "https://consonews.ma/news/sante-bien-etre-news/akdital-inaugure-le-plus-grand-hopital-prive-du-maroc-a-el-jadida",
+   "sources": [
+    "https://consonews.ma/news/sante-bien-etre-news/akdital-inaugure-le-plus-grand-hopital-prive-du-maroc-a-el-jadida"
+   ],
+   "notes": "Inauguré le 17 juin 2021 (communiqué relayé par Consonews): 220 lits d'hospitalisation dont 21 de soins intensifs, 15 181 m², investissement > 220 MDH, > 400 collaborateurs."
+  },
+  {
+   "slug": "centre-international-doncologie-del-jadida",
+   "name": "Centre International d'Oncologie d'El Jadida",
+   "brand": "Centre International d'Oncologie (CIO)",
+   "city": "El Jadida",
+   "citySlug": "el-jadida",
+   "locality": "El Jadida",
+   "region": "Casablanca-Settat",
+   "lat": 33.2316,
+   "lon": -8.5007,
+   "noCoords": false,
+   "type": "centre d'oncologie",
+   "specialties": [
+    "radiothérapie (2 bunkers)",
+    "hôpital de jour chimiothérapie"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": null,
+   "status": "opérationnel",
+   "opening_year": 2021,
+   "source": "https://consonews.ma/news/sante-bien-etre-news/akdital-inaugure-le-plus-grand-hopital-prive-du-maroc-a-el-jadida",
+   "sources": [
+    "https://consonews.ma/news/sante-bien-etre-news/akdital-inaugure-le-plus-grand-hopital-prive-du-maroc-a-el-jadida"
+   ],
+   "notes": "Situé dans l'hôpital privé d'El Jadida (inauguré juin 2021)."
+  },
+  {
+   "slug": "clinique-internationale-de-khouribga",
+   "name": "Clinique Internationale de Khouribga",
+   "brand": "Clinique Internationale",
+   "city": "Khouribga",
+   "citySlug": "khouribga",
+   "locality": "Khouribga",
+   "region": "Béni Mellal-Khénifra",
+   "lat": 32.8811,
+   "lon": -6.9063,
+   "noCoords": false,
+   "type": "clinique multidisciplinaire",
+   "specialties": [
+    "traumatologie-orthopédie",
+    "neurochirurgie",
+    "chirurgie cardiaque et vasculaire",
+    "chirurgie générale",
+    "réanimation polyvalente et cardiologie",
+    "réanimation néonatale",
+    "cardiologie interventionnelle",
+    "unité de soins intensifs",
+    "gynécologie-obstétrique",
+    "ORL",
+    "ophtalmologie",
+    "urologie",
+    "laboratoire",
+    "radiologie"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 100,
+   "status": "opérationnel",
+   "opening_year": 2024,
+   "source": "https://clinique-internationale-khouribga.ma/",
+   "sources": [
+    "https://clinique-internationale-khouribga.ma/"
+   ],
+   "notes": "Hay Dakhla, RN12, Khouribga. Mise en service le 14 fév. 2024 (1re ouverture 2024): capacité 100 lits, 9 salles opératoires, > 220 MDH, > 250 emplois directs (Médias24/FNH/Le Matin via résumé de recherche); premier centre d'oncologie, première salle de cardiologie interventionnelle et premier service de réanimation aux normes internationales de la ville."
+  },
+  {
+   "slug": "hopital-prive-beni-mellal",
+   "name": "Hôpital Privé Beni Mellal",
+   "brand": "Hôpital Privé",
+   "city": "Béni Mellal",
+   "citySlug": "beni-mellal",
+   "locality": "Béni Mellal",
+   "region": "Béni Mellal-Khénifra",
+   "lat": 32.3373,
+   "lon": -6.3498,
+   "noCoords": false,
+   "type": "hôpital privé multidisciplinaire",
+   "specialties": [
+    "traumatologie-orthopédie",
+    "neurochirurgie",
+    "chirurgie cardiaque et vasculaire",
+    "chirurgie générale",
+    "cardiologie interventionnelle",
+    "réanimation néonatale",
+    "gynécologie-obstétrique (21 lits maternité)",
+    "radiothérapie (1 accélérateur) et chimiothérapie (12 fauteuils)",
+    "ORL",
+    "ophtalmologie",
+    "urologie"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 153,
+   "status": "opérationnel",
+   "opening_year": 2023,
+   "source": "https://hp-benimellal.ma/",
+   "sources": [
+    "https://hp-benimellal.ma/"
+   ],
+   "notes": "153 lits (page plateau technique); la presse (Medias24, 11 déc. 2023, via résumé de recherche) cite 150 lits et 9 blocs (le site indique 7 blocs). Ouvert en décembre 2023."
+  },
+  {
+   "slug": "clinique-internationale-errachidia",
+   "name": "Clinique Internationale Errachidia",
+   "brand": "Clinique Internationale",
+   "city": "Errachidia",
+   "citySlug": "errachidia",
+   "locality": "Errachidia",
+   "region": "Drâa-Tafilalet",
+   "lat": 31.9314,
+   "lon": -4.4244,
+   "noCoords": false,
+   "type": "clinique multidisciplinaire",
+   "specialties": [
+    "pôle oncologie (chimiothérapie, radiothérapie)",
+    "pôle maternité",
+    "pôle cardiologie",
+    "cardiologie interventionnelle (cathétérisme)",
+    "imagerie et analyses",
+    "centre de radiologie",
+    "laboratoire"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 157,
+   "status": "opérationnel",
+   "opening_year": 2024,
+   "source": "https://clinique-internationale-errachidia.ma/",
+   "sources": [
+    "https://clinique-internationale-errachidia.ma/"
+   ],
+   "notes": "157 lits d'hospitalisation (site). Inaugurée en octobre 2024 (AllAfrica, 8 oct. 2024). Av. Moulay Ali Cherif."
+  },
+  {
+   "slug": "hopital-prive-guelmim",
+   "name": "Hôpital Privé Guelmim",
+   "brand": "Hôpital Privé",
+   "city": "Guelmim",
+   "citySlug": "guelmim",
+   "locality": "Guelmim",
+   "region": "Guelmim-Oued Noun",
+   "lat": 28.987,
+   "lon": -10.0574,
+   "noCoords": false,
+   "type": "hôpital privé multidisciplinaire",
+   "specialties": [
+    "pôle oncologie médicale et radiothérapie",
+    "pôle mère-enfant",
+    "cardiologie interventionnelle",
+    "chirurgie générale",
+    "chirurgie cardiovasculaire",
+    "neurochirurgie",
+    "urologie",
+    "traumatologie-orthopédie",
+    "chirurgie ophtalmologique",
+    "ORL",
+    "réanimation et soins intensifs (25 lits)",
+    "centre de radiologie",
+    "laboratoire",
+    "urgences 24h/24"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 126,
+   "status": "opérationnel",
+   "opening_year": 2025,
+   "source": "https://hopital-prive-guelmim.ma/",
+   "sources": [
+    "https://hopital-prive-guelmim.ma/"
+   ],
+   "notes": "126 lits d'hospitalisation, 8 blocs. Ouverture au S1 2025 (« l'ouverture d'un établissement à Guelmim », communiqué S1 2025). Avenue Mohammed VI."
+  },
+  {
+   "slug": "polyclinique-internationale-de-laayoune",
+   "name": "Polyclinique Internationale de Laâyoune",
+   "brand": "Polyclinique Internationale",
+   "city": "Laâyoune",
+   "citySlug": "laayoune",
+   "locality": "Laâyoune",
+   "region": "Laâyoune-Sakia El Hamra",
+   "lat": 27.1253,
+   "lon": -13.1625,
+   "noCoords": false,
+   "type": "polyclinique multidisciplinaire",
+   "specialties": [
+    "cardiologie",
+    "oncologie",
+    "neurochirurgie",
+    "pédiatrie",
+    "chirurgie orthopédique",
+    "gynécologie-obstétrique"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 240,
+   "status": "opérationnel",
+   "opening_year": 2025,
+   "source": "https://akdital.ma/fr/nos-etablissements/",
+   "sources": [
+    "https://akdital.ma/fr/nos-etablissements/"
+   ],
+   "notes": "Acquise (clôture annoncée le 2 avr. 2025 après accord du Conseil de la Concurrence); 240 lits; mise en service prévue le 2 mai 2025 (presse via résumé de recherche). Pas de site propre listé par Akdital."
+  },
+  {
+   "slug": "al-hikma-medical-center",
+   "name": "Al Hikma Medical Center",
+   "brand": "Clinique Akdital (acquise)",
+   "city": "Laâyoune",
+   "citySlug": "laayoune",
+   "locality": "Laâyoune",
+   "region": "Laâyoune-Sakia El Hamra",
+   "lat": 27.1253,
+   "lon": -13.1625,
+   "noCoords": false,
+   "type": "centre médical multidisciplinaire",
+   "specialties": [
+    "consultations",
+    "analyses",
+    "radiologie",
+    "chirurgie"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 76,
+   "status": "opérationnel",
+   "opening_year": 2025,
+   "source": "https://medias24.com/2025/04/02/akdital-finalise-lacquisition-de-deux-cliniques-a-laayoune/",
+   "sources": [
+    "https://medias24.com/2025/04/02/akdital-finalise-lacquisition-de-deux-cliniques-a-laayoune/"
+   ],
+   "notes": "76 lits; acquis avec la Polyclinique Internationale (avr. 2025). Non listé sur la page « Nos établissements » d'akdital.ma; son existence dans le décompte des 45 est une inférence (2 acquisitions à Laâyoune au S1 2025 = 3 établissements avec Guelmim; le décompte officiel 36 au S1 2025 inclut « deux cliniques à Laâyoune »)."
+  },
+  {
+   "slug": "clinique-internationale-de-dakhla",
+   "name": "Clinique Internationale de Dakhla",
+   "brand": "Clinique Internationale",
+   "city": "Dakhla",
+   "citySlug": "dakhla",
+   "locality": "Dakhla",
+   "region": "Dakhla-Oued Ed-Dahab",
+   "lat": 23.6848,
+   "lon": -15.9579,
+   "noCoords": false,
+   "type": "clinique multidisciplinaire",
+   "specialties": [
+    "services médicaux et chirurgicaux",
+    "mère-enfant (14 lits + nursery)",
+    "8 blocs opératoires"
+   ],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": 113,
+   "status": "opérationnel",
+   "opening_year": 2024,
+   "source": "https://ledesk.ma/2024/11/07/le-groupe-akdital-ouvre-la-clinique-internationale-de-dakhla-pour-un-investissement-de-269-mdh/",
+   "sources": [
+    "https://ledesk.ma/2024/11/07/le-groupe-akdital-ouvre-la-clinique-internationale-de-dakhla-pour-un-investissement-de-269-mdh/"
+   ],
+   "notes": "Inaugurée le 6 nov. 2024; 113 lits; investissement 269 MDH (Le Desk via résumé de recherche)."
+  },
+  {
+   "slug": "clinique-de-specialites-dal-hoceima",
+   "name": "Clinique de Spécialités d'Al Hoceïma",
+   "brand": "Clinique Akdital (spécialités)",
+   "city": "Al Hoceïma",
+   "citySlug": "al-hoceima",
+   "locality": "Al Hoceïma",
+   "region": "Tanger-Tétouan-Al Hoceïma",
+   "lat": 35.2517,
+   "lon": -3.9372,
+   "noCoords": false,
+   "type": "clinique de spécialités",
+   "specialties": [],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": null,
+   "status": "en construction",
+   "opening_year": 2027,
+   "source": "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684",
+   "sources": [
+    "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684"
+   ],
+   "notes": "Filiale créée et consolidée au T3 2025 (communiqué T3 2025). PDG (TelQuel, 19 oct. 2026): Al Hoceïma « bientôt », en « cours de finition », ouverture « entre fin 2026 et début 2027 »; personnel en formation à l'Akdital Academy. Carte de la présentation de mars 2026: ouverture 2027. Statut « en construction » = finition en cours d'après le PDG; nombre de lits non publié."
+  },
+  {
+   "slug": "clinique-de-specialites-de-larache",
+   "name": "Clinique de Spécialités de Larache",
+   "brand": "Clinique Akdital (spécialités)",
+   "city": "Larache",
+   "citySlug": "larache",
+   "locality": "Larache",
+   "region": "Tanger-Tétouan-Al Hoceïma",
+   "lat": 35.1932,
+   "lon": -6.1557,
+   "noCoords": false,
+   "type": "clinique de spécialités",
+   "specialties": [],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": null,
+   "status": "en construction",
+   "opening_year": 2027,
+   "source": "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684",
+   "sources": [
+    "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684"
+   ],
+   "notes": "Filiale créée et consolidée au T3 2025. PDG (TelQuel, 19 oct. 2026): en « cours de finition », ouverture « entre fin 2026 et début 2027 ». Carte de mars 2026: 2027. Lits non publiés."
+  },
+  {
+   "slug": "clinique-de-specialites-de-khemisset",
+   "name": "Clinique de Spécialités de Khémisset",
+   "brand": "Clinique Akdital (spécialités)",
+   "city": "Khémisset",
+   "citySlug": "khemisset",
+   "locality": "Khémisset",
+   "region": "Rabat-Salé-Kénitra",
+   "lat": 33.824,
+   "lon": -6.066,
+   "noCoords": false,
+   "type": "clinique de spécialités",
+   "specialties": [],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": null,
+   "status": "en construction",
+   "opening_year": 2027,
+   "source": "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684",
+   "sources": [
+    "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684"
+   ],
+   "notes": "Filiale « Clinique de Spécialités Khemisset » intégrée au périmètre au T4 2025. PDG (TelQuel, 19 oct. 2026): en « cours de finition », ouverture « entre fin 2026 et début 2027 ». Carte de mars 2026: 2027. Lits non publiés."
+  },
+  {
+   "slug": "clinique-de-specialites-de-taza",
+   "name": "Clinique de Spécialités de Taza",
+   "brand": "Clinique Akdital (spécialités)",
+   "city": "Taza",
+   "citySlug": "taza",
+   "locality": "Taza",
+   "region": "Fès-Meknès",
+   "lat": 34.21,
+   "lon": -4.01,
+   "noCoords": false,
+   "type": "clinique de spécialités",
+   "specialties": [],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": null,
+   "status": "projet annoncé",
+   "opening_year": 2027,
+   "source": "https://akdital.ma/wp-content/uploads/2026/04/20260330-Akdital-Presentation-Conf-analystes-Mars-2026-vENG.pdf",
+   "sources": [
+    "https://akdital.ma/wp-content/uploads/2026/04/20260330-Akdital-Presentation-Conf-analystes-Mars-2026-vENG.pdf"
+   ],
+   "notes": "Filiale « Clinique de Spécialités Taza » intégrée au périmètre au T4 2025; ouverture citée « à horizon 2028 » (communiqué annuel 2025) et carte de mars 2026: 2027. Aucune source lue ne confirme un chantier avancé (non citée par le PDG dans l'interview du 19 oct. 2026) -> statut incertain."
+  },
+  {
+   "slug": "extension-de-lhopital-international-ibn-nafis-hopital-multidisciplinaire",
+   "name": "Extension de l'Hôpital International Ibn Nafis (hôpital multidisciplinaire)",
+   "brand": "Hôpital International",
+   "city": "Marrakech",
+   "citySlug": "marrakech",
+   "locality": "Marrakech",
+   "region": "Marrakech-Safi",
+   "lat": 31.6295,
+   "lon": -7.9811,
+   "noCoords": false,
+   "type": "hôpital multidisciplinaire (extension du centre d'oncologie)",
+   "specialties": [],
+   "premium": null,
+   "premium_evidence": null,
+   "beds": null,
+   "status": "projet annoncé",
+   "opening_year": 2026,
+   "source": "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684",
+   "sources": [
+    "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684"
+   ],
+   "notes": "PDG (TelQuel, 19 oct. 2026): « l'extension de notre centre d'oncologie de Marrakech, qui va devenir un hôpital multidisciplinaire »; « n'attend que les autorisations : il est prêt ». La carte de mars 2026 montre une ouverture 2026 à Marrakech. Ce n'est pas un nouvel établissement mais une extension; l'impact sur le décompte des 59 n'est pas précisé."
+  },
+  {
+   "slug": "prime-hospital-fes",
+   "name": "Prime Hospital Fès",
+   "brand": "Prime",
+   "city": "Fès",
+   "citySlug": "fes",
+   "locality": "Fès",
+   "region": "Fès-Meknès",
+   "lat": 34.0181,
+   "lon": -5.0078,
+   "noCoords": false,
+   "type": "hôpital de format « Prime » (3e génération, premium)",
+   "specialties": [],
+   "premium": true,
+   "premium_evidence": "« Les Prime Hospitals de Casablanca, Fès, Agadir et Tanger viendront renforcer le segment hospitalier haut de gamme à partir de 2026-2027 » (journalsantemaroc.com, citant BourseNews); PDG (TelQuel 19 oct. 2026): « hôpitaux 4.0, high level ».",
+   "beds": null,
+   "status": "projet annoncé",
+   "opening_year": 2027,
+   "source": "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684",
+   "sources": [
+    "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684"
+   ],
+   "notes": "PDG: Anfa Prime est le premier modèle « et nous sommes en train de le dupliquer à Fès ». Carte de mars 2026: ouverture 2027 à Fès. Communiqué annuel 2025: formats « Prime » prévus notamment à Casablanca, Agadir, Tanger et Fès. Lits non publiés."
+  },
+  {
+   "slug": "prime-hospital-tanger",
+   "name": "Prime Hospital Tanger",
+   "brand": "Prime",
+   "city": "Tanger",
+   "citySlug": "tanger",
+   "locality": "Tanger",
+   "region": "Tanger-Tétouan-Al Hoceïma",
+   "lat": 35.7595,
+   "lon": -5.834,
+   "noCoords": false,
+   "type": "hôpital de format « Prime » (3e génération, premium)",
+   "specialties": [],
+   "premium": true,
+   "premium_evidence": "« Les Prime Hospitals de Casablanca, Fès, Agadir et Tanger viendront renforcer le segment hospitalier haut de gamme à partir de 2026-2027 » (journalsantemaroc.com, citant BourseNews); PDG (TelQuel 19 oct. 2026): « hôpitaux 4.0, high level ».",
+   "beds": null,
+   "status": "projet annoncé",
+   "opening_year": 2028,
+   "source": "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684",
+   "sources": [
+    "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684"
+   ],
+   "notes": "Carte de mars 2026: ouverture 2028 à Tanger. PDG: terrain en cours d'acquisition pour des Prime à Tanger, Marrakech et Agadir (la phrase est ambiguë sur « un deuxième Prime à Fès »). Lits non publiés."
+  },
+  {
+   "slug": "prime-hospital-agadir",
+   "name": "Prime Hospital Agadir",
+   "brand": "Prime",
+   "city": "Agadir",
+   "citySlug": "agadir",
+   "locality": "Agadir",
+   "region": "Souss-Massa",
+   "lat": 30.4278,
+   "lon": -9.5981,
+   "noCoords": false,
+   "type": "hôpital de format « Prime » (3e génération, premium)",
+   "specialties": [],
+   "premium": true,
+   "premium_evidence": "« Les Prime Hospitals de Casablanca, Fès, Agadir et Tanger viendront renforcer le segment hospitalier haut de gamme à partir de 2026-2027 » (journalsantemaroc.com, citant BourseNews); PDG (TelQuel 19 oct. 2026): « hôpitaux 4.0, high level ».",
+   "beds": null,
+   "status": "projet annoncé",
+   "opening_year": 2028,
+   "source": "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684",
+   "sources": [
+    "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684"
+   ],
+   "notes": "Carte de mars 2026: ouverture 2028 à Agadir. PDG: terrain en cours d'acquisition. Lits non publiés."
+  },
+  {
+   "slug": "prime-hospital-marrakech",
+   "name": "Prime Hospital Marrakech",
+   "brand": "Prime",
+   "city": "Marrakech",
+   "citySlug": "marrakech",
+   "locality": "Marrakech",
+   "region": "Marrakech-Safi",
+   "lat": 31.6295,
+   "lon": -7.9811,
+   "noCoords": false,
+   "type": "hôpital de format « Prime » (3e génération, premium)",
+   "specialties": [],
+   "premium": true,
+   "premium_evidence": "Même format « Prime » (PDG, TelQuel 19 oct. 2026: Prime prévus pour les villes de la Coupe du monde 2030, dont Marrakech).",
+   "beds": null,
+   "status": "projet annoncé",
+   "opening_year": null,
+   "source": "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684",
+   "sources": [
+    "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684"
+   ],
+   "notes": "Cité uniquement par le PDG (terrain en cours d'acquisition); absent de la carte 2025-2028 de la présentation de mars 2026 -> statut et date incertains."
+  }
+ ],
+ "cities": [
+  {
+   "slug": "casablanca",
+   "name": "Casablanca",
+   "region": "Casablanca-Settat",
+   "lat": 33.5618,
+   "lon": -7.5951,
+   "noCoords": false,
+   "sites": [
+    "clinique-jerrada-oasis",
+    "clinique-ain-borja",
+    "centre-international-doncologie-casablanca",
+    "clinique-longchamps",
+    "hopital-prive-de-casablanca-ain-sebaa",
+    "clinique-atfal",
+    "clinique-panorama-sidi-maarouf",
+    "anfa-prime-hospital",
+    "onco-prime-hospital",
+    "cardio-prime-hospital",
+    "akditalife-clinique-du-bien-etre-bouskoura"
+   ],
+   "operational": 11,
+   "construction": 0,
+   "announced": 0,
+   "beds": 848,
+   "bedsKnownFor": 7
+  },
+  {
+   "slug": "agadir",
+   "name": "Agadir",
+   "region": "Souss-Massa",
+   "lat": 30.4278,
+   "lon": -9.5981,
+   "noCoords": false,
+   "sites": [
+    "hopital-international-agadir",
+    "centre-international-doncologie-agadir",
+    "prime-hospital-agadir"
+   ],
+   "operational": 2,
+   "construction": 0,
+   "announced": 1,
+   "beds": 220,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "fes",
+   "name": "Fès",
+   "region": "Fès-Meknès",
+   "lat": 34.0181,
+   "lon": -5.0078,
+   "noCoords": false,
+   "sites": [
+    "hopital-international-de-fes",
+    "centre-international-doncologie-de-fes",
+    "prime-hospital-fes"
+   ],
+   "operational": 2,
+   "construction": 0,
+   "announced": 1,
+   "beds": 170,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "tanger",
+   "name": "Tanger",
+   "region": "Tanger-Tétouan-Al Hoceïma",
+   "lat": 35.7595,
+   "lon": -5.834,
+   "noCoords": false,
+   "sites": [
+    "hopital-prive-de-tanger",
+    "centre-international-doncologie-boughaz-de-tanger",
+    "prime-hospital-tanger"
+   ],
+   "operational": 2,
+   "construction": 0,
+   "announced": 1,
+   "beds": 245,
+   "bedsKnownFor": 2
+  },
+  {
+   "slug": "el-jadida",
+   "name": "El Jadida",
+   "region": "Casablanca-Settat",
+   "lat": 33.2316,
+   "lon": -8.5007,
+   "noCoords": false,
+   "sites": [
+    "hopital-prive-el-jadida",
+    "centre-international-doncologie-del-jadida"
+   ],
+   "operational": 2,
+   "construction": 0,
+   "announced": 0,
+   "beds": 220,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "kenitra",
+   "name": "Kénitra",
+   "region": "Rabat-Salé-Kénitra",
+   "lat": 34.261,
+   "lon": -6.5802,
+   "noCoords": false,
+   "sites": [
+    "hopital-international-de-kenitra",
+    "centre-international-doncologie-de-kenitra"
+   ],
+   "operational": 2,
+   "construction": 0,
+   "announced": 0,
+   "beds": 244,
+   "bedsKnownFor": 2
+  },
+  {
+   "slug": "laayoune",
+   "name": "Laâyoune",
+   "region": "Laâyoune-Sakia El Hamra",
+   "lat": 27.1253,
+   "lon": -13.1625,
+   "noCoords": false,
+   "sites": [
+    "polyclinique-internationale-de-laayoune",
+    "al-hikma-medical-center"
+   ],
+   "operational": 2,
+   "construction": 0,
+   "announced": 0,
+   "beds": 316,
+   "bedsKnownFor": 2
+  },
+  {
+   "slug": "meknes",
+   "name": "Meknès",
+   "region": "Fès-Meknès",
+   "lat": 33.8935,
+   "lon": -5.5473,
+   "noCoords": false,
+   "sites": [
+    "hopital-prive-meknes",
+    "centre-international-doncologie-de-meknes"
+   ],
+   "operational": 2,
+   "construction": 0,
+   "announced": 0,
+   "beds": 194,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "oujda",
+   "name": "Oujda",
+   "region": "L'Oriental",
+   "lat": 34.6867,
+   "lon": -1.9114,
+   "noCoords": false,
+   "sites": [
+    "hopital-prive-oujda",
+    "centre-international-doncologie-oujda"
+   ],
+   "operational": 2,
+   "construction": 0,
+   "announced": 0,
+   "beds": 154,
+   "bedsKnownFor": 2
+  },
+  {
+   "slug": "rabat",
+   "name": "Rabat",
+   "region": "Rabat-Salé-Kénitra",
+   "lat": 34.0209,
+   "lon": -6.8416,
+   "noCoords": false,
+   "sites": [
+    "hopital-prive-ibn-yassine-rabat",
+    "centre-international-doncologie-rabat"
+   ],
+   "operational": 2,
+   "construction": 0,
+   "announced": 0,
+   "beds": 155,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "sale",
+   "name": "Salé",
+   "region": "Rabat-Salé-Kénitra",
+   "lat": 34.0531,
+   "lon": -6.7985,
+   "noCoords": false,
+   "sites": [
+    "hopital-prive-de-sale",
+    "centre-doncologie-prive-de-sale"
+   ],
+   "operational": 2,
+   "construction": 0,
+   "announced": 0,
+   "beds": 170,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "marrakech",
+   "name": "Marrakech",
+   "region": "Marrakech-Safi",
+   "lat": 31.6295,
+   "lon": -7.9811,
+   "noCoords": false,
+   "sites": [
+    "hopital-international-ibn-nafis",
+    "extension-de-lhopital-international-ibn-nafis-hopital-multidisciplinaire",
+    "prime-hospital-marrakech"
+   ],
+   "operational": 1,
+   "construction": 0,
+   "announced": 2,
+   "beds": 100,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "benguerir",
+   "name": "Benguerir",
+   "region": "Marrakech-Safi",
+   "lat": 32.236,
+   "lon": -7.9534,
+   "noCoords": false,
+   "sites": [
+    "centre-international-doncologie-de-benguerir"
+   ],
+   "operational": 1,
+   "construction": 0,
+   "announced": 0,
+   "beds": 81,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "beni-mellal",
+   "name": "Béni Mellal",
+   "region": "Béni Mellal-Khénifra",
+   "lat": 32.3373,
+   "lon": -6.3498,
+   "noCoords": false,
+   "sites": [
+    "hopital-prive-beni-mellal"
+   ],
+   "operational": 1,
+   "construction": 0,
+   "announced": 0,
+   "beds": 153,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "dakhla",
+   "name": "Dakhla",
+   "region": "Dakhla-Oued Ed-Dahab",
+   "lat": 23.6848,
+   "lon": -15.9579,
+   "noCoords": false,
+   "sites": [
+    "clinique-internationale-de-dakhla"
+   ],
+   "operational": 1,
+   "construction": 0,
+   "announced": 0,
+   "beds": 113,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "errachidia",
+   "name": "Errachidia",
+   "region": "Drâa-Tafilalet",
+   "lat": 31.9314,
+   "lon": -4.4244,
+   "noCoords": false,
+   "sites": [
+    "clinique-internationale-errachidia"
+   ],
+   "operational": 1,
+   "construction": 0,
+   "announced": 0,
+   "beds": 157,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "essaouira",
+   "name": "Essaouira",
+   "region": "Marrakech-Safi",
+   "lat": 31.5085,
+   "lon": -9.7595,
+   "noCoords": false,
+   "sites": [
+    "clinique-internationale-de-mogador"
+   ],
+   "operational": 1,
+   "construction": 0,
+   "announced": 0,
+   "beds": 166,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "guelmim",
+   "name": "Guelmim",
+   "region": "Guelmim-Oued Noun",
+   "lat": 28.987,
+   "lon": -10.0574,
+   "noCoords": false,
+   "sites": [
+    "hopital-prive-guelmim"
+   ],
+   "operational": 1,
+   "construction": 0,
+   "announced": 0,
+   "beds": 126,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "inezgane",
+   "name": "Inezgane",
+   "region": "Souss-Massa",
+   "lat": 30.3556,
+   "lon": -9.5372,
+   "noCoords": false,
+   "sites": [
+    "clinique-internationale-dinezgane"
+   ],
+   "operational": 1,
+   "construction": 0,
+   "announced": 0,
+   "beds": 156,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "khouribga",
+   "name": "Khouribga",
+   "region": "Béni Mellal-Khénifra",
+   "lat": 32.8811,
+   "lon": -6.9063,
+   "noCoords": false,
+   "sites": [
+    "clinique-internationale-de-khouribga"
+   ],
+   "operational": 1,
+   "construction": 0,
+   "announced": 0,
+   "beds": 100,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "mohammedia",
+   "name": "Mohammedia",
+   "region": "Casablanca-Settat",
+   "lat": 33.6866,
+   "lon": -7.383,
+   "noCoords": false,
+   "sites": [
+    "clinique-internationale-de-mohammedia"
+   ],
+   "operational": 1,
+   "construction": 0,
+   "announced": 0,
+   "beds": 100,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "nador",
+   "name": "Nador",
+   "region": "L'Oriental",
+   "lat": 35.1681,
+   "lon": -2.9335,
+   "noCoords": false,
+   "sites": [
+    "hopital-prive-nador"
+   ],
+   "operational": 1,
+   "construction": 0,
+   "announced": 0,
+   "beds": 144,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "safi",
+   "name": "Safi",
+   "region": "Marrakech-Safi",
+   "lat": 32.2994,
+   "lon": -9.2372,
+   "noCoords": false,
+   "sites": [
+    "clinique-de-specialites-de-safi"
+   ],
+   "operational": 1,
+   "construction": 0,
+   "announced": 0,
+   "beds": 100,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "taroudant",
+   "name": "Taroudant",
+   "region": "Souss-Massa",
+   "lat": 30.4703,
+   "lon": -8.8769,
+   "noCoords": false,
+   "sites": [
+    "clinique-internationale-de-taroudant"
+   ],
+   "operational": 1,
+   "construction": 0,
+   "announced": 0,
+   "beds": 153,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "tetouan",
+   "name": "Tétouan",
+   "region": "Tanger-Tétouan-Al Hoceïma",
+   "lat": 35.5785,
+   "lon": -5.3684,
+   "noCoords": false,
+   "sites": [
+    "hopital-prive-de-tetouan"
+   ],
+   "operational": 1,
+   "construction": 0,
+   "announced": 0,
+   "beds": 130,
+   "bedsKnownFor": 1
+  },
+  {
+   "slug": "al-hoceima",
+   "name": "Al Hoceïma",
+   "region": "Tanger-Tétouan-Al Hoceïma",
+   "lat": 35.2517,
+   "lon": -3.9372,
+   "noCoords": false,
+   "sites": [
+    "clinique-de-specialites-dal-hoceima"
+   ],
+   "operational": 0,
+   "construction": 1,
+   "announced": 0,
+   "beds": null,
+   "bedsKnownFor": 0
+  },
+  {
+   "slug": "khemisset",
+   "name": "Khémisset",
+   "region": "Rabat-Salé-Kénitra",
+   "lat": 33.824,
+   "lon": -6.066,
+   "noCoords": false,
+   "sites": [
+    "clinique-de-specialites-de-khemisset"
+   ],
+   "operational": 0,
+   "construction": 1,
+   "announced": 0,
+   "beds": null,
+   "bedsKnownFor": 0
+  },
+  {
+   "slug": "larache",
+   "name": "Larache",
+   "region": "Tanger-Tétouan-Al Hoceïma",
+   "lat": 35.1932,
+   "lon": -6.1557,
+   "noCoords": false,
+   "sites": [
+    "clinique-de-specialites-de-larache"
+   ],
+   "operational": 0,
+   "construction": 1,
+   "announced": 0,
+   "beds": null,
+   "bedsKnownFor": 0
+  },
+  {
+   "slug": "taza",
+   "name": "Taza",
+   "region": "Fès-Meknès",
+   "lat": 34.21,
+   "lon": -4.01,
+   "noCoords": false,
+   "sites": [
+    "clinique-de-specialites-de-taza"
+   ],
+   "operational": 0,
+   "construction": 0,
+   "announced": 1,
+   "beds": null,
+   "bedsKnownFor": 0
+  }
+ ],
+ "international": [
+  {
+   "country": "Arabie saoudite",
+   "iso": "SA",
+   "city": "Riyad",
+   "lat": 24.7136,
+   "lon": 46.6753,
+   "noCoords": false,
+   "precision": "ville",
+   "project": "AKDITAL Hospitals Riyadh Olaya (ex-hôpital Abdul Rahman Al Mishari), 150 lits",
+   "status": "opérationnel (mise en service sept. 2026)",
+   "statusKey": "opérationnel",
+   "beds": 150,
+   "details": "Communiqué S1 2026: travaux de rénovation finalisés et mise en service en septembre 2026 (« deux premiers hôpitaux en Arabie saoudite »). Communiqué annuel 2025: acquisition finalisée et rebaptisé « Akdital Hospitals Riyadh Olaya »; communiqué S1 2025: protocole d'accord de « location et gestion » -> nature exacte du contrat (acquisition vs location/gestion) divergente selon les communiqués. PDG (TelQuel 19 oct. 2026): reprise d'un hôpital de 40 ans « en plein centre », totalement réaménagé.",
+   "source": "https://akdital.ma/wp-content/uploads/2026/09/CP-Akdital-S1-2026-29092202-22h16.pdf",
+   "sources": [
+    "https://akdital.ma/wp-content/uploads/2026/09/CP-Akdital-S1-2026-29092202-22h16.pdf",
+    "https://akdital.ma/wp-content/uploads/2026/03/CP-Akdital-Annuel-2025-VF.pdf",
+    "https://akdital.ma/wp-content/uploads/2025/09/CP-Akdital-S1-2025.pdf",
+    "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684",
+    "https://akdital.ma/wp-content/uploads/2026/04/20260330-Akdital-Presentation-Conf-analystes-Mars-2026-vENG.pdf"
+   ]
+  },
+  {
+   "country": "Arabie saoudite",
+   "iso": "SA",
+   "city": "Riyad",
+   "lat": 24.7136,
+   "lon": 46.6753,
+   "noCoords": false,
+   "precision": "ville",
+   "project": "Al Mugharrazat Hospital (2e hôpital à Riyad), 152 lits",
+   "status": "projet (terrain acquis, permis en attente; en construction selon le PDG)",
+   "statusKey": "en construction",
+   "beds": 152,
+   "details": "Présentation de mars 2026: « Land acquired, permits pending », construction « from scratch », échéance non écrite en toutes lettres (placé sur la ligne du temps vers T1 2028, lecture de la diapositive). PDG (19 oct. 2026): « Un deuxième hôpital est en cours de construction à Riyad » (non nommé).",
+   "source": "https://akdital.ma/wp-content/uploads/2026/04/20260330-Akdital-Presentation-Conf-analystes-Mars-2026-vENG.pdf",
+   "sources": [
+    "https://akdital.ma/wp-content/uploads/2026/04/20260330-Akdital-Presentation-Conf-analystes-Mars-2026-vENG.pdf",
+    "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684"
+   ]
+  },
+  {
+   "country": "Arabie saoudite",
+   "iso": "SA",
+   "city": "La Mecque",
+   "lat": 21.3891,
+   "lon": 39.8579,
+   "noCoords": false,
+   "precision": "ville",
+   "project": "AKDITAL Makkah Al Mukarramah (ex-hôpital Al Bishri), 120 lits portés à 126",
+   "status": "opérationnel (mise en service sept. 2026); acquisition de la participation majoritaire annoncée « en cours »",
+   "statusKey": "opérationnel",
+   "beds": 120,
+   "details": "Communiqué S1 2026: acquisition d'une participation majoritaire « en cours », rénovation et extension de 120 à 126 lits (Le Matin), mise en service en septembre 2026. Protocole d'accord signé en déc. 2025. PDG: « à quinze minutes du Haram ».",
+   "source": "https://akdital.ma/wp-content/uploads/2026/09/CP-Akdital-S1-2026-29092202-22h16.pdf",
+   "sources": [
+    "https://akdital.ma/wp-content/uploads/2026/09/CP-Akdital-S1-2026-29092202-22h16.pdf",
+    "https://lematin.ma/economie/akdital-le-benefice-progresse-de-20-a-252-mdh-au-s1-2026/367784",
+    "https://medias24.com/2025/12/19/akdital-acquiert-un-hopital-prive-a-la-mecque-1599271/",
+    "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684"
+   ]
+  },
+  {
+   "country": "Arabie saoudite",
+   "iso": "SA",
+   "city": "Djeddah",
+   "lat": 21.4858,
+   "lon": 39.1925,
+   "noCoords": false,
+   "precision": "ville",
+   "project": "Hôpital Aladwani (aménagement, équipement et gestion en location longue durée), 120 lits (presse) / 150 lits (présentation mars 2026)",
+   "status": "en cours d'aménagement; ouverture annoncée T1 2027 (presse juin 2026) puis « fin juin ou début juillet 2027 » (PDG, oct. 2026)",
+   "statusKey": "en construction",
+   "beds": 120,
+   "details": "Contrat signé en juin 2026 pour un bâtiment déjà construit (Hespress 15 juin 2026: « pouvant atteindre 120 lits »). La présentation de mars 2026 indique 150 lits et « BEFA negotiations underway ».",
+   "source": "https://fr.hespress.com/477647-477647.html",
+   "sources": [
+    "https://fr.hespress.com/477647-477647.html",
+    "https://akdital.ma/wp-content/uploads/2026/09/CP-Akdital-S1-2026-29092202-22h16.pdf",
+    "https://akdital.ma/wp-content/uploads/2026/04/20260330-Akdital-Presentation-Conf-analystes-Mars-2026-vENG.pdf",
+    "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684"
+   ]
+  },
+  {
+   "country": "Arabie saoudite",
+   "iso": "SA",
+   "city": "Médine",
+   "lat": 24.5247,
+   "lon": 39.5692,
+   "noCoords": false,
+   "precision": "ville",
+   "project": "Hôpital au stade du gros œuvre, acquisition en négociation (non nommé)",
+   "status": "négociation (non annoncé officiellement); ouverture visée fin 2027 selon le PDG",
+   "statusKey": "incertain",
+   "beds": null,
+   "details": "PDG (TelQuel 19 oct. 2026): « À Médine, nous sommes en pleine négociation pour acquérir un nouvel hôpital, au stade du gros œuvre, que nous aménagerons pour l'ouvrir fin 2027 ». Aucun communiqué financier ne le mentionne.",
+   "source": "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684",
+   "sources": [
+    "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684"
+   ]
+  },
+  {
+   "country": "Émirats arabes unis",
+   "iso": "AE",
+   "city": "Dubaï",
+   "lat": 25.2048,
+   "lon": 55.2708,
+   "noCoords": false,
+   "precision": "ville",
+   "project": "Premier hôpital de Dubaï (« Dubai DIP Hospital »), 180 lits (200 lits dans les annonces de 2025)",
+   "status": "en construction (première pierre juin 2025)",
+   "statusKey": "en construction",
+   "beds": 180,
+   "details": "Le Matin (3 juin 2025): 200 lits, 70 M USD, ouverture T4 2026. Communiqué S1 2025: 200 lits, ouverture T1 2027. Présentation de mars 2026: « Dubai DIP Hospital, 180 beds », « Work in progress », ouverture T3 2027. Calendrier repoussé; « DIP » non explicité dans les sources (Dubai Investments Park supposé, non confirmé). Communiqué S1 2026: « les projets de Djeddah et de Dubaï se poursuivent ».",
+   "source": "https://lematin.ma/economie/akdital-pose-la-premiere-pierre-de-son-nouvel-hopital-a-dubai/283497",
+   "sources": [
+    "https://lematin.ma/economie/akdital-pose-la-premiere-pierre-de-son-nouvel-hopital-a-dubai/283497",
+    "https://akdital.ma/wp-content/uploads/2025/09/CP-Akdital-S1-2025.pdf",
+    "https://akdital.ma/wp-content/uploads/2026/04/20260330-Akdital-Presentation-Conf-analystes-Mars-2026-vENG.pdf",
+    "https://akdital.ma/wp-content/uploads/2026/09/CP-Akdital-S1-2026-29092202-22h16.pdf"
+   ]
+  },
+  {
+   "country": "Émirats arabes unis",
+   "iso": "AE",
+   "city": "Dubaï",
+   "lat": 25.2048,
+   "lon": 55.2708,
+   "noCoords": false,
+   "precision": "ville",
+   "project": "Dubai Al Furjan Hospital, 95 lits",
+   "status": "projet (terrain acquis, études en cours)",
+   "statusKey": "projet annoncé",
+   "beds": 95,
+   "details": "Présentation de mars 2026: « Land acquired, studies in progress », ouverture T1 2029. Communiqué annuel 2025: « deux projets sont en cours de développement à Dubaï ».",
+   "source": "https://akdital.ma/wp-content/uploads/2026/04/20260330-Akdital-Presentation-Conf-analystes-Mars-2026-vENG.pdf",
+   "sources": [
+    "https://akdital.ma/wp-content/uploads/2026/04/20260330-Akdital-Presentation-Conf-analystes-Mars-2026-vENG.pdf",
+    "https://akdital.ma/wp-content/uploads/2026/03/CP-Akdital-Annuel-2025-VF.pdf"
+   ]
+  },
+  {
+   "country": "Émirats arabes unis",
+   "iso": "AE",
+   "city": "RAK (probablement Ras Al Khaimah; non explicité)",
+   "lat": 25.7895,
+   "lon": 55.9432,
+   "noCoords": false,
+   "precision": "ville",
+   "project": "RAK Hospital, 100 lits",
+   "status": "négociation avec le propriétaire d'un hôpital en construction",
+   "statusKey": "incertain",
+   "beds": 100,
+   "details": "Présentation de mars 2026: « Negotiations underway with the owner of a hospital under construction », ouverture T1 2028. L'identification de « RAK » à Ras Al Khaimah est une inférence.",
+   "source": "https://akdital.ma/wp-content/uploads/2026/04/20260330-Akdital-Presentation-Conf-analystes-Mars-2026-vENG.pdf",
+   "sources": [
+    "https://akdital.ma/wp-content/uploads/2026/04/20260330-Akdital-Presentation-Conf-analystes-Mars-2026-vENG.pdf"
+   ]
+  },
+  {
+   "country": "Tunisie",
+   "iso": "TN",
+   "city": "non précisée dans les sources lues (Clinique Taoufik, 164 lits)",
+   "lat": 36.8065,
+   "lon": 10.1815,
+   "noCoords": false,
+   "precision": "pays",
+   "project": "Taoufik Hospitals Group (THG): Taoufik Hospital 164 lits, Hannibal Hospital 230 lits, Soukra Hospital 130 lits, Ezzahra Hospital 50 lits (574 lits, 4 hôpitaux)",
+   "status": "protocole d'accord signé (déc. 2025) pour 100 % du capital, ~90 M USD (~900 MDH); closing suspendu fin juin 2026 dans l'attente du Conseil de la concurrence tunisien; risque de veto signalé; aucune clôture trouvée",
+   "statusKey": "incertain",
+   "beds": null,
+   "details": "Communiqués T4/annuel 2025: MoU pour l'acquisition de 100 % de THG, première implantation en Afrique du Nord. Le360 (11 juin 2026): rachat « bloqué », closing initialement prévu le 31 mai, Conseil de la concurrence demande un mois; Le Desk (2 juin 2026): closing étendu au 30 juin. Yabiladi/Africa Intelligence (2 juin 2026): risque de veto de la présidence tunisienne. Les noms Hannibal/Soukra/Ezzahra/Taoufik viennent de la présentation d'Akdital de mars 2026; les villes ne sont pas indiquées dans les sources lues. Le communiqué S1 2026 (30 sept. 2026) ne mentionne pas la Tunisie.",
+   "source": "https://akdital.ma/wp-content/uploads/2026/02/CP-Akdital-T4-2025-VF.pdf",
+   "sources": [
+    "https://akdital.ma/wp-content/uploads/2026/02/CP-Akdital-T4-2025-VF.pdf",
+    "https://akdital.ma/wp-content/uploads/2026/03/CP-Akdital-Annuel-2025-VF.pdf",
+    "https://akdital.ma/wp-content/uploads/2026/04/20260330-Akdital-Presentation-Conf-analystes-Mars-2026-vENG.pdf",
+    "https://fr.le360.ma/economie/tunisie-akdital-freine-dans-sa-volonte-dimpulser-une-nouvelle-dynamique-hospitaliere_RNCUI4EFNBEH7NGOE2WTEE5YF4/",
+    "https://en.yabiladi.com/articles/details/195824/akdital-takeover-taoufik-hospitals-faces.html",
+    "https://fr.hespress.com/455223-455223.html"
+   ]
+  },
+  {
+   "country": "Afrique subsaharienne (pays non précisés)",
+   "iso": "",
+   "city": "non précisée",
+   "lat": 0,
+   "lon": 0,
+   "noCoords": true,
+   "precision": "ville",
+   "project": "Acquisition d'un ou plusieurs établissements en négociation",
+   "status": "négociation (non annoncé)",
+   "statusKey": "incertain",
+   "beds": null,
+   "details": "PDG (TelQuel 19 oct. 2026): prospection « dans des villes de pays subsahariens très importants », annonce attendue « dans les jours à venir ». Communiqué T2 2026: AKDITAL International Company (Riyad) doit piloter les activités « au Moyen-Orient et dans certaines régions d'Afrique ».",
+   "source": "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684",
+   "sources": [
+    "https://telquel.ma/2026/10/19/rochdi-talib-lepoque-des-cliniques-villas-est-revolue_2013684",
+    "https://akdital.ma/wp-content/uploads/2026/08/CP-Akdital-T2-2026.pdf"
+   ]
+  }
+ ],
+ "gaps": [
+  "RECONCILIATION DES 45: la page « Nos établissements » d'akdital.ma ne liste que 39 établissements (mise à jour partielle: ni Rabat, ni Inezgane, ni Al Hikma, ni Onco Prime/Cardio Prime; Anfa Prime y figure en 1 entrée). Les 6 manquants ont été reconstitués à partir des communiqués officiels (2025: 8 ouvertures à Guelmim, Laâyoune ×2, Nador, Oujda ×2, Rabat ×2; S1 2026: 4 ouvertures = Anfa Prime + Onco Prime + Cardio Prime + Inezgane) et de la presse: décompte 21 (fin 2023) + 12 (2024) + 8 (2025) + 4 (2026) = 45, retrouvé exactement avec la liste ci-jointe. Le nom « Al Hikma Medical Center » (2e établissement de Laâyoune) provient de la presse (Médias24/Le Desk, avr. 2025) et n'est pas confirmé par une page Akdital.",
+  "NOMBRE DE VILLES: la liste compte 26 localités distinctes (Bouskoura et Casablanca séparées) contre 25 « villes » officielles au 30 juin 2026 (24 fin 2025, 19 fin 2024, 9 fin 2023). Bouskoura est très probablement rattachée à Casablanca dans le décompte (inférence). La carte de la présentation de mars 2026 place un point « Berrechid » (établissement opérationnel) là où aucun établissement n'est nommé: probablement la clinique de Bouskoura (non confirmé).",
+  "LITS MANQUANTS (aucune source lue, beds = null): CIO Casablanca et Clinique Longchamps (ensemble ~180 lits avec HPC = 220 sur 400 lits ouverts en 2019, répartition non publiée), CIO Salé (HP + CIO = ~220 lits), CIO Meknès, CIO Fès, CIO Agadir, CIO El Jadida, Onco Prime et Cardio Prime (inclus dans les 191 lits d'Anfa Prime), CIO Rabat (inclus dans les 155 lits de Rabat). Jerrada Oasis et Ain Borja: 100 lits chacun d'après l'historique d'akdital.ma (2015 / 2018), capacité actuelle non republiée. La somme des lits renseignés (~4 715 pour 35 des 45 établissements, dont certains chiffres sont des capacités de complexe) ne peut pas être réconciliée exactement avec le total officiel de 4 864 lits (certains chiffres sont des capacités de site, d'autres issus de la presse, certains lits sont partagés entre entités d'un même complexe).",
+  "DIVERGENCES DE LITS ENTRE SOURCES: Hôpital International de Fès (130 lits sur la page plateau technique vs « plus de 170 » sur la page de présentation; la page d'accueil de Guelmim dit « plus de 2300 lits » par erreur de gabarit), Hôpital Privé de Salé (170 vs « plus de 220 », ce dernier étant probablement HP + centre d'oncologie), Béni Mellal (153 site vs 150 presse), Tanger (210 site vs 270 presse pour le complexe). Les pages d'accueil des sites contiennent des erreurs de copier-coller (ex.: la Clinique Internationale de Taroudant dit être située à Errachidia).",
+  "DATES D'OUVERTURE: 2011, 2018, 2019 (Casablanca) issues du site Akdital ou de résumés de presse non relus dans le texte; Rabat (annonce 17-18 juin 2025, ouverture officielle annoncée le 9 janv. 2026, intégré au réseau au T4 2025): date exacte incertaine; Atfal (2021) = année d'acquisition, pas d'ouverture; Laâyoune (acquisitions closes avril 2025, mise en service prévue mai 2025: non vérifiée); Essaouira/Mogador et Errachidia: dates précises non lues (2024 selon communiqué annuel 2024).",
+  "SITES INACCESSIBLES (HTTP 403 / filtre réseau / certificat): Anfa Prime, Nador, Oujda (HP et CIO), CIO Meknès, CIO Agadir, CIO Fès, CIO El Jadida, CIO Benguérir, Dakhla, Tétouan, Ibn Nafis, HPC Aïn Sebaâ, HP El Jadida, Panorama, Atfal (site en maintenance). Pour ces établissements, spécialités et lits proviennent de la presse ou sont déduits du type d'établissement (CIO) et signalés comme tels. Aucun contournement de ces blocages n'a été tenté.",
+  "PREMIUM / VIP: preuve explicite uniquement pour le format « Prime » (Anfa Prime Hospital, Onco Prime, Cardio Prime: offre « Prime Signature », circuits d'accueil dédiés, accompagnement individualisé; Médias24 le qualifie de « vaisseau amiral »). Les pages « Modalités » des hôpitaux d'Agadir, Tanger et Salé mentionnent des « suites » et « mini-suites » dans un texte standard: preuve de suites, pas de positionnement VIP spécifique. Aucune aile VIP nommée, aucune labellisation « VIP » trouvée pour les autres établissements. Le mot « Hôpital International » n'est pas défini officiellement comme un segment premium (le groupe se présente comme accessible: « démocratiser les soins de qualité »).",
+  "PIPELINE MAROC: seuls Al Hoceïma, Larache, Khémisset (en finition, ouverture fin 2026-début 2027 selon le PDG) et Taza (2027, statut incertain) sont nommés; Prime Fès (2027), Prime Tanger et Prime Agadir (2028) selon la carte de mars 2026; Prime Marrakech cité seulement par le PDG; extension de l'oncologie de Marrakech en hôpital multidisciplinaire (prête, en attente d'autorisations). Les plans passent de 41 (2025) à 45 (2026), 53 (2027), 59 (2028) établissements: environ 7 des 14 ouvertures restantes ne sont pas nommées dans les sources lues. Le PDG évoque désormais « 55 ou 58 établissements » à l'horizon 2028-2029 (TelQuel, 19 oct. 2026) contre 59 dans les communiqués. Cibles de villes citées sans projet daté: Berkane, Sefrou, Kelaat Sraghna (journalsantemaroc.com, via Le Matin/Médias24).",
+  "INTERNATIONAL: (1) Tunisie: MoU signé pour 100 % de THG (déc. 2025), closing suspendu et risque de veto signalé en juin 2026; aucune source postérieure à juin 2026 trouvée et le communiqué S1 2026 n'en parle pas -> statut INCERTAIN; les villes des 4 hôpitaux de THG ne figurent dans aucune source lue (noms issus de la présentation de mars 2026). (2) Riyad Olaya: nature du contrat (acquisition vs location-gestion) et (3) La Mecque: finalisation de la participation majoritaire divergent selon les documents (Le Matin note lui-même l'ambiguïté). (4) Djeddah: 120 lits (presse juin 2026) vs 150 (présentation mars 2026); ouverture T1 2027 vs mi-2027 (PDG). (5) Dubaï: 200 lits/T4 2026 (2025) vs 180 lits/T3 2027 (mars 2026); « DIP » et « RAK » non explicités (Dubai Investments Park et Ras Al Khaimah supposés). (6) Médine et Afrique subsaharienne: négociations évoquées uniquement par le PDG (19 oct. 2026), sans communiqué.",
+  "COORDONNEES: lat/lon = centre-ville de la ville (pas la position du bâtiment), comme demandé. Régions = 12 régions administratives marocaines (découpage 2015).",
+  "DIALYSE / DEPARTEMENTS: la page « Nos spécialités » d'akdital.ma ne cite ni dialyse ni urgences comme service autonome (urgences mentionnées sur les sites des établissements); aucun centre de dialyse spécifique n'a été trouvé (néphrologie citée comme spécialité à Salé, Fès, Mohammédia).",
+  "CHIFFRES D'INFRASTRUCTURE de la page akdital.ma « Nos infrastructures » (240 blocs opératoires, 1 046 lits de soins intensifs, 361 boxes de réanimation adulte, 153 lits de réanimation néonatale, 28 accélérateurs de radiothérapie, 30 salles de cathétérisme, 444 fauteuils de chimiothérapie, 3 unités de greffe de moelle, 374 salles d'urgences/consultation, 30 centres de radiologie, 20 laboratoires, 8 centres de médecine nucléaire, 353 lits de maternité, 8 PET-scan) correspondent au total de 4 505 lits (fin 2025), pas aux 4 864 lits de juin 2026.",
+  "Chiffre 2025 du communiqué annuel: « 8 nouveaux établissements » dont Laâyoune ×2 -> la 2e clinique de Laâyoune (Al Hikma Medical Center, 76 lits) est donc comptée; Medias24 a titré « 38e établissement » pour Rabat en juin 2025 alors que le communiqué S1 2025 comptait 36 établissements à fin juin et T3 2025 39: décalage entre annonce presse et intégration au réseau."
+ ]
+}

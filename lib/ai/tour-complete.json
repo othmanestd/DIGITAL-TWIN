@@ -1,0 +1,655 @@
+{
+  "version": 3,
+  "mode": "complete",
+  "chapters": [
+    {
+      "id": "pression",
+      "title": "La pression, et la réponse",
+      "beats": [
+        {
+          "id": "s-pression",
+          "title": "La pression",
+          "text": "Chez Akdital, la croissance a un revers. Au premier semestre 2026, les charges de personnel ont bondi de 28 %, quand le chiffre d'affaires progressait de 21 %. Elles pèsent désormais 22,5 % des ventes, contre 21,2 % un an plus tôt. Chaque nouvelle clinique ajoute des guichets, des saisies, des appels. Notre réponse : des agents IA qui reprennent ce travail répétitif. Au plein régime, 302 MDH de masse salariale libérés chaque année, pour 160 MDH de coût d'agents : 142 MDH nets, sans aucun licenciement.",
+          "speech": "Chez Akdital, la croissance a un revers. Au premier semestre 2026, les charges de personnel ont bondi de 28 %, quand le chiffre d'affaires progressait de 21 %. Elles pèsent désormais 22 et demi pour cent des ventes, contre 21 pour cent un an plus tôt. Chaque nouvelle clinique ajoute des guichets, des saisies, des appels. Notre réponse : des agents IA qui reprennent ce travail répétitif. Au plein régime, 302 millions de dirhams de masse salariale libérés chaque année, pour 160 millions de coût d'agents : 142 millions nets, sans aucun licenciement.",
+          "actions": [
+            {
+              "do": "section",
+              "section": "explorer",
+              "silent": true
+            },
+            {
+              "do": "year",
+              "year": 2029,
+              "silent": true
+            },
+            {
+              "do": "view",
+              "perSite": false,
+              "silent": true
+            },
+            {
+              "do": "level",
+              "level": "hospital"
+            },
+            {
+              "do": "home",
+              "silent": true
+            },
+            {
+              "do": "point",
+              "anchor": "stage",
+              "at": 0.3
+            }
+          ]
+        },
+        {
+          "id": "c-agents",
+          "title": "Ce qu'est un agent",
+          "text": "Un agent IA, c'est un logiciel qui prépare, exécute, vérifie ou relance une tâche dans les systèmes de l'hôpital, toujours sous la responsabilité d'un humain. Selon les cas, il assiste, il automatise sous validation, ou il remplace un tableur et une ressaisie. Il intervient d'abord dans l'administratif des sites, où il reprend six heures de travail sur dix ; puis au siège ; et, pour une petite part seulement, chez les soignants et dans l'hébergement.",
+          "speech": "Un agent IA, c'est un logiciel qui prépare, exécute, vérifie ou relance une tâche dans les systèmes de l'hôpital, toujours sous la responsabilité d'un humain. Selon les cas, il assiste, il automatise sous validation, ou il remplace un tableur et une ressaisie. Il intervient d'abord dans l'administratif des sites, où il reprend six heures de travail sur dix ; puis au siège ; et, pour une petite part seulement, chez les soignants et dans l'hébergement.",
+          "actions": [
+            {
+              "do": "point",
+              "anchor": "stage",
+              "at": 0.3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "journee",
+      "title": "Une journée à l'hôpital type",
+      "beats": [
+        {
+          "id": "c-entree",
+          "title": "L'hôpital type",
+          "text": "Entrons dans l'hôpital type : tout le groupe, ramené à un seul bâtiment. Chaque jour, plus de trois mille patients franchissent les portes d'une clinique Akdital. Suivons l'une d'entre elles, du hall jusqu'à sa sortie, et regardons ce qui change, pour elle et pour les équipes, étage par étage.",
+          "speech": "Entrons dans l'hôpital type : tout le groupe, ramené à un seul bâtiment. Chaque jour, plus de trois mille patients franchissent les portes d'une clinique Akdital. Suivons l'une d'entre elles, du hall jusqu'à sa sortie, et regardons ce qui change, pour elle et pour les équipes, étage par étage.",
+          "actions": [
+            {
+              "do": "select",
+              "kind": "floor",
+              "id": "main:0",
+              "at": 0.35
+            }
+          ]
+        },
+        {
+          "id": "c-hall",
+          "title": "Accueil et admissions",
+          "text": "Au hall, les Expériences IA l'accueillent : un guide lui répond en darija et l'oriente, un référent pilote les files. Son dossier est déjà prêt : avant sa venue, l'agent a rassemblé ses pièces. En Angleterre, deux hôpitaux publics qui le font ont évité à un patient sur deux de se déplacer pour sa consultation préalable. Au guichet, le dossier est pré-rempli : la chargée d'admission vérifie, repère un éventuel doublon et fait signer. Pour le groupe, c'est l'équivalent de 174 postes d'admission, près de quatre par clinique. Et chaque mois, les 45 accueils du groupe sont comparés, comme le ferait un patient mystère.",
+          "speech": "Au hall, les Expériences IA l'accueillent : un guide lui répond en darija et l'oriente, un référent pilote les files. Son dossier est déjà prêt : avant sa venue, l'agent a rassemblé ses pièces. En Angleterre, deux hôpitaux publics qui le font ont évité à un patient sur deux de se déplacer pour sa consultation préalable. Au guichet, le dossier est pré-rempli : la chargée d'admission vérifie, repère un éventuel doublon et fait signer. Pour le groupe, c'est l'équivalent de 174 postes d'admission, près de quatre par clinique. Et chaque mois, les 45 accueils du groupe sont comparés, comme le ferait un patient mystère.",
+          "actions": [
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "accueil",
+              "at": 0.02
+            },
+            {
+              "do": "select",
+              "kind": "xp",
+              "id": "xp-guide",
+              "at": 0.08
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "admissions",
+              "at": 0.3
+            },
+            {
+              "do": "case",
+              "id": "A-01",
+              "at": 0.36
+            },
+            {
+              "do": "case",
+              "id": "A-02",
+              "at": 0.66
+            }
+          ]
+        },
+        {
+          "id": "c-standard",
+          "title": "Standard, caisse, urgences",
+          "text": "Derrière le hall, le standard ne sonne plus dans le vide : un agent vocal répond jour et nuit, en darija, en français et en arabe, prend et confirme les rendez-vous ; la veille, un rappel part tout seul, et un créneau annulé est aussitôt proposé au patient suivant. À Paris, une fondation hospitalière traite déjà ainsi trois appels sur quatre sans personnel. À la caisse, devis et reste à charge sont préparés, et chaque écart est expliqué avant la clôture. Aux urgences, l'enregistrement se fait en parallèle des soins, et l'attente ne passe plus inaperçue. Même la prévention s'y met : les campagnes de dépistage sont proposées au bon patient.",
+          "speech": "Derrière le hall, le standard ne sonne plus dans le vide : un agent vocal répond jour et nuit, en darija, en français et en arabe, prend et confirme les rendez-vous ; la veille, un rappel part tout seul, et un créneau annulé est aussitôt proposé au patient suivant. À Paris, une fondation hospitalière traite déjà ainsi trois appels sur quatre sans personnel. À la caisse, devis et reste à charge sont préparés, et chaque écart est expliqué avant la clôture. Aux urgences, l'enregistrement se fait en parallèle des soins, et l'attente ne passe plus inaperçue. Même la prévention s'y met : les campagnes de dépistage sont proposées au bon patient.",
+          "actions": [
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "standard",
+              "at": 0.02
+            },
+            {
+              "do": "case",
+              "id": "A-06",
+              "at": 0.08
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "caisse",
+              "at": 0.47
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "urgences",
+              "at": 0.62
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "imagerie",
+              "at": 0.85
+            }
+          ]
+        },
+        {
+          "id": "c-consult",
+          "title": "Consultations",
+          "text": "Premier étage, la consultation. Le secrétariat trouve le dossier prêt et les résultats déjà classés. Le médecin dicte ; l'agent rédige un brouillon structuré ; le médecin relit et signe. Dans deux grands centres universitaires américains, cette documentation assistée a rendu à chaque médecin une vingtaine de minutes de saisie par jour. Les médecins adresseurs sont informés sans avoir à relancer, et après le séjour, duplicatas et copies de dossier partent sans retour au guichet.",
+          "speech": "Premier étage, la consultation. Le secrétariat trouve le dossier prêt et les résultats déjà classés. Le médecin dicte ; l'agent rédige un brouillon structuré ; le médecin relit et signe. Dans deux grands centres universitaires américains, cette documentation assistée a rendu à chaque médecin une vingtaine de minutes de saisie par jour. Les médecins adresseurs sont informés sans avoir à relancer, et après le séjour, duplicatas et copies de dossier partent sans retour au guichet.",
+          "actions": [
+            {
+              "do": "select",
+              "kind": "floor",
+              "id": "main:1"
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "consultations",
+              "at": 0.04
+            },
+            {
+              "do": "case",
+              "id": "A-17",
+              "at": 0.2
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "documents",
+              "at": 0.82
+            }
+          ]
+        },
+        {
+          "id": "c-pec",
+          "title": "Prises en charge et facturation",
+          "text": "Ici se joue la trésorerie. Les agents préparent les prises en charge dès la programmation, réclament les pièces manquantes et suivent chaque accord jusqu'à l'entrée. Dans un hôpital américain, le délai entre la prescription et la programmation est passé de onze jours à un peu plus de deux. La facture est pré-clôturée avant la sortie, les rejets sont prévenus avant l'envoi, les règlements lettrés au fil de l'eau, les honoraires des médecins libéraux calculés et expliqués, et le codeur reçoit un dossier complet. Dans un hôpital communautaire américain, les factures bloquées après la sortie ont été divisées par deux.",
+          "speech": "Ici se joue la trésorerie. Les agents préparent les prises en charge dès la programmation, réclament les pièces manquantes et suivent chaque accord jusqu'à l'entrée. Dans un hôpital américain, le délai entre la prescription et la programmation est passé de onze jours à un peu plus de deux. La facture est pré-clôturée avant la sortie, les rejets sont prévenus avant l'envoi, les règlements lettrés au fil de l'eau, les honoraires des médecins libéraux calculés et expliqués, et le codeur reçoit un dossier complet. Dans un hôpital communautaire américain, les factures bloquées après la sortie ont été divisées par deux.",
+          "actions": [
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "pec",
+              "at": 0.02
+            },
+            {
+              "do": "case",
+              "id": "A-08",
+              "at": 0.08
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "facturation",
+              "at": 0.47
+            },
+            {
+              "do": "case",
+              "id": "A-11",
+              "at": 0.55
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "codage",
+              "at": 0.86
+            }
+          ]
+        },
+        {
+          "id": "c-bloc",
+          "title": "Le bloc",
+          "text": "Deuxième étage, le bloc. Ici, rien ne change dans le geste chirurgical. Ce qui change, c'est autour : registres et check-lists réglementaires pré-remplis, chaque dispositif posé tracé jusqu'à la facture, fiches de préférence des chirurgiens revues, réserves de l'unité commandées par l'agent et validées par l'infirmière référente. La réanimation et la maternité restent entièrement humaines.",
+          "speech": "Deuxième étage, le bloc. Ici, rien ne change dans le geste chirurgical. Ce qui change, c'est autour : registres et check-lists réglementaires pré-remplis, chaque dispositif posé tracé jusqu'à la facture, fiches de préférence des chirurgiens revues, réserves de l'unité commandées par l'agent et validées par l'infirmière référente. La réanimation et la maternité restent entièrement humaines.",
+          "actions": [
+            {
+              "do": "select",
+              "kind": "floor",
+              "id": "main:2"
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "bloc",
+              "at": 0.05
+            },
+            {
+              "do": "case",
+              "id": "P-06",
+              "at": 0.25
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "reserve",
+              "at": 0.62
+            }
+          ]
+        },
+        {
+          "id": "c-chambre",
+          "title": "La chambre",
+          "text": "Troisième étage, la chambre. L'infirmière dicte son dossier de soins au lit du patient : fini, la double saisie. Dans quatorze établissements allemands, elle y a gagné un quart d'heure par poste. La relève est préparée par l'agent et complétée par l'équipe ; les demandes non médicales des patients ne passent plus par la soignante. La nuit, les chutes et les sorties à risque sont repérées, sans reconnaître personne. Et après la sortie, la famille reste en lien, avec un appel dès le lendemain.",
+          "speech": "Troisième étage, la chambre. L'infirmière dicte son dossier de soins au lit du patient : fini, la double saisie. Dans quatorze établissements allemands, elle y a gagné un quart d'heure par poste. La relève est préparée par l'agent et complétée par l'équipe ; les demandes non médicales des patients ne passent plus par la soignante. La nuit, les chutes et les sorties à risque sont repérées, sans reconnaître personne. Et après la sortie, la famille reste en lien, avec un appel dès le lendemain.",
+          "actions": [
+            {
+              "do": "select",
+              "kind": "floor",
+              "id": "main:3"
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "hospitalisation",
+              "at": 0.04
+            },
+            {
+              "do": "case",
+              "id": "P-01",
+              "at": 0.1
+            },
+            {
+              "do": "case",
+              "id": "P-02",
+              "at": 0.45
+            }
+          ]
+        },
+        {
+          "id": "c-humain",
+          "title": "Ce qui reste humain",
+          "text": "Ce qui reste humain ? Tout ce qui compte : le soin, l'écoute, la décision. Les agents préparent ; les équipes décident et signent l'irréversible. Pour les soignants, c'est un dixième de leur temps, celui de la paperasse, qui retourne au patient. Les cadres de santé reçoivent un planning proposé, les absences sont anticipées trois semaines à l'avance et remplacées par la réserve interne, et les lits sont tenus à jour, les arbitrages restant humains. Chaque semaine, les équipes, y compris celles de nuit, donnent leur avis à la voix, anonymement ; et le compliment d'un patient retrouve l'équipe qui l'a mérité.",
+          "speech": "Ce qui reste humain ? Tout ce qui compte : le soin, l'écoute, la décision. Les agents préparent ; les équipes décident et signent l'irréversible. Pour les soignants, c'est un dixième de leur temps, celui de la paperasse, qui retourne au patient. Les cadres de santé reçoivent un planning proposé, les absences sont anticipées trois semaines à l'avance et remplacées par la réserve interne, et les lits sont tenus à jour, les arbitrages restant humains. Chaque semaine, les équipes, y compris celles de nuit, donnent leur avis à la voix, anonymement ; et le compliment d'un patient retrouve l'équipe qui l'a mérité.",
+          "actions": [
+            {
+              "do": "select",
+              "kind": "person",
+              "id": "hospitalisation/infirmier/0",
+              "at": 0.02
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "cadres",
+              "at": 0.52
+            },
+            {
+              "do": "case",
+              "id": "P-03",
+              "at": 0.6
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "lits",
+              "at": 0.88
+            }
+          ]
+        },
+        {
+          "id": "c-coulisses",
+          "title": "Les coulisses",
+          "text": "Elle sort. En coulisses, au sous-sol, tout s'enchaîne. La chambre libérée déclenche le bionettoyage, sans un seul appel : dans un grand centre américain de cancérologie, la chambre est prête en un peu plus d'une heure au lieu de près de deux. Le brancardage est régulé, le linge et les repas commandés au plus juste, les demandes logistiques dispatchées, le courrier et les archives lus et classés. Et à la pharmacie, un lot qui va périmer change de clinique avant d'être perdu.",
+          "speech": "Elle sort. En coulisses, au sous-sol, tout s'enchaîne. La chambre libérée déclenche le bionettoyage, sans un seul appel : dans un grand centre américain de cancérologie, la chambre est prête en un peu plus d'une heure au lieu de près de deux. Le brancardage est régulé, le linge et les repas commandés au plus juste, les demandes logistiques dispatchées, le courrier et les archives lus et classés. Et à la pharmacie, un lot qui va périmer change de clinique avant d'être perdu.",
+          "actions": [
+            {
+              "do": "select",
+              "kind": "floor",
+              "id": "main:-1"
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "bionettoyage",
+              "at": 0.06
+            },
+            {
+              "do": "case",
+              "id": "H-01",
+              "at": 0.13
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "brancardage",
+              "at": 0.56
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "linge",
+              "at": 0.64
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "logistique",
+              "at": 0.71
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "archives",
+              "at": 0.78
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "pharmacie",
+              "at": 0.88
+            }
+          ]
+        },
+        {
+          "id": "c-twin",
+          "title": "La salle de contrôle JABB Twin",
+          "text": "Montons au quatrième étage, dans la salle de contrôle du JABB Twin, le jumeau numérique de l'hôpital. Il écoute la voix des patients, chambre par chambre ; chaque réclamation reçoit une réponse dans l'heure, un incident se déclare en une minute, à la voix ; l'accréditation est tenue à jour en permanence, et l'hygiène suivie chaque jour. Côté technique, il voit la panne venir avant l'arrêt, retrouve le pousse-seringue libre, surveille l'oxygène et la chaîne du froid, mesure le vrai rendement des IRM et des salles de bloc, et compare l'énergie des 45 sites. Dans un hôpital universitaire chinois, la maintenance priorisée par l'IA coûte un tiers de moins. Toute cette valeur s'ajoute, sans entrer dans les 302 MDH.",
+          "speech": "Montons au quatrième étage, dans la salle de contrôle du Jabb Twin, le jumeau numérique de l'hôpital. Il écoute la voix des patients, chambre par chambre ; chaque réclamation reçoit une réponse dans l'heure, un incident se déclare en une minute, à la voix ; l'accréditation est tenue à jour en permanence, et l'hygiène suivie chaque jour. Côté technique, il voit la panne venir avant l'arrêt, retrouve le pousse-seringue libre, surveille l'oxygène et la chaîne du froid, mesure le vrai rendement des IRM et des salles de bloc, et compare l'énergie des 45 sites. Dans un hôpital universitaire chinois, la maintenance priorisée par l'IA coûte un tiers de moins. Toute cette valeur s'ajoute, sans entrer dans les 302 millions de dirhams.",
+          "actions": [
+            {
+              "do": "select",
+              "kind": "floor",
+              "id": "main:4"
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "technique",
+              "at": 0.04
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "qualite",
+              "at": 0.14
+            },
+            {
+              "do": "case",
+              "id": "X-01",
+              "at": 0.18
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "technique",
+              "at": 0.5
+            },
+            {
+              "do": "case",
+              "id": "I-04",
+              "at": 0.7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "siege",
+      "title": "Le siège et l'Agentic Command Center",
+      "beats": [
+        {
+          "id": "c-siege",
+          "title": "Finance, RH, services généraux",
+          "text": "Traversons vers le siège. À la finance, les factures fournisseurs sont contrôlées par l'agent, la banque rapprochée chaque jour, la clôture du mois préparée, et les créances sur les organismes relancées sans relâche. Aux ressources humaines, la paie est vérifiée avant le calcul, les contrats se signent en ligne, et un assistant répond jour et nuit aux 10 256 collaborateurs. Le recrutement s'accélère : sur près de 70 000 candidats, des entretiens vocaux par IA ont augmenté les embauches de 18 %. Le contrôle de gestion connaît enfin le coût de chaque séjour ; les appels d'offres se bouclent en jours, et les conventions avec les organismes se négocient sur preuves. Achats, juridique et support informatique suivent le même chemin. Le siège, à lui seul, pèse 94 MDH.",
+          "speech": "Traversons vers le siège. À la finance, les factures fournisseurs sont contrôlées par l'agent, la banque rapprochée chaque jour, la clôture du mois préparée, et les créances sur les organismes relancées sans relâche. Aux ressources humaines, la paie est vérifiée avant le calcul, les contrats se signent en ligne, et un assistant répond jour et nuit aux 10 256 collaborateurs. Le recrutement s'accélère : sur près de 70 000 candidats, des entretiens vocaux par IA ont augmenté les embauches de 18 %. Le contrôle de gestion connaît enfin le coût de chaque séjour ; les appels d'offres se bouclent en jours, et les conventions avec les organismes se négocient sur preuves. Achats, juridique et support informatique suivent le même chemin. Le siège, à lui seul, pèse 94 millions de dirhams.",
+          "actions": [
+            {
+              "do": "select",
+              "kind": "floor",
+              "id": "annex:1"
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "siege-finance",
+              "at": 0.03
+            },
+            {
+              "do": "case",
+              "id": "S-01",
+              "at": 0.08
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "siege-rh",
+              "at": 0.38
+            },
+            {
+              "do": "case",
+              "id": "S-08",
+              "at": 0.62
+            },
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "siege-generaux",
+              "at": 0.84
+            }
+          ]
+        },
+        {
+          "id": "c-warroom",
+          "title": "L'Agentic Command Center",
+          "text": "Au dernier étage, l'Agentic Command Center. Chaque matin à sept heures, la direction reçoit son rapport : effectifs, heures rendues, décisions de poste, coût des agents. Elle ne compte qu'une chose : l'économie constatée en paie. Chaque agent a un responsable, un budget et un bouton d'arrêt ; et une académie forme les administratifs à devenir pilotes d'agents. Une bourse des transitions accompagne chaque mobilité ; les nouvelles cliniques sont conçues augmentées dès le premier jour, leur jumeau numérique existant avant la première pierre ; et une salle de crise numérique se tient prête, pour un afflux massif comme pour une cyberattaque.",
+          "speech": "Au dernier étage, l'Agentic Command Center. Chaque matin à sept heures, la direction reçoit son rapport : effectifs, heures rendues, décisions de poste, coût des agents. Elle ne compte qu'une chose : l'économie constatée en paie. Chaque agent a un responsable, un budget et un bouton d'arrêt ; et une académie forme les administratifs à devenir pilotes d'agents. Une bourse des transitions accompagne chaque mobilité ; les nouvelles cliniques sont conçues augmentées dès le premier jour, leur jumeau numérique existant avant la première pierre ; et une salle de crise numérique se tient prête, pour un afflux massif comme pour une cyberattaque.",
+          "actions": [
+            {
+              "do": "select",
+              "kind": "dept",
+              "id": "siege-pilotage",
+              "at": 0.02
+            },
+            {
+              "do": "case",
+              "id": "T-07",
+              "at": 0.06
+            },
+            {
+              "do": "case",
+              "id": "T-04",
+              "at": 0.42
+            },
+            {
+              "do": "case",
+              "id": "T-05",
+              "at": 0.6
+            }
+          ]
+        },
+        {
+          "id": "c-bilan",
+          "title": "89 cas d'usage",
+          "text": "Au total, nous venons de traverser 89 cas d'usage. 46 libèrent les 302 MDH de masse salariale. 35 créent une autre valeur, en qualité, en revenu, en énergie, sans jamais s'y additionner. Et 8 leviers transforment le temps libéré en économie réelle, constatée en paie.",
+          "speech": "Au total, nous venons de traverser 89 cas d'usage. 46 libèrent les 302 millions de dirhams de masse salariale. 35 créent une autre valeur, en qualité, en revenu, en énergie, sans jamais s'y additionner. Et 8 leviers transforment le temps libéré en économie réelle, constatée en paie.",
+          "actions": [
+            {
+              "do": "section",
+              "section": "cas",
+              "at": 0.08
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "temps",
+      "title": "2026 → 2029 : la transformation",
+      "beats": [
+        {
+          "id": "s-temps",
+          "title": "2026 → 2029",
+          "text": "Revenons à l'hôpital, et faisons défiler le temps. 2026. 2027. 2028. 2029. Regardez l'hôpital se transformer : moins de guichets, plus de pilotes d'agents. Dès 2027, les premières vagues couvrent leur coût ; en 2028, le gain net dépasse 80 MDH ; en 2029, c'est le plein régime : 142 MDH nets par an, près de deux dirhams économisés pour chaque dirham investi.",
+          "speech": "Revenons à l'hôpital, et faisons défiler le temps. 2026. 2027. 2028. 2029. Regardez l'hôpital se transformer : moins de guichets, plus de pilotes d'agents. Dès 2027, les premières vagues couvrent leur coût ; en 2028, le gain net dépasse 80 millions de dirhams ; en 2029, c'est le plein régime : 142 millions de dirhams nets par an, près de deux dirhams économisés pour chaque dirham investi.",
+          "actions": [
+            {
+              "do": "home"
+            },
+            {
+              "do": "year",
+              "year": 2026,
+              "atSentence": 1
+            },
+            {
+              "do": "year",
+              "year": 2027,
+              "atSentence": 2
+            },
+            {
+              "do": "year",
+              "year": 2028,
+              "atSentence": 3
+            },
+            {
+              "do": "year",
+              "year": 2029,
+              "atSentence": 4
+            }
+          ]
+        },
+        {
+          "id": "s-emplois",
+          "title": "Zéro licenciement",
+          "text": "Et personne n'est licencié. Les agents libèrent l'équivalent de 1 410 postes administratifs ; or, chaque année, environ 458 personnes quittent ces fonctions, naturellement. En un peu plus de trois ans, les départs non remplacés et la mobilité vers les nouvelles cliniques absorbent tout. Le déploiement avance par vagues : une clinique et le siège dès la mi-décembre, trois cliniques au printemps, une région à l'automne, puis tout le groupe.",
+          "speech": "Et personne n'est licencié. Les agents libèrent l'équivalent de 1 410 postes administratifs ; or, chaque année, environ 458 personnes quittent ces fonctions, naturellement. En un peu plus de trois ans, les départs non remplacés et la mobilité vers les nouvelles cliniques absorbent tout. Le déploiement avance par vagues : une clinique et le siège dès la mi-décembre, trois cliniques au printemps, une région à l'automne, puis tout le groupe.",
+          "actions": [
+            {
+              "do": "section",
+              "section": "emplois",
+              "at": 0.02
+            },
+            {
+              "do": "section",
+              "section": "deploiement",
+              "at": 0.62
+            }
+          ]
+        },
+        {
+          "id": "c-confiance",
+          "title": "La confiance",
+          "text": "Et la confiance se construit dès le premier jour. Les données de santé restent au Maroc, dans un coffre souverain. Chaque agent est enregistré, chaque action journalisée, et tout peut être arrêté en un geste. Aucune donnée réelle n'est traitée avant l'autorisation de la CNDP, et chaque élargissement se décide sur le compteur de valeur, pas sur une promesse.",
+          "speech": "Et la confiance se construit dès le premier jour. Les données de santé restent au Maroc, dans un coffre souverain. Chaque agent est enregistré, chaque action journalisée, et tout peut être arrêté en un geste. Aucune donnée réelle n'est traitée avant l'autorisation de la CNDP, et chaque élargissement se décide sur le compteur de valeur, pas sur une promesse.",
+          "actions": [
+            {
+              "do": "section",
+              "section": "gouvernance",
+              "at": 0.05
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reseau",
+      "title": "Le jumeau et le réseau",
+      "beats": [
+        {
+          "id": "s-casa",
+          "title": "Casablanca",
+          "text": "Prenons de la hauteur. À trois kilomètres, Casablanca apparaît : la ville du siège et d'Anfa Prime, le vaisseau amiral du groupe. Le jumeau ne s'arrête pas aux murs de l'hôpital : chaque clinique du réseau devient un nœud du programme.",
+          "speech": "Prenons de la hauteur. À trois kilomètres, Casablanca apparaît : la ville du siège et d'Anfa Prime, le vaisseau amiral du groupe. Le jumeau ne s'arrête pas aux murs de l'hôpital : chaque clinique du réseau devient un nœud du programme.",
+          "actions": [
+            {
+              "do": "section",
+              "section": "explorer",
+              "silent": true
+            },
+            {
+              "do": "zoom",
+              "g": 0.31,
+              "at": 0.05
+            }
+          ]
+        },
+        {
+          "id": "s-maroc",
+          "title": "Le réseau marocain",
+          "text": "Le Maroc, ensuite : 45 établissements en service dans 25 villes, et bientôt 59. Regardez les données circuler entre les cliniques et le siège : ce qui est prouvé dans une clinique se déploie dans toutes. C'est sur ce périmètre que portent les 302 MDH.",
+          "speech": "Le Maroc, ensuite : 45 établissements en service dans 25 villes, et bientôt 59. Regardez les données circuler entre les cliniques et le siège : ce qui est prouvé dans une clinique se déploie dans toutes. C'est sur ce périmètre que portent les 302 millions de dirhams.",
+          "actions": [
+            {
+              "do": "zoom",
+              "g": 0.62,
+              "at": 0.03
+            }
+          ]
+        },
+        {
+          "id": "s-monde",
+          "title": "Au-delà du Maroc",
+          "text": "Et au-delà. En Arabie saoudite, Riyad et La Mecque sont en service depuis septembre, Djeddah suivra ; à Dubaï, un hôpital est en construction. Le modèle prouvé au Maroc pourra s'y répliquer, pays après pays.",
+          "speech": "Et au-delà. En Arabie saoudite, Riyad et La Mecque sont en service depuis septembre, Djeddah suivra ; à Dubaï, un hôpital est en construction. Le modèle prouvé au Maroc pourra s'y répliquer, pays après pays.",
+          "actions": [
+            {
+              "do": "zoom",
+              "g": 0.79,
+              "at": 0.03
+            },
+            {
+              "do": "point",
+              "anchor": "country:SA",
+              "at": 0.25
+            },
+            {
+              "do": "point",
+              "anchor": "country:AE",
+              "at": 0.6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "decision",
+      "title": "La décision",
+      "beats": [
+        {
+          "id": "s-decision",
+          "title": "La décision",
+          "text": "Le chemin est tracé, et il commence petit : une clinique et le siège, sans contact patient, mesurés chaque mois dans l'Agentic Command Center. La décision qui vous revient aujourd'hui : lancer le cadrage en novembre.",
+          "speech": "Le chemin est tracé, et il commence petit : une clinique et le siège, sans contact patient, mesurés chaque mois dans l'Agentic Command Center. La décision qui vous revient aujourd'hui : lancer le cadrage en novembre.",
+          "actions": [
+            {
+              "do": "point",
+              "anchor": "stage",
+              "at": 0.2
+            }
+          ]
+        },
+        {
+          "id": "s-ligne",
+          "title": "JABB × AKDITAL × mibtech",
+          "text": "JABB × AKDITAL × mibtech : 302 MDH libérés chaque année, 142 MDH nets, sans un seul licenciement.",
+          "speech": "Jabb, Akdital et Mibtech : 302 millions de dirhams libérés chaque année, 142 millions de dirhams nets, sans un seul licenciement.",
+          "actions": [
+            {
+              "do": "zoom",
+              "g": 0.99,
+              "at": 0.02
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "note": "Generated by scripts/build-tour.mjs — edit the story there. Beat: text (captions), speech (said), actions {do,…, at: fraction | atSec | atSentence}."
+}
