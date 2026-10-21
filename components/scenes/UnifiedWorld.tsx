@@ -80,24 +80,62 @@ export default function UnifiedWorld() {
     c.smoothTime = 0.16; c.draggingSmoothTime = 0.06; c.dollySpeed = 1; c.infinityDolly = false;
     c.mouseButtons.wheel = 0; // handled below
     const s = st.current;
-    const on = () => { s.dragging = true; rig.cancel(); s.intro = false; };
+    const on = () => { s.dragging = true; rig.cancel(); s.intro = false; dive.current++; };
     const off = () => { s.dragging = false; };
     c.addEventListener("controlstart", on); c.addEventListener("controlend", off);
     return () => { c.removeEventListener("controlstart", on); c.removeEventListener("controlend", off); rig.attach(null); };
   }, [camera]);
 
   // overview flights for the three levels (contents handle their own selections)
-  const go = (level: "hospital" | "morocco" | "world", o: { duration?: number } = {}) => {
+  const go = (level: "hospital" | "morocco" | "world", o: { duration?: number; done?: () => void } = {}) => {
     if (level === "hospital") rig.fitBox(HOSPITAL_BOX.clone(), { polar: 1.02, azimuth: 0.72, padding: 0.02, ...o });
     else if (level === "morocco") rig.flyTo(shots.morocco, 2.55e6, { polar: 0.5, azimuth: 0.04, ...o });
     else rig.flyTo(EARTH_CENTER, R_TOP + 2.1e7, { polar: shots.worldPolar, azimuth: shots.worldAz, ...o });
+  };
+  // Staged travel through the powers of ten, both ways: logo → globe → Morocco → Casablanca → hospital (the globe comes out
+  // of the logo, Morocco out of the globe, Casablanca out of Morocco, then the hospital), and back up the same ladder.
+  // Used when a click skips two rungs or more (a straight flight would land inside Morocco with the pivot still on the
+  // Earth). ≈ 2.1 s a rung. Any new command, wheel or drag stops it (dive token).
+  const dive = useRef(0);
+  const CASA = useMemo(() => new THREE.Vector3(0, 8, 0), []);
+  type Rung = "hospital" | "casa" | "morocco" | "world" | "jabb";
+  const LADDER: Rung[] = ["hospital", "casa", "morocco", "world", "jabb"];
+  const rungOf = (alt: number): number => (alt > 4e7 ? 4 : alt > 3.2e6 ? 3 : alt > 6e4 ? 2 : alt > 2_500 ? 1 : 0);
+  const fly = (r: Rung, want: number | undefined, done?: () => void) => {
+    if (r === "hospital") go("hospital", { duration: 2.2, done });
+    else if (r === "casa") rig.flyTo(CASA, 2.4e4, { polar: 0.78, azimuth: 0.45, duration: 2.0, done });
+    else if (r === "morocco") rig.flyTo(shots.morocco, want ?? 2.55e6, { polar: 0.5, azimuth: 0.04, duration: 2.1, done });
+    else if (r === "world") rig.flyTo(EARTH_CENTER, R_TOP + (want ?? 2.1e7), { polar: shots.worldPolar, azimuth: shots.worldAz, duration: 2.1, done });
+    else rig.flyTo(EARTH_CENTER, R_TOP + MAX_ALT, { duration: 2.3, done });
+  };
+  /** true when the trip skips two rungs or more (then it is staged); `want` = altitude asked for the last rung */
+  const travel = (to: Rung, want?: number) => {
+    const from = rungOf(frame.alt), end = LADDER.indexOf(to);
+    if (Math.abs(end - from) < 2) return false;
+    const my = ++dive.current;
+    const step = end > from ? 1 : -1;
+    const legs: number[] = [];
+    for (let i = from + step; step > 0 ? i <= end : i >= end; i += step) legs.push(i);
+    const next = () => {
+      if (my !== dive.current) return;
+      const i = legs.shift();
+      if (i === undefined) return;
+      fly(LADDER[i], i === end ? want : undefined, legs.length ? next : undefined);
+    };
+    next();
+    return true;
   };
   const focusNonce = useApp((s) => s.focusNonce);
   const first = useRef(true);
   useEffect(() => {
     if (first.current) { first.current = false; return; }
     const sel = useApp.getState().sel;
-    if (sel?.kind === "overview") { if (walkBusy()) WALK_API.stop(); st.current.intro = false; go(sel.id as "hospital" | "morocco" | "world"); }
+    if (sel?.kind === "overview") {
+      if (walkBusy()) WALK_API.stop();
+      st.current.intro = false; dive.current++;
+      const id = sel.id as "hospital" | "morocco" | "world";
+      if (!travel(id)) go(id);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusNonce]);
 
@@ -120,7 +158,7 @@ export default function UnifiedWorld() {
       const c = controls.current as unknown as (CameraControls & { _sphericalEnd: { radius: number }; _dollyInternal: (d: number, x: number, y: number) => void }) | null;
       if (!c) return;
       e.preventDefault();
-      rig.cancel(); st.current.intro = false;
+      rig.cancel(); st.current.intro = false; dive.current++;
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.2 && !e.ctrlKey) { c.rotate((-e.deltaX * Math.PI) / 1800, 0, true); return; }
       let dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
       if (e.ctrlKey) dy *= PINCH;
@@ -170,9 +208,15 @@ export default function UnifiedWorld() {
     return useApp.subscribe((s) => {
       const cmd = s.zoomCmd, c = controls.current;
       if (!cmd || !c || cmd.nonce === last) return;
-      last = cmd.nonce; st.current.intro = false;
+      last = cmd.nonce; st.current.intro = false; dive.current++;
       if (walkBusy()) WALK_API.stop();
       const alt = frame.alt;
+      // a click on a rung of the zoom rail that skips rungs: staged travel, not a straight dive
+      if (cmd.staged) {
+        const to: Rung = cmd.g !== undefined ? "jabb" : (cmd.level as Rung);
+        const want = cmd.value !== undefined && to !== "hospital" && to !== "jabb" ? bandAlt(cmd.level, cmd.value) : undefined;
+        if (travel(to, want)) return;
+      }
       let want = alt;
       let fast = false;
       if (cmd.g !== undefined) { want = gToAlt(cmd.g); fast = true; }

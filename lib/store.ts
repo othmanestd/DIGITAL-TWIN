@@ -43,7 +43,7 @@ type State = {
   /** Zoom inside the current level, reported by the active scene: 0 = closest, 1 = farthest (log scale). */
   zoom: number;
   /** Zoom request from the slider / shortcuts, applied by the scene of that level (see lib/zoom.ts). */
-  zoomCmd: { level: Level; value?: number; delta?: number; g?: number; nonce: number } | null;
+  zoomCmd: { level: Level; value?: number; delta?: number; g?: number; staged?: boolean; nonce: number } | null;
   helpOpen: boolean;
   /** Camera altitude above the ground, metres (continuous world). */
   altitude: number;
@@ -67,7 +67,7 @@ type State = {
   setZoom: (z: number) => void;
   /** value: absolute 0..1 within `level`; delta: relative step (+ = out, − = in) within the current level. */
   /** value: 0..1 inside `level`'s altitude band; delta: relative step (+ = out); g: 0..1 over the whole continuous range. */
-  requestZoom: (r: { level?: Level; value?: number; delta?: number; g?: number }) => void;
+  requestZoom: (r: { level?: Level; value?: number; delta?: number; g?: number; /** a click on a rung: staged travel when it skips rungs */ staged?: boolean }) => void;
   setHelpOpen: (v: boolean) => void;
   /** Level derived from the camera altitude (no navigation side effects). */
   syncLevel: (l: Level, altitude: number) => void;
@@ -123,7 +123,7 @@ export const useApp = create<State>((set, get) => ({
   requestZoom: (r) => {
     const level = r.level ?? get().level;
     const nonce = (get().zoomCmd?.nonce ?? 0) + 1;
-    set({ zoomCmd: { level, value: r.value, delta: r.delta, g: r.g, nonce } });
+    set({ zoomCmd: { level, value: r.value, delta: r.delta, g: r.g, staged: r.staged, nonce } });
   },
   syncLevel: (level, altitude) => {
     const s = get();

@@ -15,7 +15,7 @@ export const EARTH_R = 6_371_000;   // metres
 export const GLOBE_DROP = 60_000;   // the globe sits just under the map slab (no z-fighting at Casablanca)
 export const EARTH_CENTER = new THREE.Vector3(0, -EARTH_R - GLOBE_DROP, 0);
 
-type FlyOpts = { azimuth?: number; polar?: number; duration?: number; transition?: boolean; keepAngles?: boolean };
+type FlyOpts = { azimuth?: number; polar?: number; duration?: number; transition?: boolean; keepAngles?: boolean; /** called when the flight lands (not if it is cancelled or replaced) */ done?: () => void };
 type Anim = {
   t0: number; dur: number;
   T0: THREE.Vector3; T1: THREE.Vector3; D0: number; D1: number;
@@ -67,19 +67,21 @@ class Rig {
       if (o.transition === false) {
         const pos = new THREE.Vector3().setFromSphericalCoords(distance, P1, A1).add(target);
         void c.setLookAt(pos.x, pos.y, pos.z, target.x, target.y, target.z, false);
+        o.done?.();
         return;
       }
       if (ratio < 6 && far < 3) {
         this.anim = null;
         const pos = new THREE.Vector3().setFromSphericalCoords(distance, P1, A1).add(target);
         void c.setLookAt(pos.x, pos.y, pos.z, target.x, target.y, target.z, true);
+        if (o.done) setTimeout(o.done, 700); // camera-controls' own damping settles in ≈ 0.7 s
         return;
       }
       // log-space cinematic flight
       let A0 = cur.azimuth;
       const dA = ((A1 - A0 + Math.PI * 3) % (Math.PI * 2)) - Math.PI; // shortest way round
       const dur = o.duration ?? Math.min(5.2, Math.max(1.2, 0.9 + 0.36 * Math.log(Math.max(ratio, 1 + far))));
-      this.anim = { t0: performance.now(), dur: dur * 1000, T0, T1: target.clone(), D0, D1: distance, P0: cur.polar, P1, A0, A1: A0 + dA };
+      this.anim = { t0: performance.now(), dur: dur * 1000, T0, T1: target.clone(), D0, D1: distance, P0: cur.polar, P1, A0, A1: A0 + dA, done: o.done };
       this.onFlightStart?.();
     };
     if (this.controls) run(); else this.pending = run;

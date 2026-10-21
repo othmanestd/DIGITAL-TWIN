@@ -63,7 +63,7 @@ export default function ZoomSlider() {
             ref={tone} data-anchor={`zoom:level:${m.key}`}
             title={m.label}
             onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => (m.key === "jabb" ? requestZoom({ g: m.g }) : requestZoom({ level: m.key, value: m.key === "hospital" ? 0.62 : m.key === "morocco" ? 0.92 : 0.55 }))}
+            onClick={() => (m.key === "jabb" ? requestZoom({ g: m.g, staged: true }) : requestZoom({ level: m.key, value: m.key === "hospital" ? 0.62 : m.key === "morocco" ? 0.92 : 0.55, staged: true }))}
             className={`${btn} absolute left-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 ${nearest.key === m.key ? "tone-on" : "tone-dim"}`}
             style={{ top: `${m.g * 100}%` }}
           >
