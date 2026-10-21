@@ -344,7 +344,7 @@ function SpotAnchors() {
   const gl = useThree((s) => s.gl);
   useEffect(() => {
     const v = new THREE.Vector3();
-    const offs = ["campus", "hq-finance", "machine", "pump", "corridor-fall"].map((k) => registerAnchor("spot:" + k, () => {
+    const offs = ["campus", "hq-finance", "machine", "pump", "corridor-fall", "cart-out"].map((k) => registerAnchor("spot:" + k, () => {
       const p = spot(k);
       if (!p || !useStory.getState().on) return null;
       v.set(p.x, floorY(p.floor) + (k === "campus" ? 18 : 1.2), p.z);

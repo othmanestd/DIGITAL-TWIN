@@ -5,6 +5,7 @@
 //   queue     admissions: the queue in front of Youssef → nobody waiting
 //   ydesk     Youssef's desk: paper stacks → a clean console; his squad of agents (1 orb in mid, 3 after) follows him
 //   npaper    nurse station: the end-of-shift paper → gone
+//   cart      the room next to Amina's: the bionettoyage cart parked inside → rolls out of the door and down the corridor (H-01)
 //   machine   4th floor: a chiller failing (coral) → healthy, tagged and watched by the twin (green + blue)
 //   invoices  billing: stacks with rejected sheets (coral) → one complete file (gold)
 //   sheets    Leïla's spreadsheets → gone
@@ -252,6 +253,53 @@ function Fall({ M }: { M: Mats }) {
   );
 }
 
+// ---------------------------------------------------------------- H-01: the bionettoyage cart leaves the freed room
+// "before": parked inside the room; "after": rolls out of the door (2.4 s) then 2 m down the corridor (3 s) — Keeps sees the
+// cart on the existing corridor camera, never a person, and the twin moves the bed to « prêt ».
+function Cart({ M }: { M: Mats }) {
+  const step = useProp("cart");
+  const mats = useMemo(() => [M.steel.clone(), M.white.clone(), M.dark.clone(),
+    new THREE.MeshStandardMaterial({ color: "#4F7BD9", roughness: 0.6, transparent: true }),
+    new THREE.MeshStandardMaterial({ color: "#E8C24A", roughness: 0.7, transparent: true })], [M]);
+  useEffect(() => () => { mats[3].dispose(); mats[4].dispose(); }, [mats]);
+  const g = useRef<THREE.Group>(null);
+  const t0 = useRef<number | null>(null);
+  useFrame((state, dt) => {
+    const s = step(Math.min(dt, 0.5));
+    const op = smooth(Math.max(s.a, s.z)) * (floorShown("main:3") ? 1 : 0);
+    if (!g.current) return;
+    g.current.visible = op > 0.004;
+    setOp(mats, op);
+    const A = spot("cart-room")!, Bp = spot("cart-out")!, Cp = spot("cart-away")!;
+    let x = A.x, z = A.z, yaw = Math.PI;
+    if (s.cur === "after") {
+      if (t0.current === null) t0.current = state.clock.elapsedTime;
+      const age = state.clock.elapsedTime - t0.current;
+      if (age < 2.4) { const u = smooth(age / 2.4); x = A.x + (Bp.x - A.x) * u; z = A.z + (Bp.z - A.z) * u; yaw = Math.PI; }
+      else { const u = smooth(Math.min(1, (age - 2.4) / 3)); x = Bp.x + (Cp.x - Bp.x) * u; z = Bp.z + (Cp.z - Bp.z) * u; yaw = Math.PI + smooth(Math.min(1, (age - 2.4) / 0.8)) * (Math.PI / 2); }
+    } else t0.current = null;
+    g.current.position.set(x, floorY("main:3"), z);
+    g.current.rotation.set(0, yaw, 0);
+  });
+  return (
+    <group ref={g} visible={false}>
+      {/* trolley: two shelves on four uprights, wheels, a yellow bag at the back, a blue bucket and a mop in front */}
+      <mesh geometry={B} material={mats[0]} position={[0, 0.16, 0]} scale={[0.5, 0.04, 0.9]} castShadow />
+      <mesh geometry={B} material={mats[0]} position={[0, 0.78, 0]} scale={[0.5, 0.03, 0.9]} castShadow />
+      {[[-0.22, -0.42], [0.22, -0.42], [-0.22, 0.42], [0.22, 0.42]].map(([px, pz], i) => (
+        <group key={i}>
+          <mesh geometry={CYL} material={mats[0]} position={[px, 0.47, pz]} scale={[0.015, 0.62, 0.015]} />
+          <mesh geometry={CYL} material={mats[2]} position={[px, 0.06, pz]} rotation={[0, 0, Math.PI / 2]} scale={[0.06, 0.04, 0.06]} />
+        </group>
+      ))}
+      <mesh geometry={B} material={mats[4]} position={[0, 0.48, 0.3]} scale={[0.42, 0.56, 0.3]} castShadow />
+      <mesh geometry={CYL} material={mats[3]} position={[0, 0.3, -0.25]} scale={[0.17, 0.24, 0.17]} castShadow />
+      <mesh geometry={B} material={mats[1]} position={[0.08, 0.84, -0.05]} scale={[0.22, 0.09, 0.3]} />
+      <mesh geometry={CYL} material={mats[0]} position={[-0.12, 0.85, -0.3]} rotation={[0.18, 0, 0]} scale={[0.012, 1.3, 0.012]} />
+    </group>
+  );
+}
+
 // ---------------------------------------------------------------- the chiller: failing → watched by the twin
 function Machine({ M }: { M: Mats }) {
   const step = useProp("machine");
@@ -386,7 +434,7 @@ function Flashes({ M }: { M: Mats }) {
       });
       // Keeps: the existing camera's view cone (corridor alerts); twin: a beam
       const cone = g.children[3] as THREE.Mesh, beam = g.children[4] as THREE.Mesh;
-      cone.visible = f.kind === "alert" && !f.dim && f.spot === "corridor-fall";
+      cone.visible = f.kind === "alert" && !f.dim && (f.spot === "corridor-fall" || f.spot === "cart-out");
       p.cone.opacity = 0.11 * env;
       beam.visible = f.kind === "ping";
       p.beam.opacity = 0.4 * env;
@@ -416,6 +464,7 @@ export default function StoryProps() {
       <YDesk M={M} />
       <NursePaper M={M} />
       <Fall M={M} />
+      <Cart M={M} />
       <Machine M={M} />
       <Invoices M={M} />
       <Sheets M={M} />

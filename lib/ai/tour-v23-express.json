@@ -430,8 +430,8 @@
     {
      "id": "x-salma",
      "title": "La nuit de Salma",
-     "text": "Troisième étage, en 2026 : Salma ressaisit au poste, en fin de garde, ce qu'elle a noté sur papier. En 2031, elle dicte son dossier au chevet d'Amina, opérée dans l'après-midi. Cette nuit, Keeps repère une chute dans le couloir et la prévient en dix-huit secondes, sans reconnaître personne. La chambre libérée est prête plus tôt, sans un seul appel. Qualité et sécurité pèsent 103 MDH par an : du temps soignant rendu, de l'intérim évité, des lits prêts plus tôt.",
-     "speech": "Troisième étage, en 2026 : Salma ressaisit au poste, en fin de garde, ce qu'elle a noté sur papier. En 2031, elle dicte son dossier au chevet d'Amina, opérée dans l'après-midi. Cette nuit, Keeps repère une chute dans le couloir et la prévient en dix-huit secondes, sans reconnaître personne. La chambre libérée est prête plus tôt, sans un seul appel. Qualité et sécurité pèsent 103 millions de dirhams par an : du temps soignant rendu, de l'intérim évité, des lits prêts plus tôt.",
+     "text": "Troisième étage, en 2026 : Salma ressaisit au poste, en fin de garde, ce qu'elle a noté sur papier. En 2031, elle dicte son dossier au chevet d'Amina, opérée dans l'après-midi. Dans la chambre voisine, un patient vient de sortir : Keeps voit, sur la caméra de couloir existante, le chariot de bionettoyage ressortir de la chambre, sans jamais filmer une personne. Le JABB Twin passe aussitôt le lit au statut prêt, sans attendre que l'équipe prévienne le service, puis que le service prévienne l'accueil. Dans un grand centre américain, la chambre est ainsi prête en 68 minutes au lieu de 115 : quarante-sept minutes gagnées à chaque sortie, et des lits disponibles plus tôt. Qualité et sécurité pèsent 103 MDH par an : du temps soignant rendu, de l'intérim évité, des lits prêts plus tôt.",
+     "speech": "Troisième étage, en 2026 : Salma ressaisit au poste, en fin de garde, ce qu'elle a noté sur papier. En 2031, elle dicte son dossier au chevet d'Amina, opérée dans l'après-midi. Dans la chambre voisine, un patient vient de sortir : Keeps voit, sur la caméra de couloir existante, le chariot de bionettoyage ressortir de la chambre, sans jamais filmer une personne. Le Jabb Twin passe aussitôt le lit au statut prêt, sans attendre que l'équipe prévienne le service, puis que le service prévienne l'accueil. Dans un grand centre américain, la chambre est ainsi prête en 68 minutes au lieu de 115 : quarante-sept minutes gagnées à chaque sortie, et des lits disponibles plus tôt. Qualité et sécurité pèsent 103 millions de dirhams par an : du temps soignant rendu, de l'intérim évité, des lits prêts plus tôt.",
      "actions": [
       {
        "do": "cue",
@@ -448,7 +448,8 @@
        "do": "cue",
        "props": {
         "queue": "off",
-        "ydesk": "off"
+        "ydesk": "off",
+        "fall": "off"
        }
       },
       {
@@ -473,7 +474,8 @@
       {
        "do": "cue",
        "props": {
-        "npaper": "before"
+        "npaper": "before",
+        "cart": "off"
        }
       },
       {
@@ -499,7 +501,7 @@
        "do": "year",
        "year": 2031,
        "silent": true,
-       "at": 0.208
+       "at": 0.124
       },
       {
        "do": "cue",
@@ -507,14 +509,14 @@
         "t": "Mardi · 23 h 40",
         "year": 2031
        },
-       "at": 0.208
+       "at": 0.124
       },
       {
        "do": "cue",
        "props": {
         "npaper": "after"
        },
-       "at": 0.208
+       "at": 0.124
       },
       {
        "do": "cue",
@@ -534,49 +536,40 @@
          "pose": "tablet"
         }
        },
-       "at": 0.208
+       "at": 0.124
       },
       {
        "do": "cue",
        "cam": "room",
-       "at": 0.208
-      },
-      {
-       "do": "cue",
-       "alert": "corridor-fall",
-       "at": 0.369
+       "at": 0.124
       },
       {
        "do": "cue",
        "props": {
-        "fall": "after"
+        "cart": "after"
        },
-       "at": 0.369
+       "at": 0.22
       },
       {
        "do": "cue",
-       "cam": "corridor",
-       "at": 0.369
+       "cam": "cart",
+       "at": 0.22
       },
       {
        "do": "cue",
-       "cast": {
-        "salma": {
-         "at": "corridor-fall-help",
-         "from": "room-bedside",
-         "via": [
-          "room-in",
-          "room-door"
-         ],
-         "pose": "kneel"
-        }
-       },
-       "at": 0.369
+       "alert": "cart-out",
+       "delay": 1.6,
+       "at": 0.22
+      },
+      {
+       "do": "cue",
+       "ping": "room2-bed",
+       "at": 0.452
       },
       {
        "do": "cue",
        "hud": true,
-       "at": 0.608
+       "at": 0.84
       },
       {
        "do": "cue",
@@ -588,7 +581,7 @@
         "from": "salma",
         "stream": "soin"
        },
-       "at": 0.608
+       "at": 0.84
       }
      ],
      "story0": {
@@ -652,7 +645,8 @@
        "do": "cue",
        "props": {
         "npaper": "off",
-        "fall": "off"
+        "fall": "off",
+        "cart": "off"
        }
       },
       {
@@ -769,8 +763,8 @@
      "story0": {
       "cast": {
        "salma": {
-        "at": "corridor-fall-help",
-        "pose": "kneel"
+        "at": "room-bedside",
+        "pose": "tablet"
        },
        "amina": {
         "at": "room-chair",
@@ -781,8 +775,9 @@
        "calls": "off",
        "queue": "off",
        "ydesk": "off",
+       "fall": "off",
        "npaper": "after",
-       "fall": "after"
+       "cart": "after"
       },
       "stamp": {
        "t": "Mardi · 23 h 40",
@@ -949,8 +944,9 @@
        "calls": "off",
        "queue": "off",
        "ydesk": "off",
-       "npaper": "off",
        "fall": "off",
+       "npaper": "off",
+       "cart": "off",
        "machine": "after"
       },
       "stamp": {
@@ -1145,8 +1141,9 @@
        "calls": "off",
        "queue": "off",
        "ydesk": "off",
-       "npaper": "off",
        "fall": "off",
+       "npaper": "off",
+       "cart": "off",
        "machine": "off",
        "invoices": "after"
       },
@@ -1279,8 +1276,9 @@
        "calls": "off",
        "queue": "after",
        "ydesk": "after",
-       "npaper": "off",
        "fall": "off",
+       "npaper": "off",
+       "cart": "off",
        "machine": "off",
        "invoices": "off"
       },
@@ -1370,8 +1368,9 @@
        "calls": "off",
        "queue": "off",
        "ydesk": "off",
-       "npaper": "off",
        "fall": "off",
+       "npaper": "off",
+       "cart": "off",
        "machine": "off",
        "invoices": "off",
        "sheets": "after"
@@ -1419,8 +1418,9 @@
        "calls": "off",
        "queue": "off",
        "ydesk": "off",
-       "npaper": "off",
        "fall": "off",
+       "npaper": "off",
+       "cart": "off",
        "machine": "off",
        "invoices": "off",
        "sheets": "off"

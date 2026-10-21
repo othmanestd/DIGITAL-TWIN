@@ -102,6 +102,11 @@ must(W1 && /mi-déc/.test(W1.when) && W1n === 15, "wave 1: 15 cases from mid-Dec
 const txt = (id) => `${V[id].catalogue["Titre"]} ${V[id].catalogue["Avec les agents"]}`;
 must(/18 secondes/.test(txt("X-08")) && /sans reconnaître personne/.test(txt("X-08")), "X-08: 18 s, nobody recognised");
 must(/dix jours avant l'arrêt/.test(txt("I-03")), "I-03: ten days before");
+// H-01 (express, Salma's night): Keeps sees the cleaning cart leave the freed room, the twin moves the bed to « prêt »
+must(/chariot arriver devant la chambre puis repartir/.test(txt("H-01")) && /statut du lit avance sans appel/.test(txt("H-01")), "H-01: cart seen, bed status without a call");
+must(/chariot/.test(V["H-01"].catalogue["Keeps (vision IA)"]) && /jamais de personne/.test(V["H-01"].catalogue["Keeps (vision IA)"]), "H-01: Keeps sees a cart, never a person");
+must(/Statut du lit/.test(V["H-01"].catalogue["JABB Twin (jumeau numérique)"]), "H-01: bed status held by the twin");
+must(/lit prêt 47 min plus tôt/.test(V["H-01"].v23.hypothese), "H-01: bed ready 47 min earlier (115 → 68)");
 must(/bloc en veille la nuit/.test(txt("I-07")) && /journée-patient/.test(txt("I-07")), "I-07: energy per patient-day");
 must(/pousse-seringue/.test(txt("I-02")) && /3 secondes/.test(txt("I-02")), "I-02: syringe pump in 3 s");
 must(/Octobre Rose/.test(txt("X-11")) && /deux minutes/.test(txt("R-06")), "X-11 / R-06");
@@ -441,20 +446,20 @@ E.push({ id: "patient", title: "Amina : l'attente qui disparaît", beats: [
 
 E.push({ id: "soin", title: "Salma : la nuit au troisième étage", beats: [
   beat("x-salma", "La nuit de Salma",
-    `‹a›Troisième étage, en 2026 : Salma ressaisit au poste, en fin de garde, ce qu'elle a noté sur papier. ‹b›En 2031, elle dicte son dossier au chevet d'Amina, opérée dans l'après-midi. ‹c›Cette nuit, Keeps repère une chute dans le couloir et la prévient en dix-huit secondes, sans reconnaître personne. ‹d›La chambre libérée est prête plus tôt, sans un seul appel. Qualité et sécurité pèsent ${i0(S.soin.gains)} MDH par an : du temps soignant rendu, de l'intérim évité, des lits prêts plus tôt.`,
-    [cast({ amina: null, youssef: null }), C({ night: 0.12 }), props({ queue: "off", ydesk: "off" }), op.year(2026), sel("dept", "hospitalisation"), stamp("Mardi · 23 h 40", 2026),
-      props({ npaper: "before" }), cast({ salma: { at: "nurse-station", pose: "type" } }), cam("station"), chip("salma"),
+    `‹a›Troisième étage, en 2026 : Salma ressaisit au poste, en fin de garde, ce qu'elle a noté sur papier. ‹b›En 2031, elle dicte son dossier au chevet d'Amina, opérée dans l'après-midi. ‹c›Dans la chambre voisine, un patient vient de sortir : Keeps voit, sur la caméra de couloir existante, le chariot de bionettoyage ressortir de la chambre, sans jamais filmer une personne. ‹d›Le JABB Twin passe aussitôt le lit au statut prêt, sans attendre que l'équipe prévienne le service, puis que le service prévienne l'accueil. Dans un grand centre américain, la chambre est ainsi prête en 68 minutes au lieu de 115 : quarante-sept minutes gagnées à chaque sortie, et des lits disponibles plus tôt. ‹e›Qualité et sécurité pèsent ${i0(S.soin.gains)} MDH par an : du temps soignant rendu, de l'intérim évité, des lits prêts plus tôt.`,
+    [cast({ amina: null, youssef: null }), C({ night: 0.12 }), props({ queue: "off", ydesk: "off", fall: "off" }), op.year(2026), sel("dept", "hospitalisation"), stamp("Mardi · 23 h 40", 2026),
+      props({ npaper: "before", cart: "off" }), cast({ salma: { at: "nurse-station", pose: "type" } }), cam("station"), chip("salma"),
       { ...op.year(2031), mark: "b" }, { ...stamp("Mardi · 23 h 40", 2031), mark: "b" }, { ...props({ npaper: "after" }), mark: "b" },
       { ...cast({ amina: { at: "room-chair", pose: "sit" }, salma: { at: "room-bedside", from: "nurse-station", via: ["corr-e", "room-door", "room-in"], pose: "tablet" } }), mark: "b" }, { ...cam("room"), mark: "b" },
-      { ...C({ alert: "corridor-fall" }), mark: "c" }, { ...props({ fall: "after" }), mark: "c" }, { ...cam("corridor"), mark: "c" },
-      { ...cast({ salma: { at: "corridor-fall-help", from: "room-bedside", via: ["room-in", "room-door"], pose: "kneel" } }), mark: "c" },
-      { ...C({ hud: true }), mark: "d" }, { ...flow("soin", "salma"), mark: "d" }]),
+      { ...props({ cart: "after" }), mark: "c" }, { ...cam("cart"), mark: "c" }, { ...C({ alert: "cart-out", delay: 1.6 }), mark: "c" },
+      { ...C({ ping: "room2-bed" }), mark: "d" },
+      { ...C({ hud: true }), mark: "e" }, { ...flow("soin", "salma"), mark: "e" }]),
 ] });
 
 E.push({ id: "actifs", title: "Karim et le jumeau", beats: [
   beat("x-karim", "Le jumeau numérique",
     `‹a›Quatrième étage. En 2026, Karim court après les pannes. ‹b›En 2031, le JABB Twin voit la dérive d'une machine dix jours avant l'arrêt, et Karim suit un parc plus grand sans courir ; ‹c›le jumeau localise le pousse-seringue libre en trois secondes, surveille le froid et l'oxygène, et met le bloc en veille la nuit. ‹d›Énergie, maintenance, équipements : les actifs rapportent ${SP.actifs.total} MDH par an.`,
-    [cast({ amina: null, salma: null }), C({ night: null }), props({ npaper: "off", fall: "off" }), op.year(2026), sel("dept", "technique"), stamp("Mardi · 14 h 05", 2026),
+    [cast({ amina: null, salma: null }), C({ night: null }), props({ npaper: "off", fall: "off", cart: "off" }), op.year(2026), sel("dept", "technique"), stamp("Mardi · 14 h 05", 2026),
       props({ machine: "before" }), cast({ karim: { at: "machine-fix", pose: "kneel" } }), cam("machine"), chip("karim"), C({ alert: "machine" }),
       { ...op.year(2031), mark: "b" }, { ...stamp("Mardi · 14 h 05", 2031), mark: "b" }, { ...props({ machine: "after" }), mark: "b" },
       { ...cast({ karim: { at: "twin-console", from: "machine-fix", via: ["tech-mid"], pose: "tablet" } }), mark: "b" }, { ...cam("twin"), mark: "b" },

@@ -29,6 +29,9 @@ export const SPOTS: Record<string, Spot> = {
   "room-chair": S("main:3", -3.07, 8.2, -2.11, true),
   "corridor-fall": S("main:3", -9.2, 2.7, 0),
   "corridor-fall-help": S("main:3", -8.35, 2.95, -PI / 2),
+  // the room next to Amina's (door at x −11.5 on the corridor wall z 4.6, bed at x −14.2): the bionettoyage cart (H-01)
+  "cart-room": S("main:3", -11.5, 5.7, PI), "cart-out": S("main:3", -11.5, 2.85, PI / 2), "cart-away": S("main:3", -13.6, 2.75, -PI / 2),
+  "room2-bed": S("main:3", -14.2, 9.0, 0),
   // 4th floor: technical management and the JABB Twin room
   "machine": S("main:4", 7.8, 4.5, 0),
   "machine-fix": S("main:4", 7.85, 5.75, PI),
@@ -63,6 +66,7 @@ export const SHOTS: Record<string, Shot> = {
   station: { look: [-12.6, F(3, 1.2), -0.4], dist: 9.5, az: 0.38, pol: 1.0, dur: 3 },
   room: { look: [-4.3, F(3, 1.0), 7.9], dist: 9.0, az: 0.62, pol: 0.94, dur: 3.2 },
   corridor: { look: [-8.8, F(3, 0.6), 2.85], dist: 8, az: 2.5, pol: 1.0, dur: 2.6 },
+  cart: { look: [-12.8, F(3, 0.6), 1.8], dist: 9, az: 2.5, pol: 0.98, dur: 2.8 },
   machine: { look: [8.1, F(4, 1.0), 4.9], dist: 9.0, az: 0.48, pol: 1.0, dur: 3, group: "machine" },
   twin: { look: [11.4, F(4, 1.6), -7.2], dist: 12.5, az: 0.16, pol: 1.08, dur: 3.2 },
   billing: { look: [-15.1, F(1, 1.1), -3.5], dist: 8.6, az: 0.32, pol: 1.0, dur: 3, group: "billing" },

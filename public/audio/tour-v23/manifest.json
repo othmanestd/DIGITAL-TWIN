@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-21T06:45:38.661Z",
+  "generated": "2026-10-21T11:44:29.539Z",
   "voice": "Iapetus",
   "beats": {
     "x-constat": {
@@ -25,8 +25,8 @@
     },
     "x-salma": {
       "file": "x-salma.mp3",
-      "duration": 33.32,
-      "hash": "4dd960b0a39e",
+      "duration": 49.55,
+      "hash": "d2df62064299",
       "model": "gemini-2.5-flash-preview-tts",
       "voice": "Iapetus"
     },
