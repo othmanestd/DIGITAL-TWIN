@@ -30,7 +30,7 @@ export const DOWNTOWN = new THREE.Vector2(900, -1500);
 /** The old port / medina: the centre of the radial-concentric plan (ring boulevards and radial roads) */
 export const RC = (() => { const b = COAST + wiggle(600); return { x: N.x * b + T.x * 600, z: N.y * b + T.y * 600 }; })();
 /** radial boulevards out of the centre (lines through RC; the seaward half is clipped by the coast) */
-export const RADIALS: { p: [number, number]; a: number }[] = [20, 110, 135].map((deg) => ({ p: [RC.x, RC.z] as [number, number], a: (deg * Math.PI) / 180 }));
+export const RADIALS: { p: [number, number]; a: number }[] = [110, 135].map((deg) => ({ p: [RC.x, RC.z] as [number, number], a: (deg * Math.PI) / 180 }));
 /** ring boulevards around the centre (radii, m) */
 export const RINGS = [2350, 4100];
 /** distance (m) from a point to the nearest avenue, radial or ring boulevard centreline */

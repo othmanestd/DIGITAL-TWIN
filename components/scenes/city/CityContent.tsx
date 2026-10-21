@@ -415,7 +415,7 @@ export function CityContent() {
   const trunkRefs = useRef<(THREE.InstancedMesh | null)[]>([]);
   const lod = useRef<{ hi: THREE.InstancedMesh | null; lo: THREE.InstancedMesh | null }[]>([]);
 
-  const group = useRef<THREE.Group>(null), detail = useRef<THREE.Group>(null), trees = useRef<THREE.Group>(null);
+  const group = useRef<THREE.Group>(null), detail = useRef<THREE.Group>(null), trees = useRef<THREE.Group>(null), palmsG = useRef<THREE.Group>(null);
   const lastOp = useRef(-1);
   useEffect(() => { DEV.root = group.current; }, []);
   useFrame((_, dt) => {
@@ -432,10 +432,11 @@ export function CityContent() {
       }
     }
     if (detail.current) detail.current.visible = alt < 2000;
-    if (trees.current) trees.current.visible = alt < 4500;
+    if (trees.current) trees.current.visible = alt < 7000;
+    if (palmsG.current) palmsG.current.visible = alt < 3200;
     // vegetation LOD: full crowns near the camera, light ones beyond; trunks only near
-    if (alt < 4500) {
-      const cx = camera.position.x, cz = camera.position.z, R = 700 + alt * 0.6;
+    if (alt < 7000) {
+      const cx = camera.position.x, cz = camera.position.z, R = alt > 2500 ? -1e9 : 700 + alt * 0.6;
       for (let i = 0; i < lod.current.length; i++) {
         const p = lod.current[i], s = p.hi?.boundingSphere ?? p.lo?.boundingSphere;
         if (!s) continue;
@@ -510,10 +511,12 @@ export function CityContent() {
       <group ref={trees}>
         {veg.crowns.map((c, i) => <LodPair key={"c" + i} items={c} hi={res.tree} lo={res.treeLo} mat={res.treeMat} lod={lod.current} />)}
         {veg.trunks.map((c, i) => <Instances key={"t" + i} items={c} geo={res.trunk} mat={res.trunkMat} mref={(m) => { trunkRefs.current[i] = m; }} />)}
-        {veg.palmT.map((c, i) => <Instances key={"pt" + i} items={c} geo={res.palmTrunk} mat={res.palmTrunkMat} />)}
-        {veg.palmC.map((c, i) => <LodPair key={"pc" + i} items={c} hi={res.crown} lo={res.crownLo} mat={res.palmMat} lod={lod.current} />)}
-        <Instances items={veg.palmTN} geo={res.palmTrunk} mat={res.palmTrunkMat} shadow />
-        <Instances items={veg.palmCN} geo={res.crown} mat={res.palmMat} shadow />
+        <group ref={palmsG}>
+          {veg.palmT.map((c, i) => <Instances key={"pt" + i} items={c} geo={res.palmTrunk} mat={res.palmTrunkMat} />)}
+          {veg.palmC.map((c, i) => <LodPair key={"pc" + i} items={c} hi={res.crown} lo={res.crownLo} mat={res.palmMat} lod={lod.current} />)}
+          <Instances items={veg.palmTN} geo={res.palmTrunk} mat={res.palmTrunkMat} shadow />
+          <Instances items={veg.palmCN} geo={res.crown} mat={res.palmMat} shadow />
+        </group>
       </group>
       <group ref={detail}>
         {props.map((p, i) => (

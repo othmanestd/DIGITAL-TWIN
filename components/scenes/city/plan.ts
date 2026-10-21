@@ -124,7 +124,9 @@ function makePlan(): Plan {
     const d = density(mx, mz);
     if (w > 20) return d > 0.13;
     if (inMedina(mx, mz)) return false;
-    return d > 0.2 + 0.12 * hash2(Math.round(mx), Math.round(mz));
+    const hs = hash2(Math.round(mx), Math.round(mz));
+    if (Math.hypot(mx, mz) > 1700 && d > 0.45 && hash2(Math.round(mz), Math.round(mx)) < 0.14) return false; // merged blocks (lanes only)
+    return d > 0.2 + 0.12 * hs;
   };
 
   // grid streets (one segment per cell edge; the superblock interior belongs to the district)
@@ -288,7 +290,7 @@ function makePlan(): Plan {
     }
     // parks (fewer in the dense centre)
     const cfcNear = Math.hypot(cx - CFC.x, cz - CFC.y) < 560; // keep the CFC lots exactly as the landmarks expect them
-    if (zone !== Z.MEDINA && (h0 < (cfcNear ? 0.055 : 0.032) || (dist < 520 && h0 < 0.2))) {
+    if (zone !== Z.MEDINA && (h0 < (cfcNear ? 0.055 : 0.02) || (dist < 520 && h0 < 0.2))) {
       parks.push([cx, cz, bw, bd]);
       const nt = dist < 2500 ? 14 : 6;
       for (let t = 0; t < nt; t++) { const x = xa + r() * bw, z = za + r() * bd; if (!nearRB(x, z, PLAZA_R + 3) && distBoulevard(x, z) > 22) trees.push([x, z, 0.8 + r() * 0.6]); }
@@ -331,7 +333,8 @@ function makePlan(): Plan {
           break;
         }
         perimeter(xa, za, xb, zb, 17, H, dist, zone, st);
-        if (r() < 0.3) { for (let k = 0; k < 3; k++) trees.push([cx + (r() - 0.5) * (bw - 44), cz + (r() - 0.5) * (bd - 44), 0.7 + r() * 0.4]); } else add({ x: cx, z: cz, w: bw - 40, d: bd - 40, h: floors(5 + r() * 7), yaw: 0, c: r(), win: 0, pal: palOf(zone) }, dist);
+        if (r() < 0.15) { for (let k = 0; k < 3; k++) trees.push([cx + (r() - 0.5) * (bw - 44), cz + (r() - 0.5) * (bd - 44), 0.7 + r() * 0.4]); }
+        else { const iw = bw - 34 - 8 * r(), id = bd - 34 - 8 * r(), sx = r() < 0.5; add({ x: cx - (sx ? iw / 4 + 1.5 : 0), z: cz - (sx ? 0 : id / 4 + 1.5), w: sx ? iw / 2 - 3 : iw, d: sx ? id : id / 2 - 3, h: floors(9 + r() * 9), yaw: 0, c: r(), win: 0, pal: palOf(zone) }, dist); add({ x: cx + (sx ? iw / 4 + 1.5 : 0), z: cz + (sx ? 0 : id / 4 + 1.5), w: sx ? iw / 2 - 3 : iw, d: sx ? id : id / 2 - 3, h: floors(6 + r() * 9), yaw: 0, c: r(), win: 1, pal: palOf(zone) }, dist); }
         break;
       }
       case Z.BUSINESS: {
@@ -406,8 +409,8 @@ function makePlan(): Plan {
         if (!modern) {
           const H = (14 + r() * 9 + dens * 4) * nearK * hk;
           perimeter(xa, za, xb, zb, 16, H, dist, zone, () => { const q = r(); return q < 0.45 ? 1 : q < 0.75 ? 0 : 3; });
-          if (r() < 0.45) { for (let k = 0, n = 1 + Math.floor(r() * 3); k < n; k++) trees.push([cx + (r() - 0.5) * (bw - 42), cz + (r() - 0.5) * (bd - 42), 0.7 + r() * 0.4]); }
-          else if (r() < 0.8) { const iw = (bw - 38) * (0.5 + r() * 0.5), id = (bd - 38) * (0.5 + r() * 0.5); add({ x: cx + (r() - 0.5) * (bw - 38 - iw), z: cz + (r() - 0.5) * (bd - 38 - id), w: iw, d: id, h: floors(4 + r() * 6), yaw: 0, c: r(), win: r() < 0.5 ? 0 : 1, pal: palOf(zone) }, dist); }
+          if (r() < 0.25) { for (let k = 0, n = 1 + Math.floor(r() * 3); k < n; k++) trees.push([cx + (r() - 0.5) * (bw - 42), cz + (r() - 0.5) * (bd - 42), 0.7 + r() * 0.4]); }
+          else if (r() < 0.9) { const iw = (bw - 38) * (0.7 + r() * 0.3), id = (bd - 38) * (0.7 + r() * 0.3); add({ x: cx + (r() - 0.5) * (bw - 38 - iw), z: cz + (r() - 0.5) * (bd - 38 - id), w: iw, d: id, h: floors(4 + r() * 6), yaw: 0, c: r(), win: r() < 0.5 ? 0 : 1, pal: palOf(zone) }, dist); }
         } else {
           const n = 1 + Math.floor(r() * 3);
           for (let k = 0; k < n; k++) {

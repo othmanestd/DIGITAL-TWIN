@@ -178,22 +178,22 @@ function buildGeometry() {
   add(A, loft([[0.39, 0.045, 0.047, 0.044, 0.008], [0.53, 0.043, 0.044, 0.042, 0.012]], 10, { capB: false, capT: false }), B.chest, Z.skin, 1, S.female);
   // ---------------------------------------------------------------- hem: white coat (open front), djellaba, skirt — with linings
   const COAT: Ring[] = [[-0.43, 0.215, 0.14, 0.16], [-0.2, 0.2, 0.132, 0.148], [0, 0.176, 0.118, 0.128], [0.1, 0.158, 0.106, 0.108]];
-  add(A, loft(COAT, 18, { a0: 0.3, a1: Math.PI * 2 - 0.3 }), B.skirt, Z.top, 1, S.coat);
-  add(A, lining(COAT, 18, { a0: 0.3, a1: Math.PI * 2 - 0.3 }), B.skirt, Z.top, 0.8, S.coat, 0, true);
+  add(A, loft(COAT, 14, { a0: 0.3, a1: Math.PI * 2 - 0.3 }), B.skirt, Z.top, 1, S.coat);
+  add(A, lining(COAT, 14, { a0: 0.3, a1: Math.PI * 2 - 0.3 }), B.skirt, Z.top, 0.8, S.coat, 0, true);
   for (const s of [-1, 1]) add(A, xf(box(0.085, 0.07, 0.008), s * 0.2 * Math.sin(0.85), -0.16, 0.135 * Math.cos(0.85) + 0.004, 0, s * 0.85, 0), B.skirt, Z.top, 0.88, S.coat);
   const ROBE: Ring[] = [[-0.84, 0.26, 0.2, 0.2], [-0.6, 0.235, 0.175, 0.18], [-0.3, 0.21, 0.15, 0.16], [0, 0.178, 0.12, 0.13], [0.1, 0.158, 0.106, 0.108]];
-  add(A, loft(ROBE, 18, { capB: false, capT: false }), B.skirt, Z.top, 1, S.robe);
-  add(A, lining(ROBE, 18, {}), B.skirt, Z.top, 0.78, S.robe, 0, true);
+  add(A, loft(ROBE, 14, { capB: false, capT: false }), B.skirt, Z.top, 1, S.robe);
+  add(A, lining(ROBE, 14, {}), B.skirt, Z.top, 0.78, S.robe, 0, true);
   add(A, decal(ROBE, -0.82, 0.05, () => -0.006, () => 0.006, 0.003, 1, 8), B.skirt, Z.top, 0.8, S.robe);
   const SKIRT: Ring[] = [[-0.66, 0.22, 0.17, 0.17], [-0.35, 0.2, 0.15, 0.16], [0, 0.172, 0.114, 0.128], [0.1, 0.158, 0.106, 0.108]];
-  add(A, loft(SKIRT, 18, { capB: false, capT: false }), B.skirt, Z.bottom, 1, S.skirt);
-  add(A, lining(SKIRT, 18, {}), B.skirt, Z.bottom, 0.8, S.skirt, 0, true);
+  add(A, loft(SKIRT, 14, { capB: false, capT: false }), B.skirt, Z.bottom, 1, S.skirt);
+  add(A, lining(SKIRT, 14, {}), B.skirt, Z.bottom, 0.8, S.skirt, 0, true);
   // ---------------------------------------------------------------- head: face, nose, ears, eyes, brows, mouth
   add(A, loft(HEADR, 12), B.head, Z.skin);
   add(A, xf(new THREE.ConeGeometry(0.016, 0.034, 6), 0, 0.058, 0.1, Math.PI / 2 - 0.25, 0, 0, 0.9, 1, 1), B.head, Z.skin, 0.97);
   for (const s of [-1, 1]) {
     add(A, xf(sph(5, 4), s * 0.087, 0.072, -0.005, 0, 0, 0, 0.012, 0.028, 0.02), B.head, Z.skin, 0.94);
-    add(A, xf(sph(5, 4), s * 0.032, 0.088, 0.094, 0, 0, 0, 0.0115, 0.0125, 0.006), B.head, FIX, 0.09);
+    add(A, xf(sph(5, 3), s * 0.032, 0.088, 0.094, 0, 0, 0, 0.0115, 0.0125, 0.006), B.head, FIX, 0.09);
     add(A, xf(box(0.03, 0.0065, 0.008), s * 0.033, 0.108, 0.097, 0, 0, -s * 0.08), B.head, Z.hair, 0.9);
   }
   add(A, xf(box(0.026, 0.005, 0.006), 0, 0.03, 0.098), B.head, Z.skin, 0.7);
@@ -229,10 +229,10 @@ function buildGeometry() {
   {
     let sd = 11;
     const r = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);
-    for (let i = 0; i < 22; i++) {
+    for (let i = 0; i < 16; i++) {
       const th = 0.1 + r() * 1.2, ph = r() * Math.PI * 2, x = Math.sin(th) * Math.cos(ph), y = Math.cos(th), z = Math.sin(th) * Math.sin(ph);
       if (z > 0.45 && y < 0.8) continue;
-      const rr = 0.028 + r() * 0.01, ico = new THREE.IcosahedronGeometry(1, 0), pa = ico.getAttribute("position");
+      const rr = 0.032 + r() * 0.01, ico = new THREE.IcosahedronGeometry(1, 0), pa = ico.getAttribute("position");
       const na = new THREE.Float32BufferAttribute(pa.count * 3, 3);
       for (let v = 0; v < pa.count; v++) { _gp.set(pa.getX(v), pa.getY(v), pa.getZ(v)).normalize(); na.setXYZ(v, _gp.x, _gp.y, _gp.z); }
       ico.setAttribute("normal", na);
@@ -288,9 +288,9 @@ function buildGeometry() {
   }
   // ---------------------------------------------------------------- legs (trousers) and shoes
   for (const [th, sh] of [[B.thighL, B.shinL], [B.thighR, B.shinR]] as const) {
-    add(A, loft([[-0.47, 0.045, 0.045, 0.045], [-0.42, 0.058, 0.061, 0.057], [-0.25, 0.072, 0.075, 0.07], [-0.1, 0.083, 0.087, 0.085], [0, 0.089, 0.09, 0.092], [0.05, 0.078, 0.076, 0.08]], 9), th, Z.bottom);
-    add(A, loft([[-0.405, 0.047, 0.047, 0.047], [-0.25, 0.047, 0.046, 0.051], [-0.1, 0.054, 0.052, 0.062], [0, 0.056, 0.058, 0.056], [0.04, 0.046, 0.048, 0.046]], 9), sh, Z.bottom);
-    add(A, xf(loft([[-0.07, 0.03, 0.025, 0.03], [-0.05, 0.042, 0.035, 0.044], [0.03, 0.047, 0.036, 0.042], [0.13, 0.046, 0.036, 0.024], [0.185, 0.036, 0.034, 0.015], [0.2, 0.015, 0.02, 0.008]], 8, { p: 2.4 }), 0, -0.455, 0, Math.PI / 2), sh, Z.shoe);
+    add(A, loft([[-0.47, 0.045, 0.045, 0.045], [-0.42, 0.058, 0.061, 0.057], [-0.25, 0.072, 0.075, 0.07], [-0.1, 0.083, 0.087, 0.085], [0, 0.089, 0.09, 0.092], [0.05, 0.078, 0.076, 0.08]], 8), th, Z.bottom);
+    add(A, loft([[-0.405, 0.047, 0.047, 0.047], [-0.25, 0.047, 0.046, 0.051], [-0.1, 0.054, 0.052, 0.062], [0, 0.056, 0.058, 0.056], [0.04, 0.046, 0.048, 0.046]], 8), sh, Z.bottom);
+    add(A, xf(loft([[-0.07, 0.03, 0.025, 0.03], [-0.05, 0.042, 0.035, 0.044], [0.03, 0.047, 0.036, 0.042], [0.13, 0.046, 0.036, 0.024], [0.185, 0.036, 0.034, 0.015], [0.2, 0.015, 0.02, 0.008]], 7, { p: 2.4 }), 0, -0.455, 0, Math.PI / 2), sh, Z.shoe);
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute(A.pos, 3));

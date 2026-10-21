@@ -106,14 +106,14 @@ vec3 signCol(float h) {
     float fw = fwidth(x) + fwidth(z);
     float det = 1.0 - smoothstep(0.25, 1.4, fw);
     bool isFlat = !ST(6.0) && !ST(7.0);
-    vec3 rbase = ST(6.0) ? vec3(0.4563, 0.4854, 0.5004) : ST(7.0) ? vec3(0.1812, 0.1989, 0.2176) : vec3(0.6462, 0.5954, 0.5156);
+    vec3 rbase = ST(6.0) ? vec3(0.4563, 0.4854, 0.5004) : ST(7.0) ? vec3(0.1812, 0.1989, 0.2176) : vec3(0.5156, 0.4707, 0.4009);
     vec3 c = mix(wall, rbase, isFlat ? 0.5 : 0.85);
     float along = W > D ? x : z, Lg = max(W, D);
     float ps = 7.0 + 6.0 * fract(seed * 13.7);
     float pi = Lg > ps * 1.5 ? floor(along / ps) : 0.0;
     float ph = h11(pi * 3.7 + seed * 91.0);
     if (isFlat) {
-      c *= 0.9 + 0.17 * ph;
+      c *= 0.82 + 0.26 * ph;
       if (ph > 0.8) c = mix(c, vec3(0.8727, 0.8524, 0.7931), 0.55);            // freshly whitewashed terrace
       else if (ph < 0.12) c = mix(c, vec3(0.325, 0.3017, 0.2684), 0.35);      // older, darker cement
     }
@@ -290,6 +290,7 @@ export function streetMaterial() {
         if (ah > 10.0 && h21(floor(p / 24.0)) < 0.3 && length(vViewPosition) < 450.0) c = fract((p.x + p.y) / 2.2) < 0.5 ? vec3(0.4009, 0.029, 0.0203) : vec3(0.7931, 0.7739, 0.7176);
       }
       if (kind < 0.5) c *= mix(1.0, 0.88, smoothstep(th - 0.8, th, lat));   // dust along the building line
+      if (kind < 0.5) c = mix(c, vec3(0.1899, 0.1812, 0.1643), smoothstep(1200.0, 4500.0, length(vViewPosition)) * 0.75); // from afar the street reads as one darker line
       if (kind > 3.5) {
         // esplanades and the promenade: large stone slabs on a grid aligned with the coast, darker bands
         vec2 cq = vec2(dot(p, vec2(0.70710678, -0.70710678)), dot(p, vec2(-0.70710678, -0.70710678)));
