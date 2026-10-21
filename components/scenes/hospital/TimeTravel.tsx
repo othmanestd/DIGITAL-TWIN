@@ -15,6 +15,7 @@ export default function TimeTravel() {
   const start = useRef<number | null>(null);
   const prevYear = useRef(year);
   const clock = useRef(0);
+  const over = useRef({ day: 1, w: 0 });
   useEffect(() => {
     if (prevYear.current !== year) { start.current = clock.current; prevYear.current = year; }
   }, [year]);
@@ -25,7 +26,14 @@ export default function TimeTravel() {
     if (p >= 1) start.current = null;
     const ease = p < 1 ? 0.5 - 0.5 * Math.cos(Math.PI * p) : 1;
     const phi = SUN_REST + ease * Math.PI * 2; // one full turn: sunset, night, sunrise
-    rt.day = Math.min(1, Math.max(0, Math.sin(phi) * 2.2 + 0.25));
+    const lapse = Math.min(1, Math.max(0, Math.sin(phi) * 2.2 + 0.25));
+    // guided visit: the scene's clock (rt.dayTarget, set by components/scenes/story while a visit plays), eased in and
+    // out over ~2 s and never brighter than the time-lapse, so a year change still sweeps through the night
+    const o = over.current, k = 1 - Math.exp(-Math.min(dt, 0.25) * 1.6);
+    o.w += ((rt.dayTarget === null ? 0 : 1) - o.w) * k;
+    if (rt.dayTarget !== null) o.day += (rt.dayTarget - o.day) * k;
+    else if (o.w < 0.01) o.day = 1;
+    rt.day = Math.min(lapse, 1 - o.w * (1 - o.day));
   });
 
   return null;

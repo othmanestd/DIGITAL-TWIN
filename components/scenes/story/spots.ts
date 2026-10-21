@@ -69,5 +69,7 @@ export const SHOTS: Record<string, Shot> = {
   "hq-finance": { look: [46, F(1, 1.0), -2], dist: 23, az: 0.52, pol: 0.95, dur: 3.2 },
   command: { look: [48.6, F(3, 1.5), -6.6], dist: 11, az: 0.36, pol: 1.02, dur: 3.2 },
   "command-wide": { look: [47, F(3, 1.2), -3.5], dist: 19, az: 0.42, pol: 0.92, dur: 3.5 },
+  // the finale card sits on the left: Leïla and the value wall stay in view on the right
+  finale: { look: [46.4, F(3, 1.75), -7.0], dist: 9.2, az: 0.2, pol: 1.3, dur: 3.2 },
   campus: { look: [6, 8, 0], dist: 150, az: 0.62, pol: 1.02, dur: 4 },
 };

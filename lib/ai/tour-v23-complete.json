@@ -91,7 +91,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     },
     {
@@ -188,7 +189,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": true
+      "letterbox": true,
+      "night": null
      }
     }
    ]
@@ -282,7 +284,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]
@@ -361,7 +364,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     },
     {
@@ -474,7 +478,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     },
     {
@@ -566,7 +571,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]
@@ -587,6 +593,10 @@
         "amina": null,
         "youssef": null
        }
+      },
+      {
+       "do": "cue",
+       "night": 0.12
       },
       {
        "do": "year",
@@ -678,7 +688,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     },
     {
@@ -823,7 +834,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": 0.12
      }
     },
     {
@@ -924,7 +936,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": 0.12
      }
     }
    ]
@@ -945,6 +958,10 @@
         "amina": null,
         "salma": null
        }
+      },
+      {
+       "do": "cue",
+       "night": null
       },
       {
        "do": "year",
@@ -1031,7 +1048,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": 0.12
      }
     },
     {
@@ -1143,7 +1161,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     },
     {
@@ -1231,7 +1250,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]
@@ -1360,7 +1380,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     },
     {
@@ -1449,7 +1470,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]
@@ -1548,7 +1570,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]
@@ -1738,7 +1761,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     },
     {
@@ -1832,7 +1856,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     },
     {
@@ -1910,7 +1935,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]
@@ -2061,7 +2087,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     },
     {
@@ -2147,7 +2174,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     },
     {
@@ -2170,7 +2198,7 @@
       },
       {
        "do": "cue",
-       "cam": "command-wide"
+       "cam": "finale"
       },
       {
        "do": "cue",
@@ -2239,7 +2267,8 @@
       "net": true,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]
@@ -2315,7 +2344,8 @@
       "net": true,
       "finale": true,
       "chart": "cumul",
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     },
     {
@@ -2354,7 +2384,8 @@
       "net": true,
       "finale": false,
       "chart": "cumul",
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     },
     {
@@ -2403,7 +2434,8 @@
       "net": true,
       "finale": false,
       "chart": "cumul",
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]
@@ -2452,7 +2484,8 @@
       "net": true,
       "finale": false,
       "chart": "cumul",
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     },
     {
@@ -2497,7 +2530,8 @@
       "net": true,
       "finale": false,
       "chart": "cumul",
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]

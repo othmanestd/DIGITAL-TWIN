@@ -161,7 +161,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     },
     {
@@ -269,7 +270,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]
@@ -415,7 +417,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]
@@ -436,6 +439,10 @@
         "amina": null,
         "youssef": null
        }
+      },
+      {
+       "do": "cue",
+       "night": 0.12
       },
       {
        "do": "cue",
@@ -614,7 +621,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]
@@ -635,6 +643,10 @@
         "amina": null,
         "salma": null
        }
+      },
+      {
+       "do": "cue",
+       "night": null
       },
       {
        "do": "cue",
@@ -787,7 +799,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": 0.12
      }
     }
    ]
@@ -955,7 +968,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]
@@ -1151,7 +1165,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]
@@ -1246,6 +1261,11 @@
        "finale": "on",
        "chart": "cumul",
        "at": 0.723
+      },
+      {
+       "do": "cue",
+       "cam": "finale",
+       "at": 0.723
       }
      ],
      "story0": {
@@ -1279,7 +1299,8 @@
       "net": false,
       "finale": false,
       "chart": null,
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]
@@ -1370,7 +1391,8 @@
       "net": true,
       "finale": true,
       "chart": "cumul",
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     },
     {
@@ -1415,7 +1437,8 @@
       "net": true,
       "finale": false,
       "chart": "cumul",
-      "letterbox": false
+      "letterbox": false,
+      "night": null
      }
     }
    ]

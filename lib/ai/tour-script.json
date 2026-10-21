@@ -13,6 +13,18 @@
           "speech": "Mardi, sept heures et demie : le téléphone sonne au standard d'une clinique Akdital, et personne ne décroche. Au bout du fil, Amina, 54 ans, qui doit se faire opérer du genou. Ce n'est la faute de personne : la croissance a un revers. Au premier semestre 2026, les charges de personnel ont bondi de 28 %, quand le chiffre d'affaires progressait de 21 % ; elles pèsent désormais 22 et demi pour cent des ventes. Chaque nouvelle clinique ajoute des guichets, des saisies, des appels. Notre réponse : des agents IA qui reprennent ce travail répétitif. Au plein régime, 302 millions de dirhams de masse salariale libérés chaque année, pour 160 millions de coût d'agents : 142 millions nets, sans aucun licenciement.",
           "actions": [
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
+            {
               "do": "section",
               "section": "explorer",
               "silent": true
@@ -79,6 +91,28 @@
               "at": 0.58
             },
             {
+              "do": "cue",
+              "cast": {
+                "amina": {
+                  "at": "adm-front"
+                },
+                "youssef": {
+                  "at": "adm-pilot",
+                  "pose": "tablet"
+                }
+              },
+              "props": {
+                "ydesk": "after",
+                "queue": "off"
+              },
+              "chip": [
+                "amina",
+                "youssef"
+              ],
+              "cam": "admissions",
+              "at": 0.58
+            },
+            {
               "do": "case",
               "id": "A-02",
               "at": 0.64
@@ -91,6 +125,18 @@
           "text": "Premier étage, là où se joue la trésorerie : l'agent prépare la prise en charge de son opération du genou et réclame à la mutuelle la pièce manquante. Dans un hôpital américain, le délai entre la prescription et la programmation est passé de onze jours à un peu plus de deux.",
           "speech": "Premier étage, là où se joue la trésorerie : l'agent prépare la prise en charge de son opération du genou et réclame à la mutuelle la pièce manquante. Dans un hôpital américain, le délai entre la prescription et la programmation est passé de onze jours à un peu plus de deux.",
           "actions": [
+            {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
             {
               "do": "select",
               "kind": "floor",
@@ -127,6 +173,25 @@
               "at": 0.05
             },
             {
+              "do": "cue",
+              "cast": {
+                "amina": {
+                  "at": "room-chair",
+                  "pose": "sit"
+                },
+                "salma": {
+                  "at": "room-bedside",
+                  "pose": "tablet"
+                }
+              },
+              "chip": [
+                "salma",
+                "amina"
+              ],
+              "cam": "room",
+              "at": 0.05
+            },
+            {
               "do": "case",
               "id": "P-01",
               "at": 0.1
@@ -145,6 +210,18 @@
           "text": "Trois jours plus tard, Amina rentre chez elle, soulagée : sa facture était prête avant sa sortie, et le lendemain, un appel prend de ses nouvelles. Plus haut, le JABB Twin veille sur les équipements et l'énergie ; au siège, la paie et les factures sont contrôlées par les agents ; et l'Agentic Command Center ne compte qu'une chose : l'économie constatée en paie.",
           "speech": "Trois jours plus tard, Amina rentre chez elle, soulagée : sa facture était prête avant sa sortie, et le lendemain, un appel prend de ses nouvelles. Plus haut, le Jabb Twin veille sur les équipements et l'énergie ; au siège, la paie et les factures sont contrôlées par les agents ; et l'Agentic Command Center ne compte qu'une chose : l'économie constatée en paie.",
           "actions": [
+            {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
             {
               "do": "select",
               "kind": "floor",
@@ -198,6 +275,25 @@
               "id": "admissions"
             },
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "salma": null,
+                "youssef": {
+                  "at": "adm-desk",
+                  "pose": "type"
+                }
+              },
+              "props": {
+                "queue": "before",
+                "ydesk": "before"
+              },
+              "chip": [
+                "youssef"
+              ],
+              "cam": "admissions-wide"
+            },
+            {
               "do": "panel",
               "open": false,
               "silent": true
@@ -215,16 +311,44 @@
               "silent": true
             },
             {
+              "do": "cue",
+              "props": {
+                "ydesk": "mid"
+              },
+              "atSentence": 2
+            },
+            {
               "do": "year",
               "year": 2028,
               "atSentence": 3,
               "silent": true
             },
             {
+              "do": "cue",
+              "props": {
+                "queue": "after"
+              },
+              "atSentence": 3
+            },
+            {
               "do": "year",
               "year": 2029,
               "atSentence": 4,
               "silent": true
+            },
+            {
+              "do": "cue",
+              "props": {
+                "ydesk": "after"
+              },
+              "cast": {
+                "youssef": {
+                  "at": "adm-pilot",
+                  "from": "adm-desk",
+                  "pose": "tablet"
+                }
+              },
+              "atSentence": 4
             },
             {
               "do": "select",
@@ -246,6 +370,18 @@
           "speech": "Personne n'est licencié. Environ 458 départs naturels par an, non remplacés, et la mobilité vers les nouvelles cliniques absorbent les 1 410 postes libérés, en un peu plus de trois ans. Le déploiement avance par vagues, d'une clinique et du siège jusqu'à tout le groupe ; et les données de santé restent au Maroc.",
           "actions": [
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
+            {
               "do": "section",
               "section": "emplois",
               "at": 0.03
@@ -264,6 +400,18 @@
           "text": "Prenons de la hauteur. Au-dessus de Casablanca, la ville du siège, le jumeau relie chaque clinique : ce qui est prouvé dans l'une se déploie dans les 45 du groupe, dans 25 villes. Et au-delà : Riyad et La Mecque sont déjà en service, Dubaï est en construction.",
           "speech": "Prenons de la hauteur. Au-dessus de Casablanca, la ville du siège, le jumeau relie chaque clinique : ce qui est prouvé dans l'une se déploie dans les 45 du groupe, dans 25 villes. Et au-delà : Riyad et La Mecque sont déjà en service, Dubaï est en construction.",
           "actions": [
+            {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
             {
               "do": "section",
               "section": "explorer",
@@ -299,6 +447,18 @@
           "speech": "Le chemin est tracé, et il commence petit : une clinique et le siège, sans contact patient, mesurés chaque mois dans l'Agentic Command Center. Pour qu'Amina n'attende plus jamais au bout du fil, et que Salma garde son temps pour ses patients, la décision qui vous revient aujourd'hui : lancer le cadrage en novembre.",
           "actions": [
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
+            {
               "do": "point",
               "anchor": "stage",
               "at": 0.2
@@ -311,6 +471,18 @@
           "text": "Et la Terre devient la goutte du logo Akdital : JABB × AKDITAL × mibtech, ensemble. 302 MDH libérés chaque année, 142 MDH nets, sans un seul licenciement.",
           "speech": "Et la Terre devient la goutte du logo Akdital : Jabb, Akdital et Mibtech, ensemble. 302 millions de dirhams libérés chaque année, 142 millions de dirhams nets, sans un seul licenciement.",
           "actions": [
+            {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
             {
               "do": "zoom",
               "g": 1,

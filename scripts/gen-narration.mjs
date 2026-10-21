@@ -90,7 +90,23 @@ if (args.has("--check")) {
     console.log(`  ${ok ? "ok " : "BAD"} #${String(b.id).padEnd(16)} ${dur.toFixed(2).padStart(6)} s   last 50 ms peak ${String(peak).padStart(5)} rms ${rms.toFixed(0).padStart(4)}${burst ? `   BURST after silence (rms ${burst.toFixed(0)}, ${tailInfo})` : ""}`);
   }
   console.log(`${BEATS.length} clips · ${Math.floor(total / 60)} min ${String(Math.round(total % 60)).padStart(2, "0")} s · ${bad ? bad + " to check" : "all clean"}`);
-  process.exit(bad ? 1 : 0);
+  // the player's own rule, per visit: every beat recorded, current text hash, one model, one voice (read-only)
+  let ready = true;
+  for (const [name, beats] of [["Visite express", flat(SCRIPT)], ["Visite complète", fs.existsSync(COMPLETE_PATH) ? flat(JSON.parse(fs.readFileSync(COMPLETE_PATH, "utf8"))) : []]]) {
+    const v = man.voice, models = new Set(), missing = [];
+    let dur = 0;
+    for (const b of beats) {
+      const e = man.beats[String(b.id)];
+      const h = crypto.createHash("sha1").update(v + "|" + (b.speech || b.text)).digest("hex").slice(0, 12);
+      if (!e || e.hash !== h || (e.voice ?? v) !== v || !fs.existsSync(path.join(OUT, e.file))) { missing.push(b.id); continue; }
+      models.add(e.model); dur += e.duration + 0.6 + (b.lead || 0);
+    }
+    const ok = !missing.length && models.size === 1;
+    ready = ready && ok;
+    console.log(ok ? `READY  ${name}: ${beats.length} beats, ${[...models][0]} / ${v}, ${Math.floor(dur / 60)} min ${String(Math.round(dur % 60)).padStart(2, "0")} s`
+      : `NOT READY  ${name}: ${missing.length ? "out of date: " + missing.join(", ") : models.size + " models"}`);
+  }
+  process.exit(ready ? 0 : 1);
 }
 
 function wav(pcm, rate = 24000) {

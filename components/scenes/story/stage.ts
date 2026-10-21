@@ -14,4 +14,4 @@ export function floorShown(key: string): boolean {
   return open === key || (!open && key === "main:0");
 }
 
-if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") (window as unknown as { __stage: typeof STAGE }).__stage = STAGE;
+if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") (window as unknown as { __stage: unknown }).__stage = Object.assign(STAGE, { light: () => ({ day: rt.day, target: rt.dayTarget }) });

@@ -2,6 +2,8 @@
 // Calm: the atlas palette (app/globals.css), glass cards, tabular figures, slow easings. No neon.
 export const STORY_CSS = `
 .st-root { position: fixed; inset: 0; pointer-events: none; z-index: 45; font-feature-settings: "tnum", "ss01"; }
+.atlas-labels { transition: opacity .6s ease; }
+body[data-story-cinema="1"] .atlas-labels { opacity: 0 !important; }
 .st-fade { position: fixed; inset: 0; background: #03050C; z-index: 52; pointer-events: none; }
 .st-bar { position: fixed; left: 0; right: 0; height: 0; background: #03050C; z-index: 53; transition: height 1.6s cubic-bezier(.65,0,.35,1);
   display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -56,7 +58,7 @@ export const STORY_CSS = `
 .st-cost b { font-size: 19px; font-weight: 600; }
 .st-net { margin-top: 8px; padding: 10px 8px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); overflow: hidden; font-size: 14px; color: #F4F6FB; }
 .st-net b { font-size: 28px; font-weight: 600; letter-spacing: -.01em; color: #FFFFFF; text-shadow: 0 0 24px rgba(156,176,255,.35); }
-.st-finale { position: fixed; top: 84px; left: 50%; width: min(880px, calc(100vw - 320px)); z-index: 51; border-radius: 24px; padding: 18px 26px 18px; }
+.st-finale { position: fixed; top: 152px; left: 146px; width: min(760px, calc(56vw - 60px)); z-index: 51; border-radius: 24px; padding: 18px 26px 18px; }
 .st-finale .eyebrow { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #9FB2FF; text-align: center; }
 .st-bridge { display: flex; align-items: flex-end; justify-content: center; gap: 14px; margin: 12px 0 8px; flex-wrap: wrap; }
 .st-bridge .cell { display: flex; flex-direction: column; align-items: center; }

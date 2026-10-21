@@ -302,6 +302,12 @@ function Director() {
     return () => { unsub(); clearTimeout(timer); el.removeEventListener("pointerdown", stop); el.removeEventListener("wheel", stop); };
   }, [gl]);
   const last = useRef(0);
+  // the scene's clock → TimeTravel's daylight (night at 23 h 40); daylight again when the visit stops
+  useFrame(() => {
+    const st = useStory.getState();
+    rt.dayTarget = st.on && st.night !== null ? st.night : null;
+  });
+  useEffect(() => () => { rt.dayTarget = null; }, []);
   useFrame(() => {
     const w = tw.current, c = rig.controls;
     if (!w || !c) { last.current = performance.now(); return; }

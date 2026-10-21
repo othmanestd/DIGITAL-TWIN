@@ -162,6 +162,7 @@ export const rt = {
   userMoved: false,                        // the user moved the camera since the last programmatic flight
   root: null as THREE.Object3D | null,
   day: 1,                                  // time-lapse daylight (1 day … 0 night), see TimeTravel.tsx
+  dayTarget: null as number | null,        // guided visit: the scene's clock (e.g. 0.1 at 23 h 40); null = daylight
   desk: new Map<number, number>(),         // desk id → presence of its person (1 there … 0 folded away)
   deskVer: 0,                              // bumped whenever a desk presence changes
   yearChangedAt: -1,                       // performance.now() of the last timeline change (caption)     // campus frame ("building frame" coordinates of lib/hospital) → world

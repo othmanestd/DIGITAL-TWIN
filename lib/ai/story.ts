@@ -21,7 +21,7 @@ export type ChartStep = number | "cumul" | null;
 /** The story state at the start of a beat (written by the build script; restores everything on a chapter jump). */
 export type Story0 = {
   cast: Record<string, { at: string; pose?: Pose }>; props: Record<string, PropState>; stamp: Stamp; ledger: Ledger;
-  hud: boolean; cost: boolean; net: boolean; finale: boolean; chart: ChartStep; letterbox: boolean;
+  hud: boolean; cost: boolean; net: boolean; finale: boolean; chart: ChartStep; letterbox: boolean; night?: number | null;
 };
 
 export type Cue = {
@@ -38,6 +38,8 @@ export type Cue = {
   hud?: boolean; cost?: boolean; net?: boolean; finale?: "on" | "off"; chart?: ChartStep; focus?: string;
   from?: string;
   alert?: string; dim?: boolean; ping?: string;
+  /** the scene's daylight (0 night … 1 day); null = daylight again (components/scenes/hospital/TimeTravel.tsx) */
+  night?: number | null;
   sfx?: "title" | "reveal" | "finale";
 };
 
@@ -54,7 +56,7 @@ type StoryState = {
   ledger: Ledger;            // target values (MDH, 2031); the HUD animates towards them
   snap: number;              // bumps when the HUD must jump to the targets (chapter jump)
   hud: boolean; cost: boolean; net: boolean; finale: boolean; chart: ChartStep; focus: string | null; focusT: number;
-  letterbox: boolean; title: boolean; fade: number; closing: boolean;
+  letterbox: boolean; title: boolean; fade: number; closing: boolean; night: number | null;
   chips: Chip[]; pulses: Pulse[]; flashes: Flash[];
   cam: { shot: string; nonce: number } | null;
 };
@@ -62,7 +64,7 @@ type StoryState = {
 const ZERO: Ledger = { ms: 0, hms: 0, rec: 0, neu: 0 };
 const initial = (): Omit<StoryState, "on"> => ({
   cast: {}, props: {}, stamp: null, ledger: { ...ZERO }, snap: 0, hud: false, cost: false, net: false, finale: false, chart: null,
-  focus: null, focusT: 0, letterbox: false, title: false, fade: 0, closing: false, chips: [], pulses: [], flashes: [], cam: null,
+  focus: null, focusT: 0, letterbox: false, title: false, fade: 0, closing: false, night: null, chips: [], pulses: [], flashes: [], cam: null,
 });
 
 export const useStory = create<StoryState>(() => ({ on: false, ...initial() }));
@@ -88,7 +90,7 @@ export function storySync(s: Story0 | undefined) {
   const st = useStory.getState();
   useStory.setState({
     on: true, cast, props: { ...s.props }, stamp: s.stamp, ledger: { ...s.ledger }, snap: st.snap + 1,
-    hud: s.hud, cost: s.cost, net: s.net, finale: s.finale, chart: s.chart, letterbox: s.letterbox,
+    hud: s.hud, cost: s.cost, net: s.net, finale: s.finale, chart: s.chart, letterbox: s.letterbox, night: s.night ?? null,
     title: false, fade: 0, closing: false, chips: [], pulses: [], flashes: [], focus: null,
   });
 }
@@ -113,6 +115,7 @@ export function applyCue(c: Cue) {
   if (c.title !== undefined) patch.title = c.title;
   if (c.fade !== undefined) patch.fade = c.fade;
   if (c.closing !== undefined) patch.closing = c.closing;
+  if (c.night !== undefined) patch.night = c.night;
   if (c.hud !== undefined) patch.hud = c.hud;
   if (c.finale !== undefined) patch.finale = c.finale === "on";
   if (c.chart !== undefined) patch.chart = c.chart;

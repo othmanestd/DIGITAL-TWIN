@@ -219,6 +219,7 @@ export default function Overlay() {
     if (!host) return;
     const div = document.createElement("div");
     div.style.cssText = "position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1;";
+    div.className = "atlas-labels"; // hidden by the guided visit's title card and opening (components/ai/story/css.ts)
     host.appendChild(div);
     const root = createRoot(div);
     root.render(<OverlayUI />);

@@ -270,7 +270,7 @@ function Finale() {
   return (
     <AnimatePresence>
       {finale && (
-        <motion.section className="st-finale glass-read" initial={{ opacity: 0, y: 18, scale: 0.98, x: "-50%" }} animate={{ opacity: 1, y: 0, scale: 1, x: "-50%" }} exit={{ opacity: 0, y: -12, x: "-50%" }} transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }} aria-label="La valeur nette">
+        <motion.section className="st-finale glass-read" initial={{ opacity: 0, y: 18, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }} aria-label="La valeur nette">
           <div className="eyebrow">2031 · MDH par an · scénario central</div>
           <div className="st-bridge">
             {B.map((x, i) => ("op" in x ? <span key={i} className="op">{x.op}</span> : (
@@ -338,6 +338,13 @@ function Cinema() {
 export default function StoryOverlay() {
   const on = useStory((s) => s.on);
   const lb = useStory((s) => s.letterbox);
+  const title = useStory((s) => s.title);
+  // the hospital's floor and department labels (Overlay.tsx) stay hidden under the title card and the opening
+  useEffect(() => {
+    const b = document.body;
+    if (on && (title || lb)) b.dataset.storyCinema = "1"; else delete b.dataset.storyCinema;
+    return () => { delete b.dataset.storyCinema; };
+  }, [on, title, lb]);
   if (!on) return null;
   return (
     <div className="st-root" data-lb={lb}>

@@ -13,6 +13,18 @@
           "speech": "Mardi, sept heures et demie : le téléphone sonne au standard d'une clinique Akdital, et personne ne décroche. Au bout du fil, Amina, 54 ans, qui doit se faire opérer du genou. Ce n'est la faute de personne : la croissance a un revers. Au premier semestre 2026, les charges de personnel ont bondi de 28 %, quand le chiffre d'affaires progressait de 21 % ; elles pèsent désormais 22 et demi pour cent des ventes. Chaque nouvelle clinique ajoute des guichets, des saisies, des appels. Notre réponse : des agents IA qui reprennent ce travail répétitif. Au plein régime, 302 millions de dirhams de masse salariale libérés chaque année, pour 160 millions de coût d'agents : 142 millions nets, sans aucun licenciement.",
           "actions": [
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
+            {
               "do": "section",
               "section": "explorer",
               "silent": true
@@ -50,6 +62,18 @@
           "speech": "Un agent IA, c'est un logiciel qui prépare, exécute, vérifie ou relance une tâche dans les systèmes de l'hôpital, toujours sous la responsabilité d'un humain. Il assiste, il automatise sous validation, ou il remplace un tableur et une ressaisie. Il intervient d'abord dans l'administratif des sites, où il reprend six heures de travail sur dix ; puis au siège ; et, pour une petite part seulement, chez les soignants.",
           "actions": [
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
+            {
               "do": "point",
               "anchor": "stage",
               "at": 0.3
@@ -69,6 +93,18 @@
           "speech": "Entrons dans l'hôpital type : tout le groupe, ramené à un seul bâtiment, où plus de trois mille patients entrent chaque jour. Suivons Amina, de son appel jusqu'à sa facture. Amina, Youssef et Salma sont des personnages fictifs ; les chiffres, eux, sont réels.",
           "actions": [
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
+            {
               "do": "select",
               "kind": "floor",
               "id": "main:0",
@@ -82,6 +118,18 @@
           "text": "Reprenons son appel. Cette fois, un agent vocal décroche, jour et nuit, en darija, en français ou en arabe. Il trouve le créneau de consultation et le confirme ; la veille, un rappel part tout seul, et un créneau annulé est aussitôt proposé au patient suivant. À Paris, une fondation hospitalière traite déjà ainsi trois appels sur quatre sans personnel. À la caisse, le devis et le reste à charge d'Amina sont prêts avant qu'elle ne pose la question. Aux urgences, l'enregistrement se fait en parallèle des soins, et l'attente ne passe plus inaperçue ; même le dépistage est proposé au bon patient.",
           "speech": "Reprenons son appel. Cette fois, un agent vocal décroche, jour et nuit, en darija, en français ou en arabe. Il trouve le créneau de consultation et le confirme ; la veille, un rappel part tout seul, et un créneau annulé est aussitôt proposé au patient suivant. À Paris, une fondation hospitalière traite déjà ainsi trois appels sur quatre sans personnel. À la caisse, le devis et le reste à charge d'Amina sont prêts avant qu'elle ne pose la question. Aux urgences, l'enregistrement se fait en parallèle des soins, et l'attente ne passe plus inaperçue ; même le dépistage est proposé au bon patient.",
           "actions": [
+            {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
             {
               "do": "select",
               "kind": "dept",
@@ -126,6 +174,23 @@
               "at": 0.02
             },
             {
+              "do": "cue",
+              "cast": {
+                "amina": {
+                  "at": "hall-plan",
+                  "from": "door-in"
+                }
+              },
+              "props": {
+                "ydesk": "after",
+                "queue": "off"
+              },
+              "chip": [
+                "amina"
+              ],
+              "at": 0.02
+            },
+            {
               "do": "select",
               "kind": "xp",
               "id": "xp-guide",
@@ -135,6 +200,23 @@
               "do": "select",
               "kind": "dept",
               "id": "admissions",
+              "at": 0.3
+            },
+            {
+              "do": "cue",
+              "cast": {
+                "amina": {
+                  "at": "adm-front"
+                },
+                "youssef": {
+                  "at": "adm-pilot",
+                  "pose": "tablet"
+                }
+              },
+              "chip": [
+                "youssef"
+              ],
+              "cam": "admissions",
               "at": 0.3
             },
             {
@@ -155,6 +237,18 @@
           "text": "Premier étage, la consultation avec le chirurgien. Le secrétariat trouve le dossier d'Amina prêt et ses radios déjà classées. Le chirurgien dicte ; l'agent rédige un brouillon structuré ; le chirurgien relit et signe. Dans deux grands centres universitaires américains, cette documentation assistée a rendu à chaque médecin une vingtaine de minutes par jour. Et son médecin traitant est informé, sans avoir à relancer.",
           "speech": "Premier étage, la consultation avec le chirurgien. Le secrétariat trouve le dossier d'Amina prêt et ses radios déjà classées. Le chirurgien dicte ; l'agent rédige un brouillon structuré ; le chirurgien relit et signe. Dans deux grands centres universitaires américains, cette documentation assistée a rendu à chaque médecin une vingtaine de minutes par jour. Et son médecin traitant est informé, sans avoir à relancer.",
           "actions": [
+            {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
             {
               "do": "select",
               "kind": "floor",
@@ -179,6 +273,18 @@
           "text": "L'opération est décidée. Ici se joue la trésorerie : l'agent prépare la prise en charge dès la programmation, réclame à la mutuelle la pièce manquante, et suit l'accord jusqu'à l'entrée d'Amina. Dans un hôpital américain, le délai entre la prescription et la programmation est passé de onze jours à un peu plus de deux. Les rejets sont prévenus avant l'envoi, les règlements lettrés au fil de l'eau, les honoraires des médecins libéraux calculés et expliqués, et le codeur reçoit un dossier complet.",
           "speech": "L'opération est décidée. Ici se joue la trésorerie : l'agent prépare la prise en charge dès la programmation, réclame à la mutuelle la pièce manquante, et suit l'accord jusqu'à l'entrée d'Amina. Dans un hôpital américain, le délai entre la prescription et la programmation est passé de onze jours à un peu plus de deux. Les rejets sont prévenus avant l'envoi, les règlements lettrés au fil de l'eau, les honoraires des médecins libéraux calculés et expliqués, et le codeur reçoit un dossier complet.",
           "actions": [
+            {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
             {
               "do": "select",
               "kind": "dept",
@@ -210,6 +316,18 @@
           "text": "Le jour de l'opération, au deuxième étage, rien ne change dans le geste du chirurgien. Ce qui change, c'est autour : registres et check-lists pré-remplis, la prothèse du genou d'Amina tracée de la pose jusqu'à la facture, réserves de l'unité commandées par l'agent et validées par l'infirmière référente. La réanimation et la maternité restent entièrement humaines.",
           "speech": "Le jour de l'opération, au deuxième étage, rien ne change dans le geste du chirurgien. Ce qui change, c'est autour : registres et check-lists pré-remplis, la prothèse du genou d'Amina tracée de la pose jusqu'à la facture, réserves de l'unité commandées par l'agent et validées par l'infirmière référente. La réanimation et la maternité restent entièrement humaines.",
           "actions": [
+            {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
             {
               "do": "select",
               "kind": "floor",
@@ -249,6 +367,25 @@
               "do": "select",
               "kind": "dept",
               "id": "hospitalisation",
+              "at": 0.04
+            },
+            {
+              "do": "cue",
+              "cast": {
+                "amina": {
+                  "at": "room-chair",
+                  "pose": "sit"
+                },
+                "salma": {
+                  "at": "room-bedside",
+                  "pose": "tablet"
+                }
+              },
+              "chip": [
+                "salma",
+                "amina"
+              ],
+              "cam": "room",
               "at": 0.04
             },
             {
@@ -301,6 +438,18 @@
           "speech": "Trois jours plus tard, Amina rentre chez elle, soulagée. Sa facture est déjà prête : pré-clôturée avant la sortie, complète, sans rejet. Dans un hôpital communautaire américain, les factures bloquées après la sortie ont été divisées par deux. Ses copies de dossier lui parviennent sans retour au guichet, et le lendemain, un appel prend de ses nouvelles.",
           "actions": [
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
+            {
               "do": "select",
               "kind": "floor",
               "id": "main:1"
@@ -329,6 +478,18 @@
           "text": "En coulisses, au sous-sol, tout s'enchaîne. Sa chambre libérée déclenche le bionettoyage, sans un seul appel : dans un grand centre américain de cancérologie, la chambre est prête en un peu plus d'une heure au lieu de près de deux. Brancardage régulé, linge et repas au plus juste, demandes logistiques dispatchées, courrier et archives classés ; et à la pharmacie, un lot qui va périmer change de clinique avant d'être perdu.",
           "speech": "En coulisses, au sous-sol, tout s'enchaîne. Sa chambre libérée déclenche le bionettoyage, sans un seul appel : dans un grand centre américain de cancérologie, la chambre est prête en un peu plus d'une heure au lieu de près de deux. Brancardage régulé, linge et repas au plus juste, demandes logistiques dispatchées, courrier et archives classés ; et à la pharmacie, un lot qui va périmer change de clinique avant d'être perdu.",
           "actions": [
+            {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
             {
               "do": "select",
               "kind": "floor",
@@ -384,6 +545,18 @@
           "speech": "Montons au quatrième étage, dans la salle de contrôle du Jabb Twin, le jumeau numérique de l'hôpital. C'est lui qui a écouté la voix d'Amina, chambre par chambre ; chaque réclamation y reçoit une réponse dans l'heure, un incident se déclare en une minute, à la voix, et l'accréditation est tenue à jour en permanence. Côté technique, il voit la panne venir avant l'arrêt, retrouve le pousse-seringue libre, surveille l'oxygène et la chaîne du froid, et compare l'énergie des 45 sites. Dans un hôpital universitaire chinois, la maintenance priorisée par l'IA coûte un tiers de moins. Toute cette valeur s'ajoute, sans entrer dans les 302 millions de dirhams.",
           "actions": [
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
+            {
               "do": "select",
               "kind": "floor",
               "id": "main:4"
@@ -431,6 +604,18 @@
           "speech": "Traversons vers le siège. À la finance, les factures fournisseurs sont contrôlées par l'agent, la banque rapprochée chaque jour, la clôture du mois préparée, et les créances sur les organismes relancées sans relâche. Aux ressources humaines, la paie est vérifiée avant le calcul, les contrats se signent en ligne, et un assistant répond jour et nuit aux 10 256 collaborateurs. Le recrutement s'accélère : sur près de 70 000 candidats, des entretiens vocaux par IA ont augmenté les embauches de 18 %. Achats, juridique et support informatique suivent le même chemin. Le siège, à lui seul, pèse 94 millions de dirhams.",
           "actions": [
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
+            {
               "do": "select",
               "kind": "floor",
               "id": "annex:1"
@@ -472,6 +657,18 @@
           "speech": "Au dernier étage, l'Agentic Command Center. Chaque matin à sept heures, la direction reçoit son rapport : effectifs, heures rendues, décisions de poste, coût des agents. Elle ne compte qu'une chose : l'économie constatée en paie. Chaque agent a un responsable, un budget et un bouton d'arrêt ; une académie forme des administratifs comme Youssef à devenir pilotes d'agents ; et une bourse des transitions accompagne chaque mobilité.",
           "actions": [
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
+            {
               "do": "select",
               "kind": "dept",
               "id": "siege-pilotage",
@@ -500,6 +697,18 @@
           "text": "Au total, Amina vient de traverser 89 cas d'usage. 46 libèrent les 302 MDH de masse salariale. 35 créent une autre valeur, en qualité, en revenu, en énergie, sans jamais s'y additionner. Et 8 leviers transforment le temps libéré en économie réelle, constatée en paie.",
           "speech": "Au total, Amina vient de traverser 89 cas d'usage. 46 libèrent les 302 millions de dirhams de masse salariale. 35 créent une autre valeur, en qualité, en revenu, en énergie, sans jamais s'y additionner. Et 8 leviers transforment le temps libéré en économie réelle, constatée en paie.",
           "actions": [
+            {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
             {
               "do": "section",
               "section": "cas",
@@ -530,6 +739,25 @@
               "id": "admissions"
             },
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "salma": null,
+                "youssef": {
+                  "at": "adm-desk",
+                  "pose": "type"
+                }
+              },
+              "props": {
+                "queue": "before",
+                "ydesk": "before"
+              },
+              "chip": [
+                "youssef"
+              ],
+              "cam": "admissions-wide"
+            },
+            {
               "do": "panel",
               "open": false,
               "silent": true
@@ -547,16 +775,44 @@
               "silent": true
             },
             {
+              "do": "cue",
+              "props": {
+                "ydesk": "mid"
+              },
+              "atSentence": 2
+            },
+            {
               "do": "year",
               "year": 2028,
               "atSentence": 3,
               "silent": true
             },
             {
+              "do": "cue",
+              "props": {
+                "queue": "after"
+              },
+              "atSentence": 3
+            },
+            {
               "do": "year",
               "year": 2029,
               "atSentence": 4,
               "silent": true
+            },
+            {
+              "do": "cue",
+              "props": {
+                "ydesk": "after"
+              },
+              "cast": {
+                "youssef": {
+                  "at": "adm-pilot",
+                  "from": "adm-desk",
+                  "pose": "tablet"
+                }
+              },
+              "atSentence": 4
             },
             {
               "do": "select",
@@ -578,6 +834,18 @@
           "speech": "Personne n'est licencié, et ce n'est pas une promesse en l'air. Les agents libèrent l'équivalent de 1 410 postes administratifs ; or, chaque année, environ 458 personnes quittent ces fonctions, naturellement. En un peu plus de trois ans, les départs non remplacés et la mobilité absorbent tout : la collègue de Youssef qui part à la retraite n'est pas remplacée, un autre rejoint la clinique qui ouvre à côté. Le déploiement avance par vagues : une clinique et le siège dès la mi-décembre, trois cliniques au printemps, une région à l'automne, puis tout le groupe.",
           "actions": [
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
+            {
               "do": "section",
               "section": "emplois",
               "at": 0.02
@@ -595,6 +863,18 @@
           "text": "Et la confiance se construit dès le premier jour. Les données de santé d'Amina restent au Maroc, dans un coffre souverain. Chaque agent est enregistré, chaque action journalisée, et tout peut être arrêté en un geste. Aucune donnée réelle n'est traitée avant l'autorisation de la CNDP, et chaque élargissement se décide sur le compteur de valeur, pas sur une promesse.",
           "speech": "Et la confiance se construit dès le premier jour. Les données de santé d'Amina restent au Maroc, dans un coffre souverain. Chaque agent est enregistré, chaque action journalisée, et tout peut être arrêté en un geste. Aucune donnée réelle n'est traitée avant l'autorisation de la CNDP, et chaque élargissement se décide sur le compteur de valeur, pas sur une promesse.",
           "actions": [
+            {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
             {
               "do": "section",
               "section": "gouvernance",
@@ -615,6 +895,18 @@
           "speech": "Prenons de la hauteur. À trois kilomètres, Casablanca apparaît : la ville du siège et d'Anfa Prime, le vaisseau amiral du groupe. Le jumeau ne s'arrête pas aux murs de l'hôpital d'Amina : chaque clinique du réseau devient un nœud du programme.",
           "actions": [
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
+            {
               "do": "section",
               "section": "explorer",
               "silent": true
@@ -633,6 +925,18 @@
           "speech": "Le Maroc, ensuite : 45 établissements en service dans 25 villes, et bientôt 59. Regardez les données circuler entre les cliniques et le siège : ce qui est prouvé dans une clinique se déploie dans toutes. C'est sur ce périmètre que portent les 302 millions de dirhams.",
           "actions": [
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
+            {
               "do": "zoom",
               "g": 0.62,
               "at": 0.03
@@ -645,6 +949,18 @@
           "text": "Et au-delà. En Arabie saoudite, Riyad et La Mecque sont en service depuis septembre, Djeddah suivra ; à Dubaï, un hôpital est en construction. Le modèle prouvé au Maroc pourra s'y répliquer, pays après pays.",
           "speech": "Et au-delà. En Arabie saoudite, Riyad et La Mecque sont en service depuis septembre, Djeddah suivra ; à Dubaï, un hôpital est en construction. Le modèle prouvé au Maroc pourra s'y répliquer, pays après pays.",
           "actions": [
+            {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
             {
               "do": "zoom",
               "g": 0.79,
@@ -675,6 +991,18 @@
           "speech": "Le chemin est tracé, et il commence petit : une clinique et le siège, sans contact patient, mesurés chaque mois dans l'Agentic Command Center. Pour qu'Amina n'attende plus jamais au bout du fil, et que Salma garde son temps pour ses patients, la décision qui vous revient aujourd'hui : lancer le cadrage en novembre.",
           "actions": [
             {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
+            {
               "do": "point",
               "anchor": "stage",
               "at": 0.2
@@ -687,6 +1015,18 @@
           "text": "Et la Terre devient la goutte du logo Akdital : JABB × AKDITAL × mibtech, ensemble. 302 MDH libérés chaque année, 142 MDH nets, sans un seul licenciement.",
           "speech": "Et la Terre devient la goutte du logo Akdital : Jabb, Akdital et Mibtech, ensemble. 302 millions de dirhams libérés chaque année, 142 millions de dirhams nets, sans un seul licenciement.",
           "actions": [
+            {
+              "do": "cue",
+              "cast": {
+                "amina": null,
+                "youssef": null,
+                "salma": null
+              },
+              "props": {
+                "queue": "off",
+                "ydesk": "off"
+              }
+            },
             {
               "do": "zoom",
               "g": 1,

@@ -282,7 +282,7 @@ X.push({ id: "patient", title: "Amina : l'attente qui disparaît", beats: [
 X.push({ id: "soin", title: "Salma : la nuit au troisième étage", beats: [
   beat("c-salma-avant", "2026, la fin de garde",
     `‹a›Troisième étage, en 2026. À la fin de sa garde, Salma ressaisit au poste ce qu'elle a noté sur papier, au lieu d'être auprès de ses patients. À la relève, il faut tout reconstituer, d'écran en écran. ‹b›Et la nuit, une chute dans le couloir n'est découverte qu'au tour suivant.`,
-    [cast({ amina: null, youssef: null }), op.year(2026), sel("dept", "hospitalisation"), stamp("Mardi · 23 h 40", 2026),
+    [cast({ amina: null, youssef: null }), C({ night: 0.12 }), op.year(2026), sel("dept", "hospitalisation"), stamp("Mardi · 23 h 40", 2026),
       props({ npaper: "before", queue: "off", ydesk: "off" }), cast({ salma: { at: "nurse-station", pose: "type" } }), cam("station"), chip("salma"),
       { ...C({ alert: "corridor-fall", dim: true }), mark: "b" }, { ...props({ fall: "before" }), mark: "b" }]),
   beat("c-salma-apres", "2031, au lit d'Amina",
@@ -304,7 +304,7 @@ X.push({ id: "soin", title: "Salma : la nuit au troisième étage", beats: [
 X.push({ id: "actifs", title: "Karim et le jumeau", beats: [
   beat("c-karim-avant", "2026, la panne",
     `‹a›Quatrième étage, en 2026. Karim, technicien biomédical, court après les pannes. La maintenance suit le calendrier, avec du retard ; ‹b›un groupe froid tombe sans prévenir ; un pousse-seringue introuvable se cherche d'étage en étage ; et la ventilation du bloc tourne toute la nuit, salle vide.`,
-    [cast({ amina: null, salma: null }), op.year(2026), sel("dept", "technique"), stamp("Mardi · 14 h 05", 2026),
+    [cast({ amina: null, salma: null }), C({ night: null }), op.year(2026), sel("dept", "technique"), stamp("Mardi · 14 h 05", 2026),
       props({ npaper: "off", fall: "off", machine: "before" }), cast({ karim: { at: "machine-fix", pose: "kneel" } }), cam("machine"), chip("karim"),
       { ...C({ alert: "machine" }), mark: "b" }]),
   beat("c-karim-apres", "2031, la salle du JABB Twin",
@@ -379,7 +379,7 @@ X.push({ id: "compte", title: "Leïla fait le compte", beats: [
     { speech: say(`‹a›Tout cela a un coût, et nous le déduisons entièrement : agents, plateformes, coûts transverses et contingence, ${D.cout} MDH par an en 2031. ‹b›Reste la valeur nette : ${D.net} millions de dirhams par an. ‹c›Chaque dirham investi en rapporte ${ratioSaid(y("ratio"))}.`) }),
   beat("c-courbe", "Année après année",
     `‹a›Le chemin, année après année. 2027 est une année d'investissement : −${F.y27} MDH. ‹b›Dès 2028, la valeur nette devient positive, et le cumul aussi. ‹c›Puis ${F.y29} MDH en 2029, ${F.y30} en 2030, ${F.y31} en 2031. ‹d›Sur cinq ans, ${F.cumul} MDH cumulés ; actualisés à 10 %, ${F.van} MDH. ‹e›Et le registre des agents, avec la salle de crise, coûte moins de 10 MDH : sans lui, aucun cas touchant des données de santé ne passerait la CNDP, et ${F.lever} MDH de valeur cumulée seraient perdus.`,
-    [op.year(2031), sel("dept", "siege-pilotage"), cam("command-wide"), cast({ leila: { at: "cmd-screen", pose: "stand" } }),
+    [op.year(2031), sel("dept", "siege-pilotage"), cam("finale"), cast({ leila: { at: "cmd-screen", pose: "stand" } }),
       C({ hud: true, finale: "on" }), { ...C({ chart: 2027 }), mark: "a" }, { ...C({ chart: 2028 }), mark: "b" }, { ...C({ chart: 2031 }), mark: "c" }, { ...C({ chart: "cumul" }), mark: "d" }],
     { speech: say(`‹a›Le chemin, année après année. 2027 est une année d'investissement : moins ${F.y27} millions de dirhams. ‹b›Dès 2028, la valeur nette devient positive, et le cumul aussi. ‹c›Puis ${F.y29} millions en 2029, ${F.y30} en 2030, ${F.y31} en 2031. ‹d›Sur cinq ans, ${F.cumul} millions cumulés ; actualisés à 10 %, ${F.van} millions. ‹e›Et le registre des agents, avec la salle de crise, coûte moins de 10 millions : sans lui, aucun cas touchant des données de santé ne passerait la CNDP, et ${F.lever} millions de valeur cumulée seraient perdus.`) }),
 ] });
@@ -442,7 +442,7 @@ E.push({ id: "patient", title: "Amina : l'attente qui disparaît", beats: [
 E.push({ id: "soin", title: "Salma : la nuit au troisième étage", beats: [
   beat("x-salma", "La nuit de Salma",
     `‹a›Troisième étage, en 2026 : Salma ressaisit au poste, en fin de garde, ce qu'elle a noté sur papier. ‹b›En 2031, elle dicte son dossier au chevet d'Amina, opérée dans l'après-midi. ‹c›Cette nuit, Keeps repère une chute dans le couloir et la prévient en dix-huit secondes, sans reconnaître personne. ‹d›La chambre libérée est prête plus tôt, sans un seul appel. Qualité et sécurité pèsent ${i0(S.soin.gains)} MDH par an : du temps soignant rendu, de l'intérim évité, des lits prêts plus tôt.`,
-    [cast({ amina: null, youssef: null }), props({ queue: "off", ydesk: "off" }), op.year(2026), sel("dept", "hospitalisation"), stamp("Mardi · 23 h 40", 2026),
+    [cast({ amina: null, youssef: null }), C({ night: 0.12 }), props({ queue: "off", ydesk: "off" }), op.year(2026), sel("dept", "hospitalisation"), stamp("Mardi · 23 h 40", 2026),
       props({ npaper: "before" }), cast({ salma: { at: "nurse-station", pose: "type" } }), cam("station"), chip("salma"),
       { ...op.year(2031), mark: "b" }, { ...stamp("Mardi · 23 h 40", 2031), mark: "b" }, { ...props({ npaper: "after" }), mark: "b" },
       { ...cast({ amina: { at: "room-chair", pose: "sit" }, salma: { at: "room-bedside", from: "nurse-station", via: ["corr-e", "room-door", "room-in"], pose: "tablet" } }), mark: "b" }, { ...cam("room"), mark: "b" },
@@ -454,7 +454,7 @@ E.push({ id: "soin", title: "Salma : la nuit au troisième étage", beats: [
 E.push({ id: "actifs", title: "Karim et le jumeau", beats: [
   beat("x-karim", "Le jumeau numérique",
     `‹a›Quatrième étage. En 2026, Karim court après les pannes. ‹b›En 2031, le JABB Twin voit la dérive d'une machine dix jours avant l'arrêt, et Karim suit un parc plus grand sans courir ; ‹c›le jumeau localise le pousse-seringue libre en trois secondes, surveille le froid et l'oxygène, et met le bloc en veille la nuit. ‹d›Énergie, maintenance, équipements : les actifs rapportent ${SP.actifs.total} MDH par an.`,
-    [cast({ amina: null, salma: null }), props({ npaper: "off", fall: "off" }), op.year(2026), sel("dept", "technique"), stamp("Mardi · 14 h 05", 2026),
+    [cast({ amina: null, salma: null }), C({ night: null }), props({ npaper: "off", fall: "off" }), op.year(2026), sel("dept", "technique"), stamp("Mardi · 14 h 05", 2026),
       props({ machine: "before" }), cast({ karim: { at: "machine-fix", pose: "kneel" } }), cam("machine"), chip("karim"), C({ alert: "machine" }),
       { ...op.year(2031), mark: "b" }, { ...stamp("Mardi · 14 h 05", 2031), mark: "b" }, { ...props({ machine: "after" }), mark: "b" },
       { ...cast({ karim: { at: "twin-console", from: "machine-fix", via: ["tech-mid"], pose: "tablet" } }), mark: "b" }, { ...cam("twin"), mark: "b" },
@@ -493,7 +493,7 @@ E.push({ id: "compte", title: "Leïla fait le compte", beats: [
     [cast({ youssef: null }), props({ queue: "off", ydesk: "off" }), op.year(2031), sel("dept", "siege-pilotage"), cam("command"), stamp("Mercredi · 7 h 00", 2031),
       props({ sheets: "after" }), cast({ leila: { at: "cmd-screen", pose: "stand" } }), chip("leila"),
       { ...C({ hud: true, focus: "gains" }), mark: "b" }, { ...C({ cost: true, from: "leila" }), mark: "c" }, { ...C({ net: true, sfx: "finale" }), mark: "d" },
-      { ...C({ finale: "on", chart: "cumul" }), mark: "e" }],
+      { ...C({ finale: "on", chart: "cumul" }), mark: "e" }, { ...cam("finale"), mark: "e" }],
     { speech: say(`‹a›Au siège, dans l'Agentic Command Center, Leïla lit le rapport de sept heures. ‹b›Économies, ${D.eco} millions de dirhams ; marge, ${D.marge} ; gains bruts, ${D.gains}. ‹c›Moins le coût complet du programme, ${D.cout} millions : ‹d›${D.net} millions de dirhams de valeur nette par an en 2031. ‹e›Positive dès 2028, ${F.cumul} millions cumulés sur cinq ans. Chaque dirham investi en rapporte ${ratioSaid(y("ratio"))}.`) }),
 ] });
 
@@ -510,12 +510,12 @@ E.push({ id: "fin", title: "Le monde et la décision", beats: [
 // (folds the cues in order; a chapter jump restores it at once, sequential play already matches it)
 const LEDGER0 = { ms: 0, hms: 0, rec: 0, neu: 0 };
 function fold(tour) {
-  let st = { cast: {}, props: {}, stamp: null, ledger: { ...LEDGER0 }, hud: false, cost: false, net: false, finale: false, chart: null, letterbox: false };
+  let st = { cast: {}, props: {}, stamp: null, ledger: { ...LEDGER0 }, hud: false, cost: false, net: false, finale: false, chart: null, letterbox: false, night: null };
   for (const ch of tour.chapters) for (const b of ch.beats) {
     b.story0 = JSON.parse(JSON.stringify(st));
     for (const a of b.actions) {
       if (a.do !== "cue") continue;
-      if (a.reset) st = { cast: {}, props: {}, stamp: null, ledger: { ...LEDGER0 }, hud: false, cost: false, net: false, finale: false, chart: null, letterbox: false };
+      if (a.reset) st = { cast: {}, props: {}, stamp: null, ledger: { ...LEDGER0 }, hud: false, cost: false, net: false, finale: false, chart: null, letterbox: false, night: null };
       if (a.cast) for (const [k, v] of Object.entries(a.cast)) { if (v) st.cast[k] = { at: v.at, ...(v.pose ? { pose: v.pose } : {}) }; else delete st.cast[k]; }
       if (a.props) Object.assign(st.props, a.props);
       if (a.stamp !== undefined) st.stamp = a.stamp;
@@ -526,6 +526,7 @@ function fold(tour) {
       if (a.finale !== undefined) st.finale = a.finale === "on";
       if (a.chart !== undefined) st.chart = a.chart;
       if (a.letterbox !== undefined) st.letterbox = a.letterbox;
+      if (a.night !== undefined) st.night = a.night;
     }
   }
   // the whole story fills the ledger exactly once
