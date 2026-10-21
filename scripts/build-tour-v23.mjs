@@ -337,7 +337,7 @@ X.push({ id: "revenu", title: "Hicham : les soins enfin facturés", beats: [
 X.push({ id: "nouveau", title: "Ce que tout cela ramène", beats: [
   beat("c-nouveau", "L'activité nouvelle",
     `Additionnons ce que l'expérience, la qualité et les équipements ramènent : des patients qui viennent à leur rendez-vous, des médecins qui adressent, des lits et des IRM disponibles plus tôt, ‹a›et des cliniques qui ouvrent « augmentées par défaut », de ${ETAB["2026"]} aujourd'hui à ${ETAB["2031"]} en 2031. ‹b›Cette activité nouvelle représente ${F.caN} MDH de chiffre d'affaires en 2031. ‹c›Mais nous ne comptons que sa marge : près de ${F.neu75} MDH. Avec les soins récupérés, la marge sur le chiffre d'affaires additionnel atteint ${F.marge} MDH par an.`,
-    [cast({ hicham: null }), props({ invoices: "off" }), op.year(2031), sel("overview", "hospital"), cam("campus"), stamp("2031", 2031),
+    [cast({ hicham: null }), props({ invoices: "off" }), op.year(2031), sel("overview", "hospital"), cam("campus"), stamp("Le groupe Akdital", 2031),
       { ...C({ hud: true }), mark: "c" }, { ...flow("ouvertures", "spot:campus"), mark: "c" }],
     { speech: say(`Additionnons ce que l'expérience, la qualité et les équipements ramènent : des patients qui viennent à leur rendez-vous, des médecins qui adressent, des lits et des IRM disponibles plus tôt, ‹a›et des cliniques qui ouvrent « augmentées par défaut », de ${ETAB["2026"]} aujourd'hui à ${ETAB["2031"]} en 2031. ‹b›Cette activité nouvelle représente ${F.caN} MDH de chiffre d'affaires en 2031. ‹c›Mais nous ne comptons que sa marge : près de ${F.neu75} millions. Avec les soins récupérés, la marge sur le chiffre d'affaires additionnel atteint ${F.marge} millions de dirhams par an.`) }),
 ] });
@@ -346,11 +346,11 @@ const YOUSSEF_YEARS = (marks) => marks.map(([yr, m]) => ({ ...op.year(yr), mark:
 X.push({ id: "temps", title: "Youssef, cinq ans après", beats: [
   beat("c-youssef", "Le temps qui passe",
     `Revenons au guichet de Youssef, et faisons défiler les années. ‹a›2026 : il ressaisit toute la journée. ‹b›2027 : ses premiers agents arrivent ; il vérifie au lieu de taper. ‹c›2028 : il sort de l'académie des pilotes d'agents. ‹d›2029 : une collègue part à la retraite ; son poste n'est pas remplacé. ‹e›2030 : un autre rejoint une clinique qui ouvre. ‹f›2031 : Youssef pilote son escouade, et forme les pilotes des nouvelles cliniques.`,
-    [op.year(2026), sel("dept", "admissions"), cam("admissions-wide"), stamp("2026", 2026), props({ queue: "before", ydesk: "before" }),
+    [op.year(2026), sel("dept", "admissions"), cam("admissions-wide"), stamp("Guichet des admissions", 2026), props({ queue: "before", ydesk: "before" }),
       cast({ youssef: { at: "adm-desk", pose: "type" }, amina: null }), chip("youssef"),
       ...YOUSSEF_YEARS([[2027, "b"], [2028, "c"], [2029, "d"], [2030, "e"], [2031, "f"]]),
-      { ...stamp("2027", 2027), mark: "b" }, { ...props({ ydesk: "mid" }), mark: "b" }, { ...props({ queue: "after" }), mark: "c" },
-      { ...stamp("2028", 2028), mark: "c" }, { ...stamp("2029", 2029), mark: "d" }, { ...stamp("2030", 2030), mark: "e" }, { ...stamp("2031", 2031), mark: "f" },
+      { ...stamp("Guichet des admissions", 2027), mark: "b" }, { ...props({ ydesk: "mid" }), mark: "b" }, { ...props({ queue: "after" }), mark: "c" },
+      { ...stamp("Guichet des admissions", 2028), mark: "c" }, { ...stamp("Guichet des admissions", 2029), mark: "d" }, { ...stamp("Guichet des admissions", 2030), mark: "e" }, { ...stamp("Guichet des admissions", 2031), mark: "f" },
       { ...props({ ydesk: "after" }), mark: "f" }, { ...cast({ youssef: { at: "adm-pilot", from: "adm-desk", pose: "tablet" } }), mark: "f" }]),
   beat("c-siege", "Le siège",
     `‹a›Le même mouvement traverse le siège. À la finance, chaque facture fournisseur est contrôlée par l'agent, la banque rapprochée chaque jour, les créances relancées sans relâche ; aux achats, les appels d'offres se font en jours ; aux ressources humaines, la paie est vérifiée avant le calcul. ‹b›Le recrutement change aussi : sur près de 70 000 candidats, des entretiens vocaux par IA ont augmenté les embauches effectives de 18 %. ‹c›Le siège apporte ${i0(S.siege.gains)} MDH par an, dont plus de la moitié en achats et en trésorerie.`,
@@ -387,7 +387,7 @@ X.push({ id: "compte", title: "Leïla fait le compte", beats: [
 X.push({ id: "reseau", title: "Du bâtiment au monde", beats: [
   beat("c-casa", "Casablanca",
     `‹a›Prenons de la hauteur. Casablanca, la ville du siège. Le jumeau ne s'arrête pas aux murs de l'hôpital d'Amina : chaque clinique devient un nœud du programme.`,
-    [cast({ leila: null }), props({ sheets: "off" }), C({ finale: "off", hud: true }), op.section("explorer"), { ...op.zoom(0.31), at: 0.04 }]),
+    [cast({ leila: null }), props({ sheets: "off" }), C({ finale: "off", hud: true, stamp: null }), op.section("explorer"), { ...op.zoom(0.31), at: 0.04 }]),
   beat("c-maroc", "Le Maroc",
     `‹a›Le Maroc : ${ETAB["2026"]} établissements aujourd'hui, ${ETAB["2031"]} en 2031, et ${F.lits31} lits. Ce qui est prouvé dans une clinique se déploie dans toutes, vague après vague. C'est sur ce périmètre, et seulement celui-là, que portent les ${F.net} MDH.`,
     [{ ...op.zoom(0.62), at: 0.03 }]),
@@ -477,11 +477,11 @@ E.push({ id: "revenu", title: "Hicham : le revenu retrouvé", beats: [
 E.push({ id: "temps", title: "Youssef, cinq ans après", beats: [
   beat("x-youssef", "Le temps rendu",
     `‹a›Revenons à Youssef, et faisons défiler le temps. ‹b›2027 : ses premiers agents arrivent. ‹c›2029 : une collègue part à la retraite ; son poste n'est pas remplacé. ‹d›2031 : il pilote son escouade. ‹e›${F.etp} équivalents temps plein libérés, ${D.ms} MDH de masse salariale, et pas un seul licenciement : un peu plus d'un an de départs naturels suffit, et les ${F.ouv} ouvertures font le reste. ‹f›Avec le siège et les autres dépenses évitées, les économies atteignent ${F.eco} MDH par an.`,
-    [cast({ hicham: null }), props({ invoices: "off" }), op.year(2026), sel("dept", "admissions"), cam("admissions-wide"), stamp("2026", 2026),
+    [cast({ hicham: null }), props({ invoices: "off" }), op.year(2026), sel("dept", "admissions"), cam("admissions-wide"), stamp("Guichet des admissions", 2026),
       props({ queue: "before", ydesk: "before" }), cast({ youssef: { at: "adm-desk", pose: "type" } }), chip("youssef"),
-      { ...op.year(2027), mark: "b" }, { ...stamp("2027", 2027), mark: "b" }, { ...props({ ydesk: "mid" }), mark: "b" },
-      { ...op.year(2029), mark: "c" }, { ...stamp("2029", 2029), mark: "c" }, { ...props({ queue: "after" }), mark: "c" },
-      { ...op.year(2031), mark: "d" }, { ...stamp("2031", 2031), mark: "d" }, { ...props({ ydesk: "after" }), mark: "d" },
+      { ...op.year(2027), mark: "b" }, { ...stamp("Guichet des admissions", 2027), mark: "b" }, { ...props({ ydesk: "mid" }), mark: "b" },
+      { ...op.year(2029), mark: "c" }, { ...stamp("Guichet des admissions", 2029), mark: "c" }, { ...props({ queue: "after" }), mark: "c" },
+      { ...op.year(2031), mark: "d" }, { ...stamp("Guichet des admissions", 2031), mark: "d" }, { ...props({ ydesk: "after" }), mark: "d" },
       { ...cast({ youssef: { at: "adm-pilot", from: "adm-desk", pose: "tablet" } }), mark: "d" },
       { ...C({ hud: true, focus: "ms" }), mark: "e" }, { ...flow("siege", "youssef"), mark: "f" }],
     { speech: say(`‹a›Revenons à Youssef, et faisons défiler le temps. ‹b›2027 : ses premiers agents arrivent. ‹c›2029 : une collègue part à la retraite ; son poste n'est pas remplacé. ‹d›2031 : il pilote son escouade. ‹e›${F.etp} équivalents temps plein libérés, ${half(y("ms"))} de dirhams de masse salariale, et pas un seul licenciement : un peu plus d'un an de départs naturels suffit, et les ${F.ouv} ouvertures font le reste. ‹f›Avec le siège et les autres dépenses évitées, les économies atteignent ${F.eco} millions de dirhams par an.`) }),
@@ -500,7 +500,7 @@ E.push({ id: "compte", title: "Leïla fait le compte", beats: [
 E.push({ id: "fin", title: "Le monde et la décision", beats: [
   beat("x-fin", "Le Maroc, le monde, la décision",
     `‹a›Prenons de la hauteur : de Casablanca au Maroc, de ${ETAB["2026"]} établissements à ${ETAB["2031"]}, ‹b›puis au monde. Ce qui est prouvé dans une clinique se déploie dans toutes. ‹c›Le chemin commence petit : une clinique et le siège, dès la mi-décembre. La décision qui vous revient : lancer le cadrage en novembre. ‹d›Pour qu'Amina n'attende plus jamais au bout du fil.`,
-    [cast({ leila: null }), props({ sheets: "off" }), C({ finale: "off", hud: true }), op.section("explorer"), { ...op.zoom(0.31), at: 0.02 }, { ...op.zoom(0.62), at: 0.12 }, { ...op.zoom(0.79), mark: "b" }, { ...C({ hud: false }), mark: "c" }]),
+    [cast({ leila: null }), props({ sheets: "off" }), C({ finale: "off", hud: true, stamp: null }), op.section("explorer"), { ...op.zoom(0.31), at: 0.02 }, { ...op.zoom(0.62), at: 0.12 }, { ...op.zoom(0.79), mark: "b" }, { ...C({ hud: false }), mark: "c" }]),
   beat("x-ligne", "JABB × AKDITAL × mibtech",
     `‹a›JABB × AKDITAL × mibtech, ensemble : ${F.net} MDH de valeur nette par an, sans un seul licenciement.`,
     [{ ...op.zoom(1), at: 0.02 }, { ...C({ letterbox: true, closing: true }), at: 0.3 }]),

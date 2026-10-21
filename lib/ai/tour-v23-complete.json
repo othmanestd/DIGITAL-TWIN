@@ -1495,7 +1495,7 @@
       {
        "do": "cue",
        "stamp": {
-        "t": "2031",
+        "t": "Le groupe Akdital",
         "year": 2031
        }
       },
@@ -1582,7 +1582,7 @@
       {
        "do": "cue",
        "stamp": {
-        "t": "2026",
+        "t": "Guichet des admissions",
         "year": 2026
        }
       },
@@ -1642,7 +1642,7 @@
       {
        "do": "cue",
        "stamp": {
-        "t": "2027",
+        "t": "Guichet des admissions",
         "year": 2027
        },
        "at": 0.241
@@ -1664,7 +1664,7 @@
       {
        "do": "cue",
        "stamp": {
-        "t": "2028",
+        "t": "Guichet des admissions",
         "year": 2028
        },
        "at": 0.401
@@ -1672,7 +1672,7 @@
       {
        "do": "cue",
        "stamp": {
-        "t": "2029",
+        "t": "Guichet des admissions",
         "year": 2029
        },
        "at": 0.523
@@ -1680,7 +1680,7 @@
       {
        "do": "cue",
        "stamp": {
-        "t": "2030",
+        "t": "Guichet des admissions",
         "year": 2030
        },
        "at": 0.692
@@ -1688,7 +1688,7 @@
       {
        "do": "cue",
        "stamp": {
-        "t": "2031",
+        "t": "Guichet des admissions",
         "year": 2031
        },
        "at": 0.807
@@ -1724,7 +1724,7 @@
        "invoices": "off"
       },
       "stamp": {
-       "t": "2031",
+       "t": "Le groupe Akdital",
        "year": 2031
       },
       "ledger": {
@@ -1818,7 +1818,7 @@
        "invoices": "off"
       },
       "stamp": {
-       "t": "2031",
+       "t": "Guichet des admissions",
        "year": 2031
       },
       "ledger": {
@@ -2269,7 +2269,8 @@
       {
        "do": "cue",
        "finale": "off",
-       "hud": true
+       "hud": true,
+       "stamp": null
       },
       {
        "do": "section",
@@ -2341,10 +2342,7 @@
        "invoices": "off",
        "sheets": "off"
       },
-      "stamp": {
-       "t": "Mercredi · 7 h 00",
-       "year": 2031
-      },
+      "stamp": null,
       "ledger": {
        "ms": 153.453,
        "hms": 119.2449,
@@ -2393,10 +2391,7 @@
        "invoices": "off",
        "sheets": "off"
       },
-      "stamp": {
-       "t": "Mercredi · 7 h 00",
-       "year": 2031
-      },
+      "stamp": null,
       "ledger": {
        "ms": 153.453,
        "hms": 119.2449,
@@ -2445,10 +2440,7 @@
        "invoices": "off",
        "sheets": "off"
       },
-      "stamp": {
-       "t": "Mercredi · 7 h 00",
-       "year": 2031
-      },
+      "stamp": null,
       "ledger": {
        "ms": 153.453,
        "hms": 119.2449,
@@ -2493,10 +2485,7 @@
        "invoices": "off",
        "sheets": "off"
       },
-      "stamp": {
-       "t": "Mercredi · 7 h 00",
-       "year": 2031
-      },
+      "stamp": null,
       "ledger": {
        "ms": 153.453,
        "hms": 119.2449,

@@ -1001,7 +1001,7 @@
       {
        "do": "cue",
        "stamp": {
-        "t": "2026",
+        "t": "Guichet des admissions",
         "year": 2026
        }
       },
@@ -1036,7 +1036,7 @@
       {
        "do": "cue",
        "stamp": {
-        "t": "2027",
+        "t": "Guichet des admissions",
         "year": 2027
        },
        "at": 0.099
@@ -1057,7 +1057,7 @@
       {
        "do": "cue",
        "stamp": {
-        "t": "2029",
+        "t": "Guichet des admissions",
         "year": 2029
        },
        "at": 0.174
@@ -1078,7 +1078,7 @@
       {
        "do": "cue",
        "stamp": {
-        "t": "2031",
+        "t": "Guichet des admissions",
         "year": 2031
        },
        "at": 0.317
@@ -1265,7 +1265,7 @@
        "invoices": "off"
       },
       "stamp": {
-       "t": "2031",
+       "t": "Guichet des admissions",
        "year": 2031
       },
       "ledger": {
@@ -1309,7 +1309,8 @@
       {
        "do": "cue",
        "finale": "off",
-       "hud": true
+       "hud": true,
+       "stamp": null
       },
       {
        "do": "section",
@@ -1402,10 +1403,7 @@
        "invoices": "off",
        "sheets": "off"
       },
-      "stamp": {
-       "t": "Mercredi · 7 h 00",
-       "year": 2031
-      },
+      "stamp": null,
       "ledger": {
        "ms": 153.453,
        "hms": 119.2449,
