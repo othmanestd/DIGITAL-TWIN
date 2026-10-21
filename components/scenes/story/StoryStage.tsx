@@ -1,6 +1,7 @@
 "use client";
 // The guided visit's stage, inside the campus group of the hospital (building frame of lib/hospital): the six fictional
-// characters (low-poly, one accent each, a soft pool of light under their feet), their walks and gestures, the 2026 → 2031
+// characters (the shared human kit, one accent each, a soft pool of light under their feet), their walks and gestures
+// (seated exactly on their chair, typing on the keyboard, holding a tablet, kneeling by a fall), the 2026 → 2031
 // props (StoryProps), the alerts of Keeps and the pings of the JABB Twin, screen anchors for the DOM overlay
 // ("story:<id>", "spot:<id>"), and the story camera (cinematic dollies between shots, lib/ai/story.ts → cam).
 // Renders nothing unless a visit is playing. Mounted once in HospitalContent.
@@ -11,12 +12,16 @@ import { useStory, CAST_IDS, type CastId, type Pose } from "@/lib/ai/story";
 import { useApp } from "@/lib/store";
 import { registerAnchor } from "@/lib/anchors";
 import { rig } from "@/lib/rig";
-import { FIGURE } from "../hospital/People";
 import { haloTexture, rt } from "../hospital/mats";
+import { MAIN, ANNEX } from "@/lib/hospital";
+import { FLOOR_BY_KEY } from "../hospital/layout";
+import { features } from "../hospital/props/discover";
+import { BONE, mixPose, newPose, poseCounter, poseIdle, poseKneel, poseSit, poseTablet, poseType, poseWalk } from "../people/human";
+import { useHumanCrowd } from "../people/useHumans";
 import { focusOf, toWorld } from "../hospital/nav";
 import { SHOTS, floorY } from "./spots";
 import { spot, groupOffset } from "./place";
-import { LOOKS } from "./cast";
+import { LOOKS, castHuman } from "./cast";
 import StoryProps from "./StoryProps";
 import { STAGE, floorShown } from "./stage";
 export { STAGE };
@@ -29,55 +34,56 @@ function dampAngle(a: number, b: number, k: number) {
   return a + d * k;
 }
 
-// ---------------------------------------------------------------- geometry of the silhouettes
+// ---------------------------------------------------------------- accessories the kit does not draw
 const G = {
-  skirt: new THREE.CylinderGeometry(0.2, 0.31, 0.62, 16),
-  hijab: new THREE.SphereGeometry(0.158, 16, 12),
-  neck: new THREE.CylinderGeometry(0.12, 0.22, 0.24, 16),
-  cap: new THREE.CylinderGeometry(0.142, 0.142, 0.07, 16),
-  visor: new THREE.BoxGeometry(0.17, 0.018, 0.13),
-  scarf: new THREE.TorusGeometry(0.13, 0.042, 8, 20),
-  scarfEnd: new THREE.BoxGeometry(0.09, 0.26, 0.04),
-  longHair: new THREE.CapsuleGeometry(0.12, 0.22, 3, 10),
-  bun: new THREE.SphereGeometry(0.068, 10, 8),
-  collar: new THREE.BoxGeometry(0.2, 0.06, 0.05),
-  badge: new THREE.BoxGeometry(0.06, 0.085, 0.012),
-  belt: new THREE.TorusGeometry(0.205, 0.028, 6, 22),
   tablet: new THREE.BoxGeometry(0.2, 0.28, 0.016),
   screen: new THREE.PlaneGeometry(0.17, 0.24),
   pool: new THREE.PlaneGeometry(2.6, 2.6),
   ring: new THREE.RingGeometry(0.92, 1.0, 56),
 };
+/** Seat top under a seated spot: the story's own desks (StoryProps) have a 0.49 m seat; otherwise the layout's seat there. */
+const STORY_DESKS = new Set(["adm-desk", "billing-desk", "cmd-desk"]);
+const seatCache = new Map<string, number>();
+function seatTop(at: string, floor: string, x: number, z: number) {
+  const key = at + "@" + x.toFixed(2) + "," + z.toFixed(2);
+  const hit = seatCache.get(key);
+  if (hit !== undefined) return hit;
+  let top = 0.49;
+  const fl = FLOOR_BY_KEY[floor];
+  if (fl && !STORY_DESKS.has(at)) {
+    const B = floor.startsWith("annex") ? ANNEX : MAIN;
+    let best = 0.5;
+    for (const st of features(fl).seats) { const d = Math.hypot(st.x + B.x - x, st.z + B.z - z); if (d < best) { best = d; top = st.top; } }
+  }
+  seatCache.set(key, top);
+  return top;
+}
 const qFlat = new THREE.Euler(-Math.PI / 2, 0, 0);
 
-type Plan = { path: [number, number][]; pose: Pose; yawEnd: number; floor: string; seat: boolean };
+type Plan = { path: [number, number][]; pose: Pose; yawEnd: number; floor: string; seat: boolean; at: string };
 
 function Member({ id }: { id: CastId }) {
   const look = LOOKS[id];
   const camera = useThree((s) => s.camera);
   const gl = useThree((s) => s.gl);
-  const mats = useMemo(() => {
-    const m = (c: string, o: Partial<THREE.MeshStandardMaterialParameters> = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.78, transparent: true, ...o });
-    return {
-      skin: m(look.skin), hair: m(look.hair ?? "#222"), torso: m(look.torso), legs: m(look.legs), arms: m(look.arms ?? look.torso),
-      hijab: m(look.hijab ?? "#999"), skirt: m(look.skirt ?? "#999"), cap: m(look.cap ?? "#444"), scarf: m(look.scarf ?? "#999"),
-      collar: m(look.collar ?? "#fff"), belt: m(look.belt ?? "#333"), badge: m("#F3F4F7", { emissive: new THREE.Color("#7C93FF"), emissiveIntensity: 0.25 }),
-      tablet: m("#1C2233", { roughness: 0.4 }), screen: new THREE.MeshBasicMaterial({ color: "#9CB0FF", transparent: true, toneMapped: false }),
-      pool: new THREE.MeshBasicMaterial({ map: haloTexture(), color: look.accent, transparent: true, opacity: 0, depthWrite: false, toneMapped: false }),
-      ring: new THREE.MeshBasicMaterial({ color: look.accent, transparent: true, opacity: 0, depthWrite: false, toneMapped: false, side: THREE.DoubleSide }),
-    };
-  }, [look]);
+  const crowd = useHumanCrowd(1, { transparent: true });
+  useEffect(() => { crowd.setLook(0, castHuman(id)); }, [crowd, id]);
+  const mats = useMemo(() => ({
+    tablet: new THREE.MeshStandardMaterial({ color: "#1C2233", roughness: 0.4, transparent: true }),
+    screen: new THREE.MeshBasicMaterial({ color: "#9CB0FF", transparent: true, toneMapped: false }),
+    pool: new THREE.MeshBasicMaterial({ map: haloTexture(), color: look.accent, transparent: true, opacity: 0, depthWrite: false, toneMapped: false }),
+    ring: new THREE.MeshBasicMaterial({ color: look.accent, transparent: true, opacity: 0, depthWrite: false, toneMapped: false, side: THREE.DoubleSide }),
+  }), [look]);
   useEffect(() => () => Object.values(mats).forEach((m) => m.dispose()), [mats]);
-  const all = useMemo(() => Object.entries(mats).filter(([k]) => k !== "pool" && k !== "ring").map(([, v]) => v), [mats]);
+  const kp = useMemo(() => ({ cur: newPose(), tgt: newPose(), first: true }), []);
+  const tmp = useMemo(() => ({ a: new THREE.Vector3(), b: new THREE.Vector3() }), []);
 
   const root = useRef<THREE.Group>(null);
-  const body = useRef<THREE.Group>(null);
-  const legL = useRef<THREE.Mesh>(null), legR = useRef<THREE.Mesh>(null), armL = useRef<THREE.Group>(null), armR = useRef<THREE.Group>(null);
-  const upper = useRef<THREE.Group>(null), head = useRef<THREE.Group>(null), tab = useRef<THREE.Group>(null), skirt = useRef<THREE.Mesh>(null);
+  const tab = useRef<THREE.Group>(null);
   const pool = useRef<THREE.Mesh>(null), ring = useRef<THREE.Mesh>(null);
   const S = useRef({
     x: 0, z: 0, yaw: 0, floor: "out", vis: 0, want: 0, plan: null as Plan | null, next: null as Plan | null, seg: 0, segT: 0, walkPh: 0,
-    hip: 0.88, legA: 0, legB: 0, armA: 0.03, armB: 0.03, tilt: 0, tabK: 0, nonce: -1, placed: false, chipT: -1e9, seed: Math.random() * 100,
+    tabK: 0, nonce: -1, placed: false, chipT: -1e9, seed: Math.random() * 100,
   });
 
   // the store → a plan (walk along from/via/at, or dissolve to the new spot)
@@ -97,7 +103,7 @@ function Member({ id }: { id: CastId }) {
     const from = m.place.from ? spot(m.place.from) : null;
     for (const v of m.place.via ?? []) { const p = spot(v); if (p) path.push([p.x, p.z]); }
     path.push([dest.x, dest.z]);
-    const plan: Plan = { path, pose, yawEnd: dest.yaw, floor: dest.floor, seat: !!dest.seat };
+    const plan: Plan = { path, pose, yawEnd: dest.yaw, floor: dest.floor, seat: !!dest.seat, at: m.place.at };
     const visible = s.vis > 0.05 && s.placed;
     if (from && (!visible || s.floor !== dest.floor)) {
       // appear at the start of the walk, then walk
@@ -166,45 +172,33 @@ function Member({ id }: { id: CastId }) {
     }
     if (!walking && plan) s.yaw = dampAngle(s.yaw, plan.yawEnd, 1 - Math.exp(-dt * 3));
     const seat = !!plan?.seat;
-    // pose targets
-    let hip = 0.88, legA = 0, legB = 0, armA = 0.03, armB = 0.03, tilt = 0, tabK = 0;
-    if (walking) {
-      const gait = Math.sin(s.walkPh);
-      legA = 0.5 * gait; legB = -legA; armA = -0.36 * gait; armB = -armA;
-    } else if (pose === "sit" || (pose === "type" && seat)) {
-      hip = 0.5; legA = legB = -1.05; armA = armB = -0.5;
-      if (pose === "type") { armA = -1.12 + 0.05 * Math.sin(12 * t + s.seed); armB = -1.12 + 0.05 * Math.sin(12 * t + s.seed + 1.9); tilt = 0.06; }
-    } else if (pose === "type") {
-      armA = -1.0 + 0.05 * Math.sin(11 * t + s.seed); armB = -1.0 + 0.05 * Math.sin(11 * t + s.seed + 2); tilt = 0.1;
-    } else if (pose === "tablet") {
-      armA = -1.25; armB = -0.95 + 0.06 * Math.sin(3.1 * t + s.seed); tabK = 1; tilt = 0.04;
-    } else if (pose === "kneel") {
-      hip = 0.6; legA = -1.25; legB = 0.2; armA = -0.9; armB = -0.7 + 0.05 * Math.sin(2 * t); tilt = 0.32;
-    } else {
-      armA = 0.03 + 0.03 * Math.sin(1.55 * t + s.seed); armB = 0.03 - 0.03 * Math.sin(1.55 * t + s.seed);
-    }
-    const k = 1 - Math.exp(-dt * 7);
-    s.hip += (hip - s.hip) * k; s.legA += (legA - s.legA) * k; s.legB += (legB - s.legB) * k;
-    s.armA += (armA - s.armA) * k; s.armB += (armB - s.armB) * k; s.tilt += (tilt - s.tilt) * k; s.tabK += (tabK - s.tabK) * k;
+    // pose targets (kit), eased toward from the current pose — quicker while walking so the gait keeps its swing
+    const P = kp.tgt, sd = s.seed, sc = 0.92 + 0.08 * smooth(s.vis), hs = sc * crowd.height[0];
+    let tabK = 0;
+    if (walking) poseWalk(P, s.walkPh, 1);
+    else if (pose === "sit" || (pose === "type" && seat)) {
+      const top = seat && plan ? seatTop(plan.at, plan.floor, s.x, s.z) : 0.49;
+      if (pose === "type") poseType(P, top, hs, t, sd, 0.78, 0.52); else poseSit(P, top, hs, t, sd);
+    } else if (pose === "type") poseCounter(P, t, sd, 1.12, 0.4, hs);
+    else if (pose === "tablet") { poseTablet(P, t, sd); tabK = 1; }
+    else if (pose === "kneel") poseKneel(P, t);
+    else poseIdle(P, t, sd);
+    if (kp.first) { kp.first = false; mixPose(kp.cur, P, P, 0); }
+    else mixPose(kp.cur, kp.cur, P, 1 - Math.exp(-dt * (walking ? 22 : 7)));
+    s.tabK += (tabK - s.tabK) * (1 - Math.exp(-dt * 7));
 
     g.position.set(s.x, floorY(s.floor), s.z);
     g.rotation.y = s.yaw;
-    const sc = 0.92 + 0.08 * smooth(s.vis);
-    if (body.current) {
-      body.current.scale.setScalar(sc);
-      body.current.position.y = s.hip - 0.88 + (walking ? 0.03 * Math.abs(Math.sin(s.walkPh)) : 0);
+    crowd.write(0, 0, 0, 0, 0, sc, kp.cur);
+    if (tab.current) {
+      tab.current.visible = s.tabK > 0.05;
+      crowd.point(tmp.a, BONE.farmL, 0, -0.3, 0.02); crowd.point(tmp.b, BONE.farmR, 0, -0.3, 0.02);
+      tab.current.position.copy(tmp.a.add(tmp.b).multiplyScalar(0.5)).y += 0.04;
+      tab.current.scale.setScalar(Math.max(0.001, s.tabK));
     }
-    if (upper.current) upper.current.rotation.x = s.tilt;
-    if (legL.current) legL.current.rotation.x = s.legA;
-    if (legR.current) legR.current.rotation.x = s.legB;
-    if (armL.current) armL.current.rotation.x = s.armA;
-    if (armR.current) armR.current.rotation.x = s.armB;
-    if (head.current) { head.current.rotation.y = 0.3 * Math.sin(0.23 * t + s.seed) * Math.sin(0.09 * t + s.seed); head.current.rotation.x = 0.04 * Math.sin(0.31 * t + s.seed) + (s.tabK * 0.25); }
-    if (skirt.current) skirt.current.visible = s.hip > 0.7;
-    if (tab.current) { tab.current.visible = s.tabK > 0.05; tab.current.scale.setScalar(Math.max(0.001, s.tabK)); }
     // fade
     const op = smooth(s.vis);
-    for (const m of all) m.opacity = op;
+    crowd.alpha(0, op); mats.tablet.opacity = op; mats.screen.opacity = op;
     // pool of light, brighter when the character is introduced / named
     const since = (performance.now() - s.chipT) / 1000;
     const hl = since < 5 ? smooth(since / 0.4) * (1 - smooth((since - 3.6) / 1.4)) : 0;
@@ -218,37 +212,14 @@ function Member({ id }: { id: CastId }) {
     STAGE.pos.set(id, (STAGE.pos.get(id) ?? new THREE.Vector3()).set(s.x, floorY(s.floor), s.z));
   });
 
-  const hipY = 0.88;
   return (
     <group ref={root} visible={false}>
       <mesh ref={pool} geometry={G.pool} material={mats.pool} rotation={qFlat} position={[0, 0.03, 0]} renderOrder={4} raycast={() => null} />
       <mesh ref={ring} geometry={G.ring} material={mats.ring} rotation={qFlat} position={[0, 0.035, 0]} renderOrder={4} raycast={() => null} />
-      <group ref={body}>
-        <mesh ref={legL} geometry={FIGURE.legGeo} material={mats.legs} position={[-0.1, hipY, 0]} castShadow />
-        <mesh ref={legR} geometry={FIGURE.legGeo} material={mats.legs} position={[0.1, hipY, 0]} castShadow />
-        {look.skirt && <mesh ref={skirt} geometry={G.skirt} material={mats.skirt} position={[0, hipY - 0.29, 0]} castShadow />}
-        <group ref={upper} position={[0, hipY, 0]}>
-          <mesh geometry={FIGURE.torsoGeo} material={mats.torso} position={[0, 0.34, 0]} scale={[1, look.skirt ? 1.05 : 1, 0.74]} castShadow />
-          {look.belt && <mesh geometry={G.belt} material={mats.belt} position={[0, 0.03, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[1, 0.74, 1]} />}
-          {look.collar && <mesh geometry={G.collar} material={mats.collar} position={[0, 0.69, 0.1]} />}
-          {look.badge && <mesh geometry={G.badge} material={mats.badge} position={[-0.11, 0.48, 0.155]} />}
-          {look.scarf && <><mesh geometry={G.scarf} material={mats.scarf} position={[0, 0.7, 0]} rotation={[Math.PI / 2, 0, 0]} /><mesh geometry={G.scarfEnd} material={mats.scarf} position={[0.07, 0.56, 0.16]} rotation={[0.1, 0, 0.12]} /></>}
-          {look.hijab && <mesh geometry={G.neck} material={mats.hijab} position={[0, 0.7, 0]} />}
-          <group ref={armL} position={[-0.26, 0.62, 0]} rotation={[0, 0, -0.07]}><mesh geometry={FIGURE.armGeo} material={mats.arms} castShadow /></group>
-          <group ref={armR} position={[0.26, 0.62, 0]} rotation={[0, 0, 0.07]}><mesh geometry={FIGURE.armGeo} material={mats.arms} castShadow /></group>
-          <group ref={tab} position={[0, 0.42, 0.3]} rotation={[-0.75, 0, 0]} visible={false}>
-            <mesh geometry={G.tablet} material={mats.tablet} />
-            <mesh geometry={G.screen} material={mats.screen} position={[0, 0, 0.009]} />
-          </group>
-          <group ref={head} position={[0, 0.87, 0.01]}>
-            <mesh geometry={FIGURE.headGeo} material={mats.skin} castShadow />
-            {look.hair && !look.hijab && <mesh geometry={FIGURE.hairGeo} material={mats.hair} position={[0, 0.005, -0.01]} rotation={[-0.32, 0, 0]} />}
-            {look.hijab && <mesh geometry={G.hijab} material={mats.hijab} position={[0, 0.02, -0.025]} scale={[1, 1.06, 1.02]} />}
-            {look.bun && <mesh geometry={G.bun} material={mats.hair} position={[0, 0.07, -0.13]} />}
-            {look.longHair && <mesh geometry={G.longHair} material={mats.hair} position={[0, -0.12, -0.09]} />}
-            {look.cap && <><mesh geometry={G.cap} material={mats.cap} position={[0, 0.1, 0]} /><mesh geometry={G.visor} material={mats.cap} position={[0, 0.075, 0.12]} /></>}
-          </group>
-        </group>
+      <primitive object={crowd.mesh} />
+      <group ref={tab} rotation={[-0.75, 0, 0]} visible={false}>
+        <mesh geometry={G.tablet} material={mats.tablet} raycast={() => null} />
+        <mesh geometry={G.screen} material={mats.screen} position={[0, 0, 0.009]} raycast={() => null} />
       </group>
     </group>
   );

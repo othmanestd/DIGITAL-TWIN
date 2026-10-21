@@ -1,25 +1,27 @@
 "use client";
-// The non-staff crowd of a floor (patients, visitors, families), instanced with the figure primitives of People.tsx
-// (same proportions and rig): seated people sit on a recognised seat (hip on the seat top, facing the seat's way),
-// standing people shift their weight and look around, walkers move slowly along clear lanes (an IV pole, a wheelchair
-// pushed by a relative) and stop for the walking visitor. Not clickable, no staff.
+// The non-staff crowd of a floor (patients, visitors, families), drawn with the shared human kit (one instanced draw call):
+// seated people sit on a recognised seat (hip on the seat top, thighs level, feet on the floor, facing the seat's way),
+// standing people shift their weight and look around, walkers move slowly along clear lanes (a patient holding an IV pole,
+// a wheelchair pushed by a relative with both hands on its handles) and stop for the walking visitor. Phones, cups, books
+// and babies sit in the hands. Not clickable, no staff.
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { MAIN, ANNEX } from "@/lib/hospital";
-import { FIGURE } from "../People";
 import { W, walkOn } from "../../walk/state";
 import { Kit, C } from "./kit";
 import * as F from "./furniture";
 import { mergeParts } from "./geo";
-import type { CrowdSpec, Look } from "./crowdSpec";
+import { humanOf, type CrowdSpec, type Look } from "./crowdSpec";
 import type { PropMats } from "./FloorProps";
+import { BONE, newPose, posePhone, poseIdle, posePush, poseSit, poseWalk } from "../../people/human";
+import { useHumanCrowd } from "../../people/useHumans";
 
 type Fig = {
   look: Look; seed: number;
   kind: "sit" | "stand" | "walk";
   act: string;
-  x: number; z: number; yaw: number; y: number; // seated / standing pose (floor-local); y = root height
+  x: number; z: number; yaw: number; top: number; // seated / standing pose (floor-local); top = seat top
   walker: number; dx: number; dz: number; role: string;
 };
 
@@ -27,14 +29,10 @@ type Fig = {
 export const CROWD_POS = new Map<string, Float32Array>();
 
 const Y = new THREE.Vector3(0, 1, 0);
-const _m = new THREE.Matrix4(), _root = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler();
-const _p = new THREE.Vector3(), _s = new THREE.Vector3(), _v = new THREE.Vector3(), _c = new THREE.Color();
-const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
-function part(out: THREE.Matrix4, px: number, py: number, pz: number, rx: number, ry: number, rz: number, sx: number, sy: number, sz: number, order: THREE.EulerOrder = "XYZ") {
-  _e.set(rx, ry, rz, order); _q.setFromEuler(_e);
-  _m.compose(_p.set(px, py, pz), _q, _s.set(sx, sy, sz));
-  out.multiplyMatrices(_root, _m);
-}
+const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler();
+const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _s = new THREE.Vector3();
+const P = newPose();
+const WHEEL_SEAT = 0.52, WHEEL_FOOT = 0.08;   // wheelchair seat top and footrest (props/furniture.ts)
 function dampAngle(a: number, b: number, k: number) { let d = b - a; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return a + d * k; }
 
 /** small accessory geometries built with the props kit (merged, vertex coloured) */
@@ -60,15 +58,16 @@ const ACC_KEYS = Object.keys(ACC) as AccKey[];
 export default function Crowd({ spec, mats, building, floor }: { spec: CrowdSpec; mats: PropMats; building: "main" | "annex"; floor: number }) {
   const figs = useMemo<Fig[]>(() => {
     const out: Fig[] = [];
-    for (const s of spec.seated) out.push({ look: s.look, seed: s.seed, kind: "sit", act: s.act, x: s.x, z: s.z, yaw: s.yaw, y: s.top - 0.5 * (s.look.kid ? 0.62 : 1), walker: -1, dx: 0, dz: 0, role: "" });
-    for (const s of spec.standing) out.push({ look: s.look, seed: s.seed, kind: "stand", act: s.act, x: s.x, z: s.z, yaw: s.yaw, y: 0, walker: -1, dx: 0, dz: 0, role: "" });
+    for (const s of spec.seated) out.push({ look: s.look, seed: s.seed, kind: "sit", act: s.act, x: s.x, z: s.z, yaw: s.yaw, top: s.top, walker: -1, dx: 0, dz: 0, role: "" });
+    for (const s of spec.standing) out.push({ look: s.look, seed: s.seed, kind: "stand", act: s.act, x: s.x, z: s.z, yaw: s.yaw, top: 0, walker: -1, dx: 0, dz: 0, role: "" });
     spec.walkers.forEach((w, wi) => w.members.forEach((m) => out.push({
       look: m.look, seed: Math.floor(w.phase * 997 + m.dx * 31), kind: m.role === "wheel" ? "sit" : "walk", act: m.role === "wheel" ? "rest" : "walk",
-      x: 0, z: 0, yaw: 0, y: m.role === "wheel" ? 0.02 : 0, walker: wi, dx: m.dx, dz: m.dz, role: m.role,
+      x: 0, z: 0, yaw: 0, top: WHEEL_SEAT, walker: wi, dx: m.dx, dz: m.dz, role: m.role,
     })));
     return out;
   }, [spec]);
   const N = figs.length;
+  const crowd = useHumanCrowd(N);
   const geo = useMemo(() => Object.fromEntries(ACC_KEYS.map((k) => [k, ACC[k]()])) as Record<AccKey, THREE.BufferGeometry>, []);
   useEffect(() => () => Object.values(geo).forEach((g) => g.dispose()), [geo]);
   const acc = useMemo(() => {
@@ -83,8 +82,6 @@ export default function Crowd({ spec, mats, building, floor }: { spec: CrowdSpec
     }
     return n;
   }, [figs]);
-  const torso = useRef<THREE.InstancedMesh>(null), head = useRef<THREE.InstancedMesh>(null), hair = useRef<THREE.InstancedMesh>(null);
-  const legs = useRef<THREE.InstancedMesh>(null), arms = useRef<THREE.InstancedMesh>(null), scarf = useRef<THREE.InstancedMesh>(null);
   const accRefs = useRef<Partial<Record<AccKey, THREE.InstancedMesh | null>>>({});
   const root = useRef<THREE.Group>(null);
   const key = `${building}:${floor}`;
@@ -104,26 +101,14 @@ export default function Crowd({ spec, mats, building, floor }: { spec: CrowdSpec
   function put(k: AccKey, m: THREE.Matrix4) { const mesh = accRefs.current[k]; if (mesh) mesh.setMatrixAt(st.ai[k]++, m); }
 
   useEffect(() => {
-    const setC = (mesh: THREE.InstancedMesh | null, per: number, f: (i: number) => number) => {
-      if (!mesh) return;
-      for (let i = 0; i < N; i++) for (let k = 0; k < per; k++) mesh.setColorAt(i * per + k, _c.setHex(f(i)));
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    };
-    setC(torso.current, 1, (i) => figs[i].look.torso);
-    setC(arms.current, 2, (i) => figs[i].look.torso);
-    setC(legs.current, 2, (i) => figs[i].look.legs);
-    setC(head.current, 1, (i) => figs[i].look.skin);
-    setC(hair.current, 1, (i) => figs[i].look.hair ?? 0);
-    setC(scarf.current, 2, (i) => figs[i].look.scarfCol);
-    for (const r of [torso, head, hair, legs, arms, scarf]) if (r.current) r.current.frustumCulled = false;
+    figs.forEach((f, i) => crowd.setLook(i, humanOf(f.look, f.seed * 7919 + i)));
     for (const m of Object.values(accRefs.current)) if (m) m.frustumCulled = false;
-  }, [figs, N]);
+  }, [figs, crowd]);
 
   useFrame((state, dt) => {
     let o: THREE.Object3D | null = root.current;
     while (o) { if (!o.visible) return; o = o.parent; }
-    const T = torso.current, H = head.current, Hr = hair.current, Lg = legs.current, Ar = arms.current, Sc = scarf.current;
-    if (!T || !H || !Hr || !Lg || !Ar || !Sc) return;
+    crowd.sync(mats.figure);
     const t = state.clock.elapsedTime, dts = Math.max(1e-3, Math.min(dt, 0.1));
     // walkers: advance along their lane (slowing at the ends), stop for the visitor in their way
     const here = walkOn() && W.where === building && W.level === floor;
@@ -150,82 +135,61 @@ export default function Crowd({ spec, mats, building, floor }: { spec: CrowdSpec
     const ai = st.ai;
     ai.wheel = ai.iv = ai.phone = ai.cup = ai.book = ai.baby = 0;
     for (let i = 0; i < N; i++) {
-      const f = figs[i], sd = f.seed * 0.37, lk = f.look, sc = lk.kid ? 0.62 : 1;
-      let x = f.x, z = f.z, yaw = f.yaw, hip = 0.88, legL = 0, legR = 0, armL = 0.02, armR = 0.02, hy = 0, hp = 0, bob = 0, rollR = 0.07, rollL = -0.07;
-      const y0 = f.y;
-      const breathe = 1 + 0.013 * Math.sin(1.55 * t + sd);
+      const f = figs[i], sd = f.seed * 0.37, sc = f.look.kid ? 0.62 : 1, hs = sc * crowd.height[i];
+      let x = f.x, z = f.z, yaw = f.yaw;
       if (f.walker >= 0) {
         const w = f.walker, c = Math.cos(st.yaw[w]), s = Math.sin(st.yaw[w]);
         yaw = st.yaw[w];
         x = st.x[w] + f.dx * c + f.dz * s; z = st.z[w] - f.dx * s + f.dz * c;
-        const amp = st.amp[w], gait = Math.sin((st.dist[w] * 3.4) / sc + f.dx * 2);
-        if (f.role === "wheel") { hip = 0.5; legL = legR = -1.25; armL = armR = -0.55; hy = 0.25 * Math.sin(0.2 * t + sd); }
+        const amp = st.amp[w], ph = (st.dist[w] * 3.6) / hs + f.dx * 2;
+        if (f.role === "wheel") poseSit(P, WHEEL_SEAT, hs, t, sd, WHEEL_FOOT);
+        else if (f.role === "push") posePush(P, ph, amp, 0.235, 1.0, 0.43, hs);            // the wheelchair's handles, 0.82 m ahead
         else {
-          legL = 0.42 * gait * amp; legR = -legL; bob = 0.025 * Math.abs(gait) * amp;
-          armL = -0.32 * gait * amp; armR = -armL;
-          if (f.role === "push") { armL = armR = -1.1; rollL = 0.05; rollR = -0.05; }
-          if (f.role === "iv") { armR = -0.5; rollR = 0.2; hp = 0.12; }
-          hy = 0.12 * Math.sin(0.4 * t + sd);
+          poseWalk(P, ph, amp, crowd.robe[i] === 1);
+          if (f.role === "iv") { P.ikL = 1; P.txL = 0.39 / hs; P.tyL = 1.08 / hs; P.tzL = 0.13 / hs; P.hp = 0.12; }
+          P.hy += 0.12 * Math.sin(0.4 * t + sd);
         }
       } else if (f.kind === "sit") {
-        hip = 0.5; legL = legR = -1.05;
-        armL = armR = -0.5; hy = 0.3 * Math.sin(0.19 * t + sd) * Math.sin(0.07 * t + sd * 2);
-        if (f.act === "phone") { armR = -1.9; rollR = -0.35; hp = 0.3; hy = 0.04; }
-        if (f.act === "talk") { hy = 0.45 * Math.sin(0.23 * t + sd); armR = -0.7 + 0.12 * Math.sin(1.7 * t + sd); }
-        if (f.act === "read") { armL = armR = -1.05; rollL = 0.3; rollR = -0.3; hp = 0.38; hy = 0.04 * Math.sin(0.5 * t); }
-        if (f.act === "cup") { armR = -1.25 - 0.4 * Math.max(0, Math.sin(0.35 * t + sd)); rollR = -0.15; }
-        if (f.act === "baby") { armL = armR = -1.0; rollL = 0.42; rollR = -0.42; hp = 0.35; hy = 0.08 * Math.sin(0.6 * t); }
-        if (f.act === "child") { legL = -1.05 + 0.25 * Math.sin(2.2 * t + sd); legR = -1.05 + 0.25 * Math.sin(2.2 * t + sd + 1.4); }
+        poseSit(P, f.top, hs, t, sd);
+        const hip = P.hipY;
+        if (f.act === "phone") posePhone(P, t, sd, hip + 0.5);
+        if (f.act === "talk") { P.hy = 0.45 * Math.sin(0.23 * t + sd); P.ikR = 1; P.tyR = hip + 0.22 + 0.04 * Math.sin(1.7 * t + sd); P.tzR = 0.34; P.txR = -0.16; }
+        if (f.act === "read") { P.txL = 0.11; P.txR = -0.11; P.tyL = P.tyR = hip + 0.24; P.tzL = P.tzR = 0.33; P.hp = 0.48; P.hy = 0.04 * Math.sin(0.5 * t); }
+        if (f.act === "cup") { const lift = Math.max(0, Math.sin(0.35 * t + sd)); P.ikR = 1; P.txR = -0.12 + 0.07 * lift; P.tyR = hip + 0.2 + 0.32 * lift; P.tzR = 0.3 - 0.13 * lift; }
+        if (f.act === "baby") { P.txL = 0.06; P.txR = -0.1; P.tyL = P.tyR = hip + 0.17; P.tzL = P.tzR = 0.26; P.hp = 0.38; P.hy = 0.08 * Math.sin(0.6 * t); }
+        if (f.act === "child") { P.lkL += 0.28 * Math.sin(2.2 * t + sd); P.lkR += 0.28 * Math.sin(2.2 * t + sd + 1.4); }
       } else {
-        hy = 0.42 * Math.sin(0.21 * t + sd) * Math.sin(0.083 * t + sd * 2.3);
-        hp = 0.05 * Math.sin(0.31 * t + sd);
-        armL = 0.03 + 0.03 * Math.sin(1.55 * t + sd); armR = 0.03 - 0.03 * Math.sin(1.55 * t + sd);
+        poseIdle(P, t, sd);
         yaw += 0.06 * Math.sin(0.11 * t + sd);
-        if (f.act === "talk") { armR = -0.55 + 0.2 * Math.sin(1.4 * t + sd); hy = 0.2 * Math.sin(0.5 * t + sd); }
-        if (f.act === "cup") { armR = -1.35; rollR = -0.15; }
-        if (f.act === "phone") { armR = -1.9; rollR = -0.35; hp = 0.25; }
+        if (f.act === "talk") { P.ikR = 1; P.txR = -0.17; P.tyR = 1.05 + 0.05 * Math.sin(1.4 * t + sd); P.tzR = 0.3; P.hy = 0.2 * Math.sin(0.5 * t + sd); }
+        if (f.act === "cup") { P.ikR = 1; P.txR = -0.1; P.tyR = 1.08; P.tzR = 0.26; }
+        if (f.act === "phone") posePhone(P, t, sd);
       }
       st.pos[i * 2] = x; st.pos[i * 2 + 1] = z;
-      _q.setFromAxisAngle(Y, yaw);
-      _root.compose(_v.set(x, y0 + bob, z), _q, _s.set(sc, sc, sc));
-      // torso (a long robe reaches the knees, like the doctors' coats)
-      if (lk.long) part(_m, 0, hip + 0.2, 0, 0, 0, 0, 1.04, 1.32 * breathe, 0.76);
-      else part(_m, 0, hip + 0.34, 0, 0, 0, 0, 1, breathe, 0.72);
-      T.setMatrixAt(i, _m);
-      part(_m, 0, hip + 0.87, 0.01, hp, hy, 0, 1, 1, 1, "YXZ"); H.setMatrixAt(i, _m);
-      if (lk.hair && !lk.scarf) { part(_m, 0, hip + 0.875, 0, hp - 0.32, hy, 0, 1, 1, 1, "YXZ"); Hr.setMatrixAt(i, _m); } else Hr.setMatrixAt(i, ZERO);
-      if (lk.scarf) {
-        part(_m, 0, hip + 0.86, -0.012, hp - 0.12, hy, 0, 1.16, 1.32, 1.16, "YXZ"); Sc.setMatrixAt(i * 2, _m);
-        part(_m, 0, hip + 0.69, 0, 0, hy * 0.3, 0, 0.78, 0.3, 0.7); Sc.setMatrixAt(i * 2 + 1, _m);
-      } else { Sc.setMatrixAt(i * 2, ZERO); Sc.setMatrixAt(i * 2 + 1, ZERO); }
-      part(_m, -0.1, hip, 0, legL, 0, 0, 1, 1, 1); Lg.setMatrixAt(i * 2, _m);
-      part(_m, 0.1, hip, 0, legR, 0, 0, 1, 1, 1); Lg.setMatrixAt(i * 2 + 1, _m);
-      part(_m, -0.26, hip + 0.62, 0, armL, 0, rollL, 1, 1, 1); Ar.setMatrixAt(i * 2, _m);
-      part(_m, 0.26, hip + 0.62, 0, armR, 0, rollR, 1, 1, 1); Ar.setMatrixAt(i * 2 + 1, _m);
-      // accessories: in the right hand (end of a 0.58 m arm: roll about z, then the arm swing about x)
+      crowd.write(i, x, 0, z, yaw, sc, P);
+      // accessories: in the hands (phone, cup), between them (book), on the lap (baby), or under / beside the person
       if (f.act === "phone" || f.act === "cup") {
-        const L = 0.58, cr = Math.cos(rollR);
-        part(_m, 0.26 + L * Math.sin(rollR), hip + 0.62 - L * cr * Math.cos(armR), -L * cr * Math.sin(armR), f.act === "phone" ? -0.5 : 0, 0, 0, 1, 1, 1);
+        crowd.point(_v, BONE.farmR, 0, -0.31, f.act === "phone" ? 0.015 : 0.03);
+        _q.setFromEuler(_e.set(f.act === "phone" ? -0.35 : 0, yaw + (f.act === "phone" ? Math.PI : 0), 0, "YXZ"));
+        _m.compose(f.act === "cup" ? _v.setY(_v.y - 0.02) : _v, _q, _s.set(sc, sc, sc));
         put(f.act === "phone" ? "phone" : "cup", _m);
-      } else if (f.act === "read") { part(_m, 0, hip + 0.36, 0.36, -0.95, 0, 0, 1, 1, 1); put("book", _m); }
-      else if (f.act === "baby") { part(_m, 0, hip + 0.3, 0.24, 0, -0.25, 0.15, 1, 1, 1); put("baby", _m); }
-      if (f.role === "wheel") { part(_m, 0, -0.02, 0, 0, 0, 0, 1, 1, 1); put("wheel", _m); }
-      else if (f.role === "iv") { part(_m, 0.42, 0, 0.12, 0, 0, 0, 1 / sc, 1 / sc, 1 / sc); put("iv", _m); }
+      } else if (f.act === "read") {
+        crowd.point(_v, BONE.farmL, 0, -0.31, 0.02); crowd.point(_v2, BONE.farmR, 0, -0.31, 0.02); _v.add(_v2).multiplyScalar(0.5);
+        _q.setFromEuler(_e.set(-0.95, yaw, 0, "YXZ")); _m.compose(_v.setY(_v.y + 0.02), _q, _s.set(sc, sc, sc)); put("book", _m);
+      } else if (f.act === "baby") {
+        crowd.point(_v, BONE.pelvis, 0, 0.17, 0.25);
+        _q.setFromEuler(_e.set(0, yaw - 0.25, 0.15, "YXZ")); _m.compose(_v, _q, _s.set(1, 1, 1)); put("baby", _m);
+      }
+      if (f.role === "wheel") { _q.setFromAxisAngle(Y, yaw); _m.compose(_v.set(x, 0, z), _q, _s.set(1, 1, 1)); put("wheel", _m); }
+      else if (f.role === "iv") { _q.setFromAxisAngle(Y, yaw); _m.compose(_v.set(x + 0.42 * Math.cos(yaw) + 0.12 * Math.sin(yaw), 0, z - 0.42 * Math.sin(yaw) + 0.12 * Math.cos(yaw)), _q, _s.set(1, 1, 1)); put("iv", _m); }
     }
-    T.instanceMatrix.needsUpdate = true; H.instanceMatrix.needsUpdate = true; Hr.instanceMatrix.needsUpdate = true;
-    Lg.instanceMatrix.needsUpdate = true; Ar.instanceMatrix.needsUpdate = true; Sc.instanceMatrix.needsUpdate = true;
     for (const k of ACC_KEYS) { const m = accRefs.current[k]; if (m) m.instanceMatrix.needsUpdate = true; }
   });
 
   if (!N) return null;
   return (
     <group ref={root}>
-      <instancedMesh ref={torso} args={[FIGURE.torsoGeo, mats.figure, N]} castShadow receiveShadow />
-      <instancedMesh ref={head} args={[FIGURE.headGeo, mats.figure, N]} castShadow />
-      <instancedMesh ref={hair} args={[FIGURE.hairGeo, mats.figure, N]} castShadow />
-      <instancedMesh ref={scarf} args={[FIGURE.hairGeo, mats.figure, N * 2]} castShadow />
-      <instancedMesh ref={legs} args={[FIGURE.legGeo, mats.figure, N * 2]} castShadow />
-      <instancedMesh ref={arms} args={[FIGURE.armGeo, mats.figure, N * 2]} castShadow />
+      <primitive object={crowd.mesh} />
       {ACC_KEYS.filter((k) => acc[k] > 0).map((k) => (
         <instancedMesh key={k} ref={(r) => { accRefs.current[k] = r; }} args={[geo[k], mats.satin, acc[k]]} castShadow />
       ))}

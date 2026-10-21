@@ -54,9 +54,9 @@ const wrap = (a: number) => { while (a > Math.PI) a -= Math.PI * 2; while (a < -
 const damp = (k: number, dt: number) => 1 - Math.exp(-k * dt);
 
 // scratch (no allocation in the frame loop)
-const P = { x: 0, z: 0 }, N = { x: 0, z: 0 }, WH = { b: null as BId | null, tower: false };
+const P = { x: 0, z: 0 }, N = { x: 0, z: 0 }, WH = { b: null as BId | null, tower: false, bridge: false as boolean | undefined };
 const vPivot = new THREE.Vector3(), vCam = new THREE.Vector3(), vEye = new THREE.Vector3(), vLook = new THREE.Vector3(), vTmp = new THREE.Vector3();
-const UI = { view: "third" as "third" | "first", where: null as BId | null, floor: 0, tower: false, near: null as string | null, nearCase: null as string | null };
+const UI = { view: "third" as "third" | "first", where: null as BId | null, floor: 0, tower: false, bridge: false, near: null as string | null, nearCase: null as string | null };
 const qFrom = new THREE.Quaternion(), qTo = new THREE.Quaternion(), vFrom = new THREE.Vector3();
 
 /** One physics step of the visitor (campus frame). Input: move axes relative to the camera yaw. */
@@ -103,8 +103,8 @@ function step(dt: number, mf: number, ms: number, run: boolean, jump: boolean) {
 
 /** Where the visitor is: building, tower, floor; cut-away heights for the drawing. */
 function locate() {
-  whereAt(W.x, W.z, WH);
-  W.where = WH.b; W.tower = WH.tower;
+  whereAt(W.x, W.z, WH, W.y);
+  W.where = WH.b; W.tower = WH.tower; W.bridge = !!WH.bridge; // on the skybridge: the nearer building, level 1
   W.level = W.where ? Math.max(0, Math.min(TOWER_OF[W.where].top, Math.floor((W.y + 0.6) / FLOOR_H))) : 0;
   W.cutB = W.third && W.where ? W.where : null;
   W.cutY = W.y + 1.2;
@@ -180,7 +180,7 @@ export default function WalkWorld() {
     const s = st.current;
     const setUi = () => {
       const app = useApp.getState();
-      app.setWalk({ phase: W.phase, view: W.third ? "third" : "first", where: W.where, floor: W.level, tower: W.tower });
+      app.setWalk({ phase: W.phase, view: W.third ? "third" : "first", where: W.where, floor: W.level, tower: W.tower, bridge: W.bridge });
     };
 
     /** Leave walk mode immediately and give the camera back to CameraControls, synced to the current view. */
@@ -201,8 +201,8 @@ export default function WalkWorld() {
       setEvents({ enabled: true });
       gl.domElement.style.touchAction = s.touchAction;
       if (visitor.current?.root) visitor.current.root.visible = false;
-      W.cutB = null; W.clipY = Infinity;
-      useApp.getState().setWalk({ phase: "off", near: null, nearCase: null, where: null, tower: false, floor: 0 });
+      W.cutB = null; W.clipY = Infinity; W.bridge = false;
+      useApp.getState().setWalk({ phase: "off", near: null, nearCase: null, where: null, tower: false, bridge: false, floor: 0 });
     };
 
     const enter = () => {
@@ -338,7 +338,7 @@ export default function WalkWorld() {
     // dev handle for QA scripts
     if (process.env.NODE_ENV !== "production") {
       (window as unknown as { __walk: object }).__walk = {
-        W, enter, exit, stop, keys: KEYS, held, meshes: () => meshSignatures(rt.root), scan: () => scanCampusProps(rt.root), ground: groundAt, where: () => whereAt(W.x, W.z, { b: null, tower: false }), stats: COLLIDER_STATS,
+        W, enter, exit, stop, keys: KEYS, held, meshes: () => meshSignatures(rt.root), scan: () => scanCampusProps(rt.root), ground: groundAt, where: () => whereAt(W.x, W.z, { b: null, tower: false }, W.y), stats: COLLIDER_STATS,
         teleport: (x: number, z: number, y = 0, heading?: number) => {
           W.x = x; W.z = z; W.y = y; W.vx = W.vy = W.vz = 0; W.grounded = true; s.pvInit = false;
           if (heading !== undefined) { W.heading = heading; W.yaw = wrap(heading + Math.PI); }
@@ -362,7 +362,7 @@ export default function WalkWorld() {
               if (t - lastT > 2) { if (Math.hypot(W.x - lastX, W.z - lastZ) < 0.05) break; lastX = W.x; lastZ = W.z; lastT = t; }
             }
             locate();
-            out.push({ to, ok, t: Math.round(t * 100) / 100, x: +W.x.toFixed(2), y: +W.y.toFixed(2), z: +W.z.toFixed(2), where: W.where ? `${W.where}${W.tower ? "/tour" : ""}:${W.level}` : "dehors" });
+            out.push({ to, ok, t: Math.round(t * 100) / 100, x: +W.x.toFixed(2), y: +W.y.toFixed(2), z: +W.z.toFixed(2), where: W.bridge ? `passerelle(${W.where}):${W.level}` : W.where ? `${W.where}${W.tower ? "/tour" : ""}:${W.level}` : "dehors" });
             if (!ok) break;
           }
           W.vx = W.vz = 0; s.pvInit = false; setUi();
@@ -444,7 +444,7 @@ export default function WalkWorld() {
     // desired third-person camera, pulled in by the camera colliders (snap in, ease out)
     const px = s.pv.x - ox, py = s.pv.y, pz = s.pv.z - oz;
     const dx = sy * cp * W.dist, dy = sp * W.dist, dz = cy * cp * W.dist;
-    const hit = cameraHit(px, py, pz, px + dx, py + dy, pz + dz, W.cutB ? BLD_INDEX[W.cutB] : 0, W.cutY);
+    const hit = cameraHit(px, py, pz, px + dx, py + dy, pz + dz, W.cutB ? (W.bridge ? 3 : BLD_INDEX[W.cutB]) : 0, W.cutY);
     const want = Math.max(0.35, Math.min(W.dist, hit * W.dist - 0.22));
     s.dist = want < s.dist ? want : s.dist + (want - s.dist) * damp(3.5, dt);
     let cx = px + sy * cp * s.dist, cyy = py + sp * s.dist, cz = pz + cy * cp * s.dist;
@@ -483,7 +483,7 @@ export default function WalkWorld() {
     setColliderYear(useApp.getState().year); // interior props may arrive later (hot reload)
     if (s.t - s.report > 0.12) {
       s.report = s.t;
-      UI.view = W.third ? "third" : "first"; UI.where = W.where; UI.floor = W.level; UI.tower = W.tower; UI.near = nearDept(); UI.nearCase = nearCase(UI.near);
+      UI.view = W.third ? "third" : "first"; UI.where = W.where; UI.floor = W.level; UI.tower = W.tower; UI.bridge = W.bridge; UI.near = W.bridge ? null : nearDept(); UI.nearCase = nearCase(UI.near);
       useApp.getState().setWalk(UI);
     }
   });

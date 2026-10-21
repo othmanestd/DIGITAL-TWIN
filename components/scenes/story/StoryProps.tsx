@@ -5,7 +5,8 @@
 //   queue     admissions: the queue in front of Youssef → nobody waiting
 //   ydesk     Youssef's desk: paper stacks → a clean console; his squad of agents (1 orb in mid, 3 after) follows him
 //   npaper    nurse station: the end-of-shift paper → gone
-//   cart      the room next to Amina's: the bionettoyage cart parked inside → rolls out of the door and down the corridor (H-01)
+//   cart      the room next to Amina's: the bionettoyage cart parked inside, a cleaning agent beside it → pushed out of the
+//             door and down the corridor by the agent, hands on the handle, walking in step (H-01; Keeps watches the cart)
 //   machine   4th floor: a chiller failing (coral) → healthy, tagged and watched by the twin (green + blue)
 //   invoices  billing: stacks with rejected sheets (coral) → one complete file (gold)
 //   sheets    Leïla's spreadsheets → gone
@@ -15,7 +16,8 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useStory, type PropState } from "@/lib/ai/story";
 import { haloTexture } from "../hospital/mats";
-import { FIGURE } from "../hospital/People";
+import { dress, newPose, poseFloor, poseIdle, posePush, type HumanCrowd } from "../people/human";
+import { useHumanCrowd } from "../people/useHumans";
 import { floorY } from "./spots";
 import { spot, groupOffset } from "./place";
 import { STAGE, floorShown } from "./stage";
@@ -28,6 +30,9 @@ const RING = new THREE.RingGeometry(0.86, 1, 56);
 const DISC = new THREE.PlaneGeometry(1, 1);
 const CYL = new THREE.CylinderGeometry(1, 1, 1, 18);
 const CONE = new THREE.ConeGeometry(1, 1, 28, 1, true);
+// the people of the props (one transparent crowd): the admissions queue, the patient who fell, the cleaning agent
+const QUEUE0 = 0, FALL = 4, CLEANER = 5, NPROP = 6;
+const PP = newPose();
 
 type Mats = ReturnType<typeof makeMats>;
 function makeMats() {
@@ -104,32 +109,20 @@ function Calls({ M }: { M: Mats }) {
 }
 
 // ---------------------------------------------------------------- admissions: the queue
-function Queue({ M }: { M: Mats }) {
+function Queue({ H }: { H: HumanCrowd }) {
   const step = useProp("queue");
-  const mats = useMemo(() => [M.patient.clone(), M.patientLegs.clone(), M.skin.clone()], [M]);
-  const g = useRef<THREE.Group>(null);
   const o = groupOffset("ydesk");
   const spots: [number, number, number][] = [[-17.3, 4.45, 0], [-17.2, 5.25, 0.1], [-17.42, 6.05, -0.08], [-17.28, 6.85, 0.05]].map(([x, z, d]) => [x + o.dx, z + o.dz, d]);
   useFrame((state, dt) => {
     const s = step(Math.min(dt, 0.5));
-    const op = smooth(s.a) * (floorShown("main:0") ? 1 : 0);
-    if (g.current) { g.current.visible = op > 0.004; g.current.position.y = -0.05 * (1 - op); }
-    setOp(mats, op);
+    const op = smooth(s.a) * (floorShown("main:0") ? 1 : 0), t = state.clock.elapsedTime;
+    spots.forEach(([x, z, d], k) => {
+      if (op < 0.004) { H.hide(QUEUE0 + k); return; }
+      poseIdle(PP, t, k * 2.3 + 1);
+      H.write(QUEUE0 + k, x, -0.05 * (1 - op), z, Math.PI + d, 1, PP); H.alpha(QUEUE0 + k, op);
+    });
   });
-  return (
-    <group ref={g} visible={false}>
-      {spots.map(([x, z, d], i) => (
-        <group key={i} position={[x, 0, z]} rotation={[0, Math.PI + d, 0]}>
-          <mesh geometry={FIGURE.legGeo} material={mats[1]} position={[-0.1, 0.88, 0]} />
-          <mesh geometry={FIGURE.legGeo} material={mats[1]} position={[0.1, 0.88, 0]} />
-          <mesh geometry={FIGURE.torsoGeo} material={mats[0]} position={[0, 1.22, 0]} scale={[1, 1, 0.72]} />
-          <mesh geometry={FIGURE.headGeo} material={mats[2]} position={[0, 1.75, 0]} />
-          <mesh geometry={FIGURE.armGeo} material={mats[0]} position={[-0.26, 1.5, 0]} rotation={[0, 0, -0.07]} />
-          <mesh geometry={FIGURE.armGeo} material={mats[0]} position={[0.26, 1.5, 0]} rotation={[0, 0, 0.07]} />
-        </group>
-      ))}
-    </group>
-  );
+  return null;
 }
 
 /** A desk (top, sides, monitor, chair) — a light, Mibtech-style workstation. */
@@ -229,34 +222,25 @@ function NursePaper({ M }: { M: Mats }) {
 }
 
 // ---------------------------------------------------------------- the fall in the corridor: a patient sitting on the floor
-function Fall({ M }: { M: Mats }) {
+function Fall({ H }: { H: HumanCrowd }) {
   const step = useProp("fall");
-  const mats = useMemo(() => [M.patient.clone(), M.patientLegs.clone(), M.skin.clone()], [M]);
-  const g = useRef<THREE.Group>(null);
   useFrame((_, dt) => {
     const s = step(Math.min(dt, 0.5));
     const op = smooth(Math.max(s.a, s.z)) * (floorShown("main:3") ? 1 : 0);
-    if (g.current) g.current.visible = op > 0.004;
-    setOp(mats, op);
+    if (op < 0.004) { H.hide(FALL); return; }
+    const p = spot("corridor-fall")!;
+    poseFloor(PP);
+    H.write(FALL, p.x, floorY(p.floor), p.z, Math.PI / 2 + 0.3, 1, PP); H.alpha(FALL, op);
   });
-  const p = spot("corridor-fall")!;
-  return (
-    <group ref={g} visible={false} position={[p.x, floorY(p.floor), p.z]} rotation={[0, Math.PI / 2 + 0.3, 0]}>
-      {/* seated on the floor, legs forward, one hand on the floor */}
-      <mesh geometry={FIGURE.legGeo} material={mats[1]} position={[-0.1, 0.16, 0]} rotation={[-1.45, 0, 0.05]} />
-      <mesh geometry={FIGURE.legGeo} material={mats[1]} position={[0.1, 0.16, 0]} rotation={[-1.35, 0, -0.08]} />
-      <mesh geometry={FIGURE.torsoGeo} material={mats[0]} position={[0, 0.5, -0.06]} rotation={[-0.22, 0, 0]} scale={[1, 1, 0.74]} />
-      <mesh geometry={FIGURE.headGeo} material={mats[2]} position={[0, 1.02, -0.16]} />
-      <mesh geometry={FIGURE.armGeo} material={mats[0]} position={[-0.26, 0.78, -0.1]} rotation={[0.55, 0, -0.25]} />
-      <mesh geometry={FIGURE.armGeo} material={mats[0]} position={[0.26, 0.78, -0.1]} rotation={[-0.3, 0, 0.12]} />
-    </group>
-  );
+  return null;
 }
 
 // ---------------------------------------------------------------- H-01: the bionettoyage cart leaves the freed room
-// "before": parked inside the room; "after": rolls out of the door (2.4 s) then 2 m down the corridor (3 s) — Keeps sees the
-// cart on the existing corridor camera, never a person, and the twin moves the bed to « prêt ».
-function Cart({ M }: { M: Mats }) {
+// "before": parked inside the room, the cleaning agent standing at its handle; "after": the agent pushes it out of the door
+// (2.4 s), turns with it and goes 2 m down the corridor (3 s), hands on the handle, walking in step. The agent fades exactly
+// like the cart. Keeps watches the cart on the existing corridor camera, never a person; the twin moves the bed to « prêt ».
+const CART_HANDLE = -0.47, PUSHER = -0.93;   // cart-local z of the push bar and of the agent's feet
+function Cart({ M, H }: { M: Mats; H: HumanCrowd }) {
   const step = useProp("cart");
   const mats = useMemo(() => [M.steel.clone(), M.white.clone(), M.dark.clone(),
     new THREE.MeshStandardMaterial({ color: "#4F7BD9", roughness: 0.6, transparent: true }),
@@ -264,6 +248,7 @@ function Cart({ M }: { M: Mats }) {
   useEffect(() => () => { mats[3].dispose(); mats[4].dispose(); }, [mats]);
   const g = useRef<THREE.Group>(null);
   const t0 = useRef<number | null>(null);
+  const walk = useRef({ px: NaN, pz: 0, dist: 0, amp: 0 });
   useFrame((state, dt) => {
     const s = step(Math.min(dt, 0.5));
     const op = smooth(Math.max(s.a, s.z)) * (floorShown("main:3") ? 1 : 0);
@@ -280,6 +265,17 @@ function Cart({ M }: { M: Mats }) {
     } else t0.current = null;
     g.current.position.set(x, floorY("main:3"), z);
     g.current.rotation.set(0, yaw, 0);
+    // the cleaning agent behind the push bar, turning with the cart
+    const w = walk.current;
+    if (op < 0.004) { H.hide(CLEANER); w.px = NaN; return; }
+    const ax = x + Math.sin(yaw) * PUSHER, az = z + Math.cos(yaw) * PUSHER, hs = H.height[CLEANER];
+    const d = Number.isNaN(w.px) ? 0 : Math.hypot(ax - w.px, az - w.pz), dts = Math.max(1e-3, Math.min(dt, 0.5));
+    w.px = ax; w.pz = az; w.dist += d;
+    w.amp += (Math.min(1, d / dts / 0.8) - w.amp) * Math.min(1, dts * 6);
+    const hz = CART_HANDLE - PUSHER;
+    if (s.cur === "after") posePush(PP, (w.dist * 3.6) / hs, w.amp, 0.19, 0.95, hz, hs);
+    else { poseIdle(PP, state.clock.elapsedTime, 3.7); PP.ikL = 1; PP.txL = 0.19 / hs; PP.tyL = 0.95 / hs; PP.tzL = hz / hs; PP.hy *= 0.6; }
+    H.write(CLEANER, ax, floorY("main:3"), az, yaw, 1, PP); H.alpha(CLEANER, op);
   });
   return (
     <group ref={g} visible={false}>
@@ -296,6 +292,9 @@ function Cart({ M }: { M: Mats }) {
       <mesh geometry={CYL} material={mats[3]} position={[0, 0.3, -0.25]} scale={[0.17, 0.24, 0.17]} castShadow />
       <mesh geometry={B} material={mats[1]} position={[0.08, 0.84, -0.05]} scale={[0.22, 0.09, 0.3]} />
       <mesh geometry={CYL} material={mats[0]} position={[-0.12, 0.85, -0.3]} rotation={[0.18, 0, 0]} scale={[0.012, 1.3, 0.012]} />
+      {/* push bar at the back, on two uprights */}
+      <mesh geometry={CYL} material={mats[2]} position={[0, 0.95, CART_HANDLE]} rotation={[0, 0, Math.PI / 2]} scale={[0.016, 0.44, 0.016]} castShadow />
+      {[-0.2, 0.2].map((px) => <mesh key={px} geometry={CYL} material={mats[0]} position={[px, 0.865, CART_HANDLE + 0.02]} scale={[0.012, 0.17, 0.012]} />)}
     </group>
   );
 }
@@ -457,14 +456,22 @@ function Flashes({ M }: { M: Mats }) {
 export default function StoryProps() {
   const M = useMemo(makeMats, []);
   useEffect(() => () => Object.values(M).forEach((m) => m.dispose()), [M]);
+  const H = useHumanCrowd(NPROP, { transparent: true });
+  useEffect(() => {
+    for (let k = 0; k < 4; k++) H.setLook(QUEUE0 + k, dress("visitor", 5101 + k * 37, k === 1 ? { hijab: true } : k === 3 ? { robe: true } : {}));
+    H.setLook(FALL, dress("patient", 5303, { gown: true, old: true }));
+    H.setLook(CLEANER, dress("cleaning", 5407));
+    for (let i = 0; i < NPROP; i++) H.hide(i);
+  }, [H]);
   return (
     <group>
+      <primitive object={H.mesh} />
       <Calls M={M} />
-      <Queue M={M} />
+      <Queue H={H} />
       <YDesk M={M} />
       <NursePaper M={M} />
-      <Fall M={M} />
-      <Cart M={M} />
+      <Fall H={H} />
+      <Cart M={M} H={H} />
       <Machine M={M} />
       <Invoices M={M} />
       <Sheets M={M} />

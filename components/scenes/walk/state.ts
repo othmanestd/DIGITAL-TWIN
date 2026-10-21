@@ -12,6 +12,7 @@ export const W = {
   x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, heading: 0, grounded: true, speed: 0,
   where: null as BId | null,         // building whose plate (or stair tower) contains the visitor
   tower: false,                      // inside a stair tower
+  bridge: false,                     // on the skybridge (where = the nearer building, level 1)
   level: 0,                          // floor index under the feet (0 outdoors)
   // camera (third person): yaw around the visitor (0 = camera on the +z side), pitch (+ = looking down), distance
   yaw: 0, pitch: 0.3, dist: 4.2,
@@ -24,9 +25,9 @@ export const walkOn = () => W.phase === "on";
 /** Walk mode owns the camera (entry flight, walking, exit). */
 export const walkBusy = () => W.phase !== "off";
 
-/** Floor (building, index) hidden by the third-person cut-away. */
+/** Floor (building, index) hidden by the third-person cut-away (both buildings while on the skybridge). */
 export function floorCut(building: BId, floor: number) {
-  return W.phase === "on" && W.cutB === building && floor * FLOOR_H > W.cutY;
+  return W.phase === "on" && (W.cutB === building || (W.bridge && W.cutB !== null)) && floor * FLOOR_H > W.cutY;
 }
 
 /** Ask the walk controller to enter / leave / toggle walk mode (handled by WalkWorld). */

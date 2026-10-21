@@ -3,7 +3,7 @@
 // (origin = building centre, y = 0 at the floor surface). The 3D components only instance what is described here.
 import { DEPTS, FLOORS, MAIN, ANNEX, FLOOR_H, ROLE_COLOR, type Dept, type Role } from "@/lib/hospital";
 import { isShrinkRole } from "./staffing";
-import { EXTRA_DOORS } from "../walk/plan";
+import { BRIDGE, EXTRA_DOORS } from "../walk/plan";
 
 export type G = "box" | "rbox" | "cyl" | "sph" | "torus";
 export type M =
@@ -273,7 +273,8 @@ class B {
     for (const d of EXTRA_DOORS) {
       if (d.building !== this.dept.building || d.floor !== this.dept.floor) continue;
       const along = (d.x - x1) * ex + (d.z - z1) * ez, off = Math.abs((d.x - x1) * ez - (d.z - z1) * ex);
-      if (off < 0.2 && along > d.w / 2 && along < L - d.w / 2) out.push([along / L, d.w]);
+      // (a gap may run to the end of the wall: the skybridge lobby takes a room corner)
+      if (off < 0.2 && along - d.w / 2 > -0.3 && along + d.w / 2 < L + 0.3) out.push([along / L, d.w]);
     }
     return out;
   }
@@ -502,6 +503,12 @@ const L: Record<string, Fn> = {
   },
   laboratoire: (b) => {
     b.room();
+    // the skybridge lobby takes the north-east corner (walk/plan.ts BRIDGE): close it off from the lab
+    {
+      const L0 = BRIDGE.lobby, u0 = L0.x0 - MAIN.x - b.cx, v0 = (L0.z0 - MAIN.z - b.cz) * b.s; // campus → department
+      b.wall(u0, v0, b.w / 2, v0);
+      b.wall(u0, v0, u0, b.d / 2);
+    }
     for (const v of [-3.6, 0.2]) {
       const { add } = b.at(-1.4, v, 0, 1);
       add("rbox", "white", 0, 0.44, 0, 10, 0.88, 0.8);
@@ -510,7 +517,7 @@ const L: Record<string, Fn> = {
       for (let i = 0; i < 5; i++) add("rbox", "light", -4 + i * 2, 1.15, -0.05, 0.6, 0.46, 0.5);
       for (let i = 0; i < 6; i++) add("cyl", "curtain", -3.3 + i * 1.4, 1.0, 0.18, 0.09, 0.18, 0.09);
     }
-    b.staff.push(b.desk(6.0, 3.2, -1, 0, { screens: 1 }), b.stand(-3.0, -2.75, 0, -1), b.stand(1.6, 1.05, 0, -1));
+    b.staff.push(b.desk(3.2, 3.4, -1, 0, { screens: 1 }), b.stand(-3.0, -2.75, 0, -1), b.stand(1.6, 1.05, 0, -1));
     // centrifuges, microscopes, sample racks, fridges
     for (const [u, v] of [[-5.5, -3.75], [2.5, -3.75], [-4.5, 0.05]] as const) { const a = b.at(u, v, 0, 1); a.add("cyl", "white", 0, 1.08, 0, 0.42, 0.32, 0.42); a.add("cyl", "grey", 0, 1.25, 0, 0.36, 0.03, 0.36); a.add("box", "led", 0.15, 1.05, 0.21, 0.04, 0.04, 0.02); }
     for (const u of [-1.5, 4.5]) { const a = b.at(u, 0.05, 0, 1); a.add("box", "grey", 0, 1.0, 0, 0.18, 0.2, 0.25); a.add("box", "grey", 0, 1.22, -0.06, 0.06, 0.34, 0.06); a.add("cyl", "dark", 0, 1.38, 0.02, 0.12, 0.12, 0.12); }

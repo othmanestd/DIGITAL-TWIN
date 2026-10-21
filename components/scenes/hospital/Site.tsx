@@ -9,6 +9,7 @@ import { useApp } from "@/lib/store";
 import { GEO, PAL, rt, setFloorOpacity } from "./mats";
 import { letteringTexture, logoTexture, ribbonGeometry } from "./Facade";
 import { TOP_FLOOR } from "./layout";
+import { BRIDGE, bridgeY } from "../walk/plan";
 import { CAMPUS } from "@/components/scenes/city/district";
 import { registerSolids, type Solid } from "@/components/scenes/city/collide";
 
@@ -496,25 +497,59 @@ export function Roof({ building, hidden }: { building: "main" | "annex"; hidden:
   );
 }
 
-export function Skybridge({ hidden }: { hidden: boolean }) {
+/** The glazed skybridge at floor 1 (walk/plan.ts BRIDGE), walkable in walk mode: white fascia bands like the façade
+ *  ribbons, anthracite frame, light-tinted glass, deck with the corridor colour band, handrails, a lit ceiling.
+ *  The roof is its own group: it lifts away with the floors above (cut-away at floor 1, floor 1 opened). Campus frame. */
+export function Skybridge({ hidden, roofHidden }: { hidden: boolean; roofHidden: boolean }) {
   const res = useMemo(() => {
-    const slab = std(PAL.slabTop, 0.9), edge = std(PAL.slabEdge, 0.85);
-    const glass = new THREE.MeshStandardMaterial({ color: PAL.glass, roughness: 0.08, transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide, envMapIntensity: 1.4 });
-    const mull = std(PAL.mullion, 0.5);
-    return { slab, edge, glass, mull, mats: fadeMats([slab, edge, glass, mull]) };
+    const fascia = std("#F5F6F8", 0.5), deck = std(PAL.slabTop, 0.9), band = std("#C9D9E6", 0.9), soffit = std(PAL.slabEdge, 0.85);
+    const glass = new THREE.MeshStandardMaterial({ color: "#6F8BA8", roughness: 0.07, metalness: 0.3, transparent: true, opacity: 0.3, depthWrite: false, side: THREE.DoubleSide, envMapIntensity: 1.8 });
+    const frame = std("#3A3F48", 0.55, { metalness: 0.25 }), rail = std("#C2C8D3", 0.42, { metalness: 0.25 });
+    const rFascia = std("#F5F6F8", 0.5), rTop = std(PAL.slabTop, 0.92), ceiling = std("#E8EBF1", 0.9, { emissive: "#E8EBF1", emissiveIntensity: 0.45 }), rFrame = std("#3A3F48", 0.55, { metalness: 0.25 });
+    const light = new THREE.MeshStandardMaterial({ color: "#FFFFFF", emissive: "#FFF6E6", emissiveIntensity: 0.9, roughness: 0.4 });
+    const B = BRIDGE, L = B.x1 - B.x0, cx = (B.x0 + B.x1) / 2, Ls = B.s1 - B.s0, csx = (B.s0 + B.s1) / 2, z = B.z;
+    const frames: Box[] = [], rails: Box[] = [], lips: Box[] = [], heads: Box[] = [], roofLips: Box[] = [], lights: Box[] = [];
+    const bays = 6;
+    for (const sd of [-1, 1]) {
+      const zg = z + sd * B.inner;
+      for (let i = 0; i <= bays; i++) frames.push({ x: B.x0 + (L * i) / bays, y: B.ceil / 2, z: zg, sx: 0.08, sy: B.ceil, sz: 0.1 });
+      frames.push({ x: cx, y: 0.05, z: zg, sx: L, sy: 0.1, sz: 0.1 });                       // sill
+      rails.push({ x: cx, y: 0.95, z: zg - sd * 0.09, sx: L - 0.2, sy: 0.045, sz: 0.045 });  // handrail
+      for (let i = 1; i < bays; i++) rails.push({ x: B.x0 + (L * i) / bays, y: 0.95, z: zg - sd * 0.05, sx: 0.03, sy: 0.03, sz: 0.08 }); // brackets
+      lips.push({ x: csx, y: -0.2, z: z + sd * (B.half - 0.05), sx: Ls, sy: 0.6, sz: 0.14 });   // white fascia band (deck edge)
+      heads.push({ x: cx, y: B.ceil - 0.04, z: zg, sx: L, sy: 0.08, sz: 0.1 });
+      roofLips.push({ x: cx, y: B.ceil + B.roofT / 2 + 0.03, z: z + sd * (B.half - 0.05), sx: L + 0.1, sy: B.roofT + 0.18, sz: 0.14 }); // roof fascia
+    }
+    for (let i = 0; i < 4; i++) lights.push({ x: B.x0 + 1.4 + ((L - 2.8) * i) / 3, y: B.ceil - 0.012, z, sx: 1.2, sy: 0.02, sz: 0.42 });
+    const mats = fadeMats([fascia, deck, band, soffit, glass, frame, rail]);
+    const roofMats = fadeMats([rFascia, rTop, ceiling, rFrame, light]);
+    return { fascia, deck, band, soffit, glass, frame, rail, rFascia, rTop, ceiling, rFrame, light, L, cx, Ls, csx, z, frames, rails, lips, heads, roofLips, lights, mats, roofMats };
   }, []);
-  useEffect(() => () => res.mats.forEach((m) => m.dispose()), [res]);
-  const y = 1 * FLOOR_H;
+  useEffect(() => () => [...res.mats, ...res.roofMats].forEach((m) => m.dispose()), [res]);
+  const y = bridgeY();
   const { group } = useFade("bridge", hidden, y, res.mats, 10);
-  const x0 = MAIN.x + MAIN.w / 2 + 0.25, x1 = ANNEX.x - ANNEX.w / 2 - 0.25, L = x1 - x0, cx = (x0 + x1) / 2, z = -3.5;
-  const mull: Box[] = [];
-  for (let i = 0; i <= 4; i++) for (const s of [-1, 1]) mull.push({ x: cx - L / 2 + (L * i) / 4, y: 1.5, z: z + s * 1.75, sx: 0.08, sy: 3.0, sz: 0.1 });
+  const { group: roof } = useFade("bridge:roof", hidden || roofHidden, y, res.roofMats, 10);
+  const deckMats = useMemo(() => [res.fascia, res.fascia, res.deck, res.soffit, res.fascia, res.fascia], [res]);
+  const roofSlab = useMemo(() => [res.rFascia, res.rFascia, res.rTop, res.ceiling, res.rFascia, res.rFascia], [res]);
+  const B = BRIDGE;
   return (
-    <group ref={group} position={[0, y, 0]}>
-      <mesh position={[cx, -0.2, z]} material={res.edge} castShadow receiveShadow><boxGeometry args={[L, 0.4, 3.8]} /></mesh>
-      <mesh position={[cx, 3.1, z]} material={res.slab} castShadow><boxGeometry args={[L, 0.3, 3.8]} /></mesh>
-      <mesh position={[cx, 1.5, z]} material={res.glass}><boxGeometry args={[L, 3.0, 3.5]} /></mesh>
-      <Boxes mat={res.mull} items={mull} />
-    </group>
+    <>
+      <group ref={group} position={[0, y, 0]}>
+        <mesh position={[res.csx, -B.slabT / 2, res.z]} material={deckMats} castShadow receiveShadow><boxGeometry args={[res.Ls, B.slabT, B.half * 2]} /></mesh>
+        <mesh position={[res.csx, 0.006, res.z]} rotation-x={-Math.PI / 2} material={res.band} receiveShadow><planeGeometry args={[res.Ls, 0.8]} /></mesh>
+        <Boxes mat={res.fascia} items={res.lips} />
+        {[-1, 1].map((sd) => (
+          <mesh key={sd} position={[res.cx, B.ceil / 2, res.z + sd * B.inner]} material={res.glass} renderOrder={1}><planeGeometry args={[res.L, B.ceil]} /></mesh>
+        ))}
+        <Boxes mat={res.frame} items={res.frames} />
+        <Boxes mat={res.rail} items={res.rails} shadow={false} />
+      </group>
+      <group ref={roof} position={[0, y, 0]}>
+        <mesh position={[res.cx, B.ceil + B.roofT / 2, res.z]} material={roofSlab} castShadow receiveShadow><boxGeometry args={[res.L, B.roofT, B.half * 2]} /></mesh>
+        <Boxes mat={res.rFascia} items={res.roofLips} />
+        <Boxes mat={res.rFrame} items={res.heads} />
+        <Boxes mat={res.light} items={res.lights} shadow={false} />
+      </group>
+    </>
   );
 }

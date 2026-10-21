@@ -60,7 +60,7 @@ export function Openings({ fl, mats, H }: { fl: FloorLayout; mats: FloorMats; H:
     for (const d of doors) {
       if (d.o.kind !== "slide") continue;
       let want = 0;
-      if (W.phase === "on" && W.y < fl.floor * 4.4 + 2) {
+      if (W.phase === "on" && W.y < fl.floor * 4.4 + 2 && W.y > fl.floor * 4.4 - 1.5) { // (the visitor on this level)
         const dx = W.x - d.cx, dz = W.z - d.cz;
         if (dx * dx + dz * dz < 4.2 * 4.2) want = 1;
       }

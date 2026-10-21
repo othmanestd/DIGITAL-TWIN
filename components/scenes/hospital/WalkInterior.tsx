@@ -9,7 +9,7 @@ import { W } from "../walk/state";
 
 export const FP_CEIL = 3.0;
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _v = new THREE.Vector3(), _s = new THREE.Vector3();
-const fpHere = (fl: FloorLayout) => W.phase === "on" && !W.third && !W.tower && W.where === fl.building && W.level === fl.floor;
+const fpHere = (fl: FloorLayout) => W.phase === "on" && !W.third && !W.tower && (W.where === fl.building || W.bridge) && W.level === fl.floor; // (both floors 1 from the skybridge)
 const smooth = (x: number) => x * x * (3 - 2 * x);
 
 /** The partition walls of a floor ("box|wall" parts), raised to the dropped ceiling in first person. */

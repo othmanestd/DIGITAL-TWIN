@@ -17,6 +17,8 @@ export type WalkUi = {
   where: "main" | "annex" | null;
   floor: number;
   tower: boolean;
+  /** on the skybridge between the two buildings (where = the nearer one) */
+  bridge?: boolean;
   near: string | null;
   /** use case E would open (the visitor stands near / looks at its spot), else the department view */
   nearCase: string | null;
@@ -95,7 +97,7 @@ export const useApp = create<State>((set, get) => ({
   zoomCmd: null,
   helpOpen: false,
   altitude: 300,
-  walk: { phase: "off", view: "third", where: null, floor: 0, tower: false, near: null, nearCase: null },
+  walk: { phase: "off", view: "third", where: null, floor: 0, tower: false, bridge: false, near: null, nearCase: null },
 
   setLevel: (level) => set({ level, sel: { kind: "overview", id: level }, caseId: null, focusNonce: get().focusNonce + 1 }),
   setSection: (section) => set({ section }),

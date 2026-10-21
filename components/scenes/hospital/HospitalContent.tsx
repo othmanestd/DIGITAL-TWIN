@@ -63,7 +63,11 @@ export function HospitalContent({ standalone = false }: { standalone?: boolean }
   const cutting = walk.phase === "on" && walk.view === "third" && !!walk.where;
   const open = walking ? null : f.floor;
   const [ob, of] = open ? open.split(":") : [null, "9"];
+  // the skybridge (floor 1): gone below floor 1; its roof also lifts away at floor 1 (cut-away / open floor 1), like the
+  // floors above. On the skybridge both buildings are cut away (and both roofs hidden).
   const bridgeHidden = cutting ? walk.floor < 1 : !!open && Number(of) < 1;
+  const bridgeRoofHidden = cutting ? walk.floor <= 1 : !!open && Number(of) <= 1;
+  const onBridge = cutting && !!walk.bridge;
   const walkKey = walk.phase === "on" && walk.where && !walk.tower ? `${walk.where}:${walk.floor}` : null;
 
   return (
@@ -74,9 +78,9 @@ export function HospitalContent({ standalone = false }: { standalone?: boolean }
           <Floor key={fl.key} fl={fl} openKey={open} focusDept={f.dept} walkKey={walkKey} walking={walking} />
         ))}
         <StairTowers openKey={open} />
-        <Roof building="main" hidden={cutting ? walk.where === "main" : ob === "main"} />
-        <Roof building="annex" hidden={cutting ? walk.where === "annex" : ob === "annex"} />
-        <Skybridge hidden={bridgeHidden} />
+        <Roof building="main" hidden={cutting ? walk.where === "main" || onBridge : ob === "main"} />
+        <Roof building="annex" hidden={cutting ? walk.where === "annex" || onBridge : ob === "annex"} />
+        <Skybridge hidden={bridgeHidden} roofHidden={bridgeRoofHidden} />
         <PersonHighlight />
         <SensorNet />
         <HospitalProps />

@@ -4,7 +4,8 @@
 //    campus props found in the scene (trees, cars, ambulances, benches, canopy posts). Bucketed in a 1 m grid.
 //  · outdoor solids from city/collide.ts (read only), except those overlapping the buildings, whose envelope is modelled here.
 //  · camera colliders: façades, tall walls, canopies, skybridge — so the third-person camera never goes through them.
-//  · ground height: floor slabs, the stair flights (ramps fitted to the tread centres) and landings, y = 0 outdoors.
+//  · ground height: floor slabs, the stair flights (ramps fitted to the tread centres) and landings, the skybridge
+//    deck (floor 1), y = 0 outdoors.
 // Everything is allocation-free at query time.
 import * as THREE from "three";
 import { FLOOR_H, DEPT } from "@/lib/hospital";
@@ -16,14 +17,14 @@ import { TWIN_POS } from "../hospital/Twin";
 import { PERSON_VIS } from "../hospital/People";
 import { outdoorSolids } from "../city/collide";
 import { hospitalPropSolids } from "./propSolids";
-import { BLD, GLASS_OFF, SLAB_T, ST, TOWERS, TOWER_OF, columnCut, openingsOf, subtract, towerTopY, towerZ, type BId, type Side, type Tower } from "./plan";
+import { BLD, BRIDGE, GLASS_OFF, SLAB_T, ST, TOWERS, TOWER_OF, bridgeY, columnCut, inBridge, openingsOf, subtract, towerTopY, towerZ, type BId, type Side, type Tower } from "./plan";
 
 export type Col = {
   cx: number; cz: number; hx: number; hz: number; c: number; s: number; // centre, local half sizes, cos / sin of the yaw
   y0: number; y1: number;
   desk: number;   // layout desk id (folds away with the timeline staffing), 0 = none
   cond: number;   // 0 always · 1 only once the Expériences IA are installed (rt.eco)
-  bld: number;    // 0 none · 1 main · 2 annex — camera colliders of a cut-away floor are ignored
+  bld: number;    // 0 none · 1 main · 2 annex · 3 skybridge — camera colliders of a cut-away floor are ignored
   yr: number;     // year mask of a prop (bit 0 = 2026 …), 0 = every year
   x0: number; x1: number; z0: number; z1: number; // AABB
 };
@@ -152,8 +153,16 @@ function build() {
   }
   { const c = aabb(-8.3, -4.1, M.d / 2 + 0.12, M.d / 2 + 0.52, 0, 3.9); BODY.push(c); CAM.push(c); }
   CAM.push(aabb(-4.2, 2.2, M.d / 2 + 0.05, M.d / 2 + 0.55, 3.5, 4.0));
-  const bx0 = M.x + M.w / 2 + 0.25, bx1 = A.x - A.w / 2 - 0.25;
-  CAM.push(aabb(bx0, bx1, -5.4, -1.6, FLOOR_H - 0.4, FLOOR_H + 3.25));
+  // the skybridge (walkable, plan.ts BRIDGE): side glass (body + camera), deck and roof (camera), tagged 3 so the roof
+  // is ignored by the camera whenever the cut-away is on at or below the bridge level (the roof is hidden then)
+  const by = bridgeY();
+  for (const sd of [-1, 1]) {
+    const zc = BRIDGE.z + sd * (BRIDGE.inner + 0.02);
+    const c = aabb(BRIDGE.x0 - 0.1, BRIDGE.x1 + 0.1, zc - 0.05, zc + 0.05, by - 0.45, by + BRIDGE.ceil, 3);
+    BODY.push(c); CAM.push(c);
+  }
+  CAM.push(aabb(BRIDGE.s0, BRIDGE.s1, BRIDGE.z - BRIDGE.half, BRIDGE.z + BRIDGE.half, by - BRIDGE.slabT, by, 3));
+  CAM.push(aabb(BRIDGE.x0, BRIDGE.x1, BRIDGE.z - BRIDGE.half, BRIDGE.z + BRIDGE.half, by + BRIDGE.ceil, by + BRIDGE.ceil + BRIDGE.roofT, 3));
 }
 build();
 
@@ -241,11 +250,13 @@ function towerAt(x: number, z: number): Tower | null {
   }
   return null;
 }
-/** Building (plate or stair tower) containing the point, and whether it is the tower. */
-export function whereAt(x: number, z: number, out: { b: BId | null; tower: boolean }) {
-  out.tower = false; out.b = null;
+/** Building (plate or stair tower) containing the point, and whether it is the tower. With the feet height `y`, the
+ *  skybridge counts too: `bridge`, and b = the nearer building (its level-1 floor). */
+export function whereAt(x: number, z: number, out: { b: BId | null; tower: boolean; bridge?: boolean }, y?: number) {
+  out.tower = false; out.b = null; out.bridge = false;
   if (plateIn("main", x, z, GLASS_OFF)) out.b = "main";
   else if (plateIn("annex", x, z, GLASS_OFF)) out.b = "annex";
+  else if (y !== undefined && y > bridgeY() - 1.2 && inBridge(x, z, 0.2)) { out.b = x < (BRIDGE.x0 + BRIDGE.x1) / 2 ? "main" : "annex"; out.bridge = true; }
   else { const t = towerAt(x, z); if (t) { out.b = t.building; out.tower = true; } }
   return out;
 }
@@ -277,14 +288,17 @@ export function groundAt(x: number, z: number, yRef: number): number {
         const laneA = xl >= (ST.laneB1 + ST.laneA0) / 2;
         for (let s = 0; s < t.top; s++) cand(s * FLOOR_H + (laneA ? ramp(u) : ST.half + ramp(1 - u)));
       }
-    } else cand(0);
+    } else {
+      cand(0);
+      if (inBridge(x, z, BRIDGE.half - BRIDGE.inner)) cand(bridgeY()); // skybridge deck, level with both floors 1
+    }
   }
   return gBest > -Infinity ? gBest : gLow;
 }
 
 // ---------------------------------------------------------------- body collisions
 export const BODY_LO = 0.32, BODY_HI = 1.75;
-const tmpW = { b: null as BId | null, tower: false };
+const tmpW = { b: null as BId | null, tower: false, bridge: false as boolean | undefined };
 /** floor layouts by building and level (no string keys in the frame loop) */
 export const FLOOR_AT: Record<BId, (FloorLayout | undefined)[]> = {
   main: [0, 1, 2, 3, 4].map((f) => FLOOR_BY_KEY[`main:${f}`]),
@@ -319,8 +333,8 @@ function bTest(c: Col) {
 export function resolveBody(p: { x: number; z: number }, feet: number, r: number, n: { x: number; z: number }): boolean {
   bx = p.x; bz = p.z; bnx = 0; bnz = 0; bHit = false; bLo = feet + BODY_LO; bHi = feet + BODY_HI; bR = r; bEco = rt.eco;
   // people of this floor (standing or walking): soft circles
-  whereAt(bx, bz, tmpW);
-  if (tmpW.b && !tmpW.tower) {
+  whereAt(bx, bz, tmpW, feet);
+  if (tmpW.b && !tmpW.tower && !tmpW.bridge) {
     const fl = FLOOR_AT[tmpW.b][Math.round(feet / FLOOR_H)];
     if (fl) for (let i = 0; i < fl.people.length; i++) {
       const pp = fl.people[i];
@@ -376,7 +390,8 @@ function slab(o: number, v: number, lo: number, hi: number) {
 }
 function camOne(c: Col) {
   if (c.x1 < cMnx || c.x0 > cMxx || c.z1 < cMnz || c.z0 > cMxz) return;
-  if (cCutB && c.bld === cCutB && c.y0 > cCutY) return;
+  // cut-away: the visitor's building (both on the skybridge, cutB 3) and the skybridge itself, above the cut height
+  if (cCutB && (c.bld === cCutB || c.bld === 3 || cCutB === 3) && c.y0 > cCutY) return;
   if (c.desk && (rt.desk.get(c.desk) ?? 1) < 0.5) return;
   if (c.yr && !(c.yr & yearBit)) return;
   const ox = (cpx - c.cx) * c.c - (cpz - c.cz) * c.s, oz = (cpx - c.cx) * c.s + (cpz - c.cz) * c.c;
@@ -386,7 +401,8 @@ function camOne(c: Col) {
   if (ct0 > 0 && ct0 < cBest) cBest = ct0;
 }
 /** First hit of the segment p → q (campus) against the camera colliders, as a fraction of the segment (1 = clear).
- *  Colliders of building `cutB` (1 main, 2 annex) starting above `cutY` (cut away) are ignored. */
+ *  Colliders of building `cutB` (1 main, 2 annex, 3 both: on the skybridge) and of the skybridge starting above `cutY`
+ *  (cut away) are ignored. */
 export function cameraHit(px: number, py: number, pz: number, qx: number, qy: number, qz: number, cutB: number, cutY: number): number {
   cpx = px; cpy = py; cpz = pz; cdx = qx - px; cdy = qy - py; cdz = qz - pz; cBest = 1; cCutB = cutB; cCutY = cutY;
   cMnx = Math.min(px, qx); cMxx = Math.max(px, qx); cMnz = Math.min(pz, qz); cMxz = Math.max(pz, qz);

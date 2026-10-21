@@ -1,6 +1,6 @@
 "use client";
-// <CityPedestrians/>: ~235 low-poly people (same figure, proportions and soft palette as the hospital's People.tsx), instanced
-// (5 draw calls). They walk the sidewalks of the city grid corner to corner, waiting at the corners for the lights, queue at the
+// <CityPedestrians/>: ~235 people from the shared human kit (components/scenes/people/human.ts: same figure as the hospital's
+// staff, varied casual clothes in lively but natural colours, djellabas, hijabs, office wear), one instanced draw call. They walk the sidewalks of the city grid corner to corner, waiting at the corners for the lights, queue at the
 // two bus shelters in front of the hospital, come in and out of the two hospital entrances, stroll on the mosque's esplanade and
 // the business plazas, and wait on the tram platforms, board the trams that dwell there and get off them. A walking visitor
 // (frame.player) makes them step aside. Visible below 2 km of camera altitude; people farther than 600 m are not drawn, and the
@@ -9,7 +9,8 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { frame } from "@/lib/world";
-import { FIGURE } from "../hospital/People";
+import { dress, newPose, posePhone, poseIdle, poseWalk } from "../people/human";
+import { useHumanCrowd } from "../people/useHumans";
 import { SHELTERS } from "./district";
 import { blockedOutdoors } from "./collide";
 import { CELL, MOSQUE, cityPlan, onLand, sidewalkWidth } from "./plan";
@@ -18,13 +19,6 @@ import { TRAMS, TRAM_STOPS_X, platformZ } from "./landmarks/Tram";
 import { rng } from "./landmarks/env";
 
 const MAX_ALT = 2000, DRAW_R = 600, RECYCLE_R = 520;
-
-// ---------------------------------------------------------------- palette (the hospital's soft colours; skin and hair as in layout.ts)
-const TORSO = ["#C9CED9", "#B9C4E6", "#6FB7AE", "#9CC9A5", "#7C93D6", "#D6B47C", "#A88FD0", "#E8E2D6", "#8E97B3", "#C98F7C", "#7FA3B8", "#D9D3C4"];
-const OFFICE = ["#2F3447", "#3E465A", "#566079", "#8E97B3", "#E8E2D6", "#C9CED9", "#41455A"];
-const LEGS = ["#4A5368", "#3E465A", "#6E675B", "#41455A", "#B5BBC8", "#2F3447", "#5B6275"];
-const SKIN = ["#E7CBB2", "#D6AE8E", "#C08F6E", "#A47658", "#EBD3BD", "#CFA382"];
-const HAIR = ["#2A2320", "#3A2C24", "#4B3A2D", "#1E1A19", "#6E625A", "#5A4334"];
 
 // ---------------------------------------------------------------- zones (rectangles people wander in)
 type Zone = { x0: number; x1: number; z0: number; z1: number; y: number; local?: boolean; trees?: boolean };
@@ -49,13 +43,13 @@ type Ped = {
   // street graph
   orient: number; gi: number; gj: number; side: number; t: number; dir: number; len: number; lat: number; ax: number; az: number; bx: number; bz: number;
   zone: number; door: number; stop: number; plat: 1 | -1; slot: number; office: boolean;
-  torso: number; legs: number; skin: number; hair: number;
+  look: number;
 };
 function mk(kind: number, r: () => number): Ped {
   return {
     kind, x: 0, z: 0, y: 0, yaw: r() * 6.28, yawT: 0, s: 0.94 + r() * 0.1, ph: r() * 6, v: 0, vis: 1, idle: 0, phone: r() < 0.16, tx: 0, tz: 0, px: 0, pz: 0, seed: r() * 100, state: 0, timer: 0,
     orient: 0, gi: 0, gj: 0, side: 1, t: 0, dir: 1, len: 1, lat: 0, ax: 0, az: 0, bx: 0, bz: 0, zone: 0, door: 0, stop: 0, plat: 1, slot: 0, office: false,
-    torso: Math.floor(r() * 99), legs: Math.floor(r() * 99), skin: Math.floor(r() * 99), hair: r() < 0.86 ? Math.floor(r() * 99) : -1,
+    look: Math.floor(r() * 1e6),
   };
 }
 
@@ -98,15 +92,9 @@ function nextEdge(p: Ped, r: () => number) {
 }
 
 // ---------------------------------------------------------------- small helpers
-const Y = new THREE.Vector3(0, 1, 0);
-const _root = new THREE.Matrix4(), _m = new THREE.Matrix4(), _o = new THREE.Matrix4(), _q = new THREE.Quaternion(), _qy = new THREE.Quaternion(), _e = new THREE.Euler();
-const _p = new THREE.Vector3(), _s = new THREE.Vector3(), _rs = new THREE.Vector3(), _f = new THREE.Vector3(), _c = new THREE.Color();
-const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
-function part(px: number, py: number, pz: number, rx: number, ry: number, rz: number, sx: number, sy: number, sz: number, order: THREE.EulerOrder = "XYZ") {
-  _e.set(rx, ry, rz, order); _q.setFromEuler(_e);
-  _m.compose(_p.set(px, py, pz), _q, _s.set(sx, sy, sz));
-  return _o.multiplyMatrices(_root, _m);
-}
+const _p = new THREE.Vector3(), _f = new THREE.Vector3();
+const P = newPose();
+type Crowd = ReturnType<typeof useHumanCrowd>;
 function dampAngle(a: number, b: number, k: number) { let d = b - a; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return a + d * k; }
 const MC = Math.cos(MOSQUE.yaw), MS = Math.sin(MOSQUE.yaw);
 
@@ -121,9 +109,7 @@ function pickIn(zn: Zone, p: { tx: number; tz: number }, r: () => number, trees:
 }
 
 export function CityPedestrians() {
-  const torso = useRef<THREE.InstancedMesh>(null), head = useRef<THREE.InstancedMesh>(null), hair = useRef<THREE.InstancedMesh>(null);
-  const legs = useRef<THREE.InstancedMesh>(null), arms = useRef<THREE.InstancedMesh>(null), root = useRef<THREE.Group>(null);
-  const mat = useMemo(() => new THREE.MeshStandardMaterial({ roughness: 0.85, metalness: 0 }), []);
+  const root = useRef<THREE.Group>(null);
   const R = useMemo(() => rng(4242), []);
 
   const sim = useMemo(() => {
@@ -158,28 +144,13 @@ export function CityPedestrians() {
     return { peds, first };
   }, [R]);
   const N = sim.peds.length;
+  const crowd = useHumanCrowd(N);
   const trees = useMemo(() => cityPlan().trees, []);
   const towers = useMemo(() => cfcTowers(), []);
   const frust = useMemo(() => ({ f: new THREE.Frustum(), m: new THREE.Matrix4(), hit: new THREE.Vector3(), acc: 0, last: 0 }), []);
 
-  // instance colours (fixed per person) and zeroed matrices
-  useEffect(() => {
-    const T = torso.current, H = head.current, Hr = hair.current, L = legs.current, A = arms.current;
-    if (!T || !H || !Hr || !L || !A) return;
-    sim.peds.forEach((p, i) => {
-      const pal = p.office ? OFFICE : TORSO, tc = pal[p.torso % pal.length];
-      _c.set(tc); T.setColorAt(i, _c); A.setColorAt(i * 2, _c); A.setColorAt(i * 2 + 1, _c);
-      _c.set(LEGS[p.legs % LEGS.length]); L.setColorAt(i * 2, _c); L.setColorAt(i * 2 + 1, _c);
-      _c.set(SKIN[p.skin % SKIN.length]); H.setColorAt(i, _c);
-      _c.set(p.hair >= 0 ? HAIR[p.hair % HAIR.length] : "#000000"); Hr.setColorAt(i, _c);
-    });
-    for (const m of [T, H, Hr, L, A]) {
-      for (let i = 0; i < m.count; i++) m.setMatrixAt(i, ZERO);
-      m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true;
-      m.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 1e5); m.frustumCulled = false;
-    }
-  }, [sim]);
-  useEffect(() => () => mat.dispose(), [mat]);
+  // wardrobe (fixed per person): casual, djellabas and hijabs; office wear on the business plazas
+  useEffect(() => { sim.peds.forEach((p, i) => crowd.setLook(i, dress(p.office ? "office" : "visitor", p.look))); }, [sim, crowd]);
 
   useFrame(({ camera, clock }, dt0) => {
     const g = root.current;
@@ -187,8 +158,6 @@ export function CityPedestrians() {
     const alt = frame.alt;
     g.visible = alt < MAX_ALT;
     if (!g.visible) return;
-    const T = torso.current!, H = head.current!, Hr = hair.current!, L = legs.current!, A = arms.current!;
-    if (!T || !H || !Hr || !L || !A) return;
     const dt = Math.min(dt0, 0.1), t = clock.elapsedTime;
     const cam = camera.position;
     // where the camera looks at the ground: the street walkers are re-seeded around that point
@@ -215,18 +184,13 @@ export function CityPedestrians() {
         if (dd < 2.6 && dd > 0.01 && Math.abs(p.y - pl.y) < 3) { const k = Math.min(1.6, (2.6 - dd) * 3) * dt; p.px += (ddx / dd) * k * 3; p.pz += (ddz / dd) * k * 3; p.px = Math.max(-1.8, Math.min(1.8, p.px)); p.pz = Math.max(-1.8, Math.min(1.8, p.pz)); p.v *= 0.5; }
       }
       const dk = Math.exp(-dt * 0.9); p.px *= dk; p.pz *= dk;
-      draw(p, i, t, dt, T, H, Hr, L, A);
+      draw(p, i, t, dt, crowd);
     }
-    T.instanceMatrix.needsUpdate = H.instanceMatrix.needsUpdate = Hr.instanceMatrix.needsUpdate = L.instanceMatrix.needsUpdate = A.instanceMatrix.needsUpdate = true;
   });
 
   return (
     <group ref={root}>
-      <instancedMesh ref={torso} args={[FIGURE.torsoGeo, mat, N]} castShadow receiveShadow raycast={() => null} />
-      <instancedMesh ref={head} args={[FIGURE.headGeo, mat, N]} castShadow raycast={() => null} />
-      <instancedMesh ref={hair} args={[FIGURE.hairGeo, mat, N]} raycast={() => null} />
-      <instancedMesh ref={legs} args={[FIGURE.legGeo, mat, N * 2]} castShadow raycast={() => null} />
-      <instancedMesh ref={arms} args={[FIGURE.armGeo, mat, N * 2]} raycast={() => null} />
+      <primitive object={crowd.mesh} />
     </group>
   );
 }
@@ -348,27 +312,13 @@ function step(p: Ped, dt: number, t: number, r: () => number, trees: [number, nu
   void t;
 }
 
-// ---------------------------------------------------------------- pose → instance matrices
-function draw(p: Ped, i: number, t: number, dt: number, T: THREE.InstancedMesh, H: THREE.InstancedMesh, Hr: THREE.InstancedMesh, L: THREE.InstancedMesh, A: THREE.InstancedMesh) {
-  if (p.vis <= 0.01) { T.setMatrixAt(i, ZERO); H.setMatrixAt(i, ZERO); Hr.setMatrixAt(i, ZERO); L.setMatrixAt(i * 2, ZERO); L.setMatrixAt(i * 2 + 1, ZERO); A.setMatrixAt(i * 2, ZERO); A.setMatrixAt(i * 2 + 1, ZERO); return; }
+// ---------------------------------------------------------------- pose → the crowd
+function draw(p: Ped, i: number, t: number, dt: number, crowd: Crowd) {
+  if (p.vis <= 0.01) { crowd.hide(i); return; }
   const sd = p.seed, moving = p.v > 0.05, amp = Math.min(1, p.v / 1.1);
-  p.ph += p.v * dt * 3.6;                                          // one gait cycle per ~1.7 m, as in the hospital
+  p.ph += p.v * dt * 3.6;                                          // one gait cycle per ~1.75 m, as in the hospital
   p.yaw = dampAngle(p.yaw, p.yawT, moving ? 0.2 : 0.06);
-  const gait = Math.sin(p.ph), breathe = 1 + 0.013 * Math.sin(1.55 * t + sd);
-  let legL = 0.5 * gait * amp, legR = -legL, armL = -0.38 * gait * amp, armR = -armL;
-  const bob = 0.03 * Math.abs(gait) * amp;
-  let hy = 0.42 * Math.sin(0.21 * t + sd) * Math.sin(0.083 * t + sd * 2.3) * (1 - amp), hp = 0.05 * Math.sin(0.31 * t + sd);
-  if (!moving) {
-    armL = 0.03 + 0.03 * Math.sin(1.55 * t + sd); armR = 0.03 - 0.03 * Math.sin(1.55 * t + sd);
-    if (p.phone) { armR = -1.12 + 0.03 * Math.sin(2 * t + sd); armL = -0.18; hp = 0.28; hy *= 0.3; }
-    legL = 0.04 * Math.sin(0.4 * t + sd); legR = -legL;
-  }
-  const hip = 0.88;
-  _qy.setFromAxisAngle(Y, p.yaw);
-  _root.compose(_p.set(p.x + p.px, p.y + bob, p.z + p.pz), _qy, _rs.set(p.s, p.s, p.s));
-  T.setMatrixAt(i, part(0, hip + 0.34, 0, 0, 0, 0, 1, breathe, 0.72));
-  H.setMatrixAt(i, part(0, hip + 0.87, 0.01, hp, hy, 0, 1, 1, 1, "YXZ"));
-  if (p.hair >= 0) Hr.setMatrixAt(i, part(0, hip + 0.875, 0, hp - 0.32, hy, 0, 1, 1, 1, "YXZ")); else Hr.setMatrixAt(i, ZERO);
-  L.setMatrixAt(i * 2, part(-0.1, hip, 0, legL, 0, 0, 1, 1, 1)); L.setMatrixAt(i * 2 + 1, part(0.1, hip, 0, legR, 0, 0, 1, 1, 1));
-  A.setMatrixAt(i * 2, part(-0.26, hip + 0.62, 0, armL, 0, -0.07, 1, 1, 1)); A.setMatrixAt(i * 2 + 1, part(0.26, hip + 0.62, 0, armR, 0, 0.07, 1, 1, 1));
+  if (moving) { poseWalk(P, p.ph, amp, crowd.robe[i] === 1); P.hy += 0.2 * Math.sin(0.21 * t + sd) * (1 - amp); }
+  else { poseIdle(P, t, sd); if (p.phone) posePhone(P, t, sd); }
+  crowd.write(i, p.x + p.px, p.y, p.z + p.pz, p.yaw, 1, P);
 }

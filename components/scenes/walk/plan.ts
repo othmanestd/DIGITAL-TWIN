@@ -44,6 +44,26 @@ export function inTower(t: Tower, x: number, z: number, m = 0) {
   return xl >= -m && xl <= ST.glass + m && zl >= ST.endA - m && zl <= ST.endB + m;
 }
 
+// ---------------------------------------------------------------- glazed skybridge (floor 1)
+// A walkable glass footbridge between the main building's east façade and the head office's west façade, at floor 1
+// (both plates are at the same height: no ramp). Sliding glass doors at both ends (OPENINGS). Campus frame.
+//   glass x ∈ [x0, x1] (façade glass line to façade glass line) · slab / roof x ∈ [s0, s1] (plate slab edges)
+//   walkable z = z ± inner (side glass) · slab and roof z = z ± half
+// Main building: the doors open into a lobby carved out of the laboratory's north-east corner, itself open onto the
+// central corridor (z = 0). Head office: straight into the finance floor through a door in its west partition.
+export const BRIDGE = {
+  floor: 1, z: -3.5,
+  x0: MAIN.x + MAIN.w / 2 + GLASS_OFF, x1: ANNEX.x - ANNEX.w / 2 - GLASS_OFF,
+  s0: MAIN.x + MAIN.w / 2 + 0.25, s1: ANNEX.x - ANNEX.w / 2 - 0.25,
+  half: 1.9, inner: 1.75,
+  door: 2.4, doorH: 2.6,
+  ceil: 2.95, roofT: 0.3, slabT: 0.4,
+  lobby: { x0: MAIN.x + 22.3, x1: MAIN.x + MAIN.w / 2 - 0.5, z0: MAIN.z - 5.5, z1: MAIN.z - 0.5 }, // main building, floor 1 (campus)
+};
+export const bridgeY = () => BRIDGE.floor * FLOOR_H;
+/** Is the campus point inside the skybridge (between the two glass lines, within the side glass + m)? */
+export const inBridge = (x: number, z: number, m = 0) => x > BRIDGE.x0 && x < BRIDGE.x1 && Math.abs(z - BRIDGE.z) <= BRIDGE.inner + m;
+
 // ---------------------------------------------------------------- openings in the façades
 export type Side = "+x" | "-x" | "+z" | "-z";
 /** An opening in a building's glass façade. c = centre along the side, building-local (x for ±z sides, z for ±x sides). */
@@ -56,6 +76,9 @@ export const OPENINGS: Opening[] = [
   { building: "main", side: "+z", c: urg[0] - urg[2] / 2 + 0.82 * urg[2], w: 3.2, h: 2.75, floors: [0], kind: "slide" },
   // head office entrance (front door of the general services floor, 3 m)
   { building: "annex", side: "+z", c: 0, w: 3.0, h: 2.75, floors: [0], kind: "slide" },
+  // skybridge doors (floor 1): main east façade, head office west façade
+  { building: "main", side: "+x", c: BRIDGE.z - MAIN.z, w: BRIDGE.door, h: BRIDGE.doorH, floors: [BRIDGE.floor], kind: "slide" },
+  { building: "annex", side: "-x", c: BRIDGE.z - ANNEX.z, w: BRIDGE.door, h: BRIDGE.doorH, floors: [BRIDGE.floor], kind: "slide" },
   // stair tower doors, every floor
   ...TOWERS.map((t): Opening => ({ building: t.building, side: "+x", c: t.zDoor - BLD[t.building].z, w: ST.door, h: ST.doorH, floors: t.floors, kind: "open" })),
 ];
@@ -70,6 +93,11 @@ export function sideCuts(building: BId, floor: number, side: Side, margin = 0.25
   if (side === "+x" && floor >= 0 && floor <= t.top) {
     const [a, b] = towerZRange(t);
     out.push([a - BLD[building].z - 0.05, b - BLD[building].z + 0.05]);
+  }
+  // the skybridge meets the façade over its whole width (ribbons, louvres and piers make room)
+  if (floor === BRIDGE.floor && ((building === "main" && side === "+x") || (building === "annex" && side === "-x"))) {
+    const z = BRIDGE.z - BLD[building].z;
+    out.push([z - BRIDGE.half - 0.05, z + BRIDGE.half + 0.05]);
   }
   return out;
 }
@@ -99,6 +127,11 @@ export const EXTRA_DOORS: { building: BId; floor: number; x: number; z: number; 
   { building: "main", floor: 4, x: -0.5, z: 0, w: 1.8 },               // quality → central corridor
   { building: "main", floor: 4, x: 0.5, z: 0, w: 1.8 },                // technical management → central corridor
   ...[0, 1, 2, 3].map((f) => ({ building: "annex" as BId, floor: f, x: ANNEX.w / 2 - 0.5, z: 4.5, w: 1.4 })), // head office → tower
+  // skybridge, floor 1. Main: the laboratory's corridor wall and east wall stop at the bridge lobby (layout.ts closes it)
+  { building: "main", floor: BRIDGE.floor, x: (BRIDGE.lobby.x0 + BRIDGE.lobby.x1) / 2 + 0.03 - MAIN.x, z: BRIDGE.lobby.z1 - MAIN.z, w: BRIDGE.lobby.x1 - BRIDGE.lobby.x0 + 0.06 },
+  { building: "main", floor: BRIDGE.floor, x: BRIDGE.lobby.x1 - MAIN.x, z: (BRIDGE.lobby.z0 + BRIDGE.lobby.z1) / 2 + 0.03 - MAIN.z, w: BRIDGE.lobby.z1 - BRIDGE.lobby.z0 + 0.06 },
+  // head office: finance floor's west partition, in line with the bridge door
+  { building: "annex", floor: BRIDGE.floor, x: -ANNEX.w / 2 + 0.5, z: BRIDGE.z - ANNEX.z, w: BRIDGE.door },
 ];
 
 // ---------------------------------------------------------------- spawn

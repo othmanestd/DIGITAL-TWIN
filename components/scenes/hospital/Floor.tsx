@@ -18,7 +18,7 @@ import People, { THREE_STATE } from "./People";
 import { isHidden } from "./nav";
 import { Openings, glassPanels, openSides } from "./Openings";
 import { FpCeiling, WallInst } from "./WalkInterior";
-import { columnCut, openingsOf, type BId, type Side } from "../walk/plan";
+import { BRIDGE, columnCut, openingsOf, type BId, type Side } from "../walk/plan";
 import { W, floorCut } from "../walk/state";
 
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _v = new THREE.Vector3(), _s = new THREE.Vector3();
@@ -45,6 +45,11 @@ const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
 function corridorBands(floor: number): [number, number, number, number][] {
   if (floor === 4) return [[0, 0, 0.8, 25.5]];
   if (floor === 3) return [[13, 0, 25.5, 0.8]];
+  if (floor === BRIDGE.floor) {
+    // + a branch from the central corridor through the skybridge lobby to the bridge door (building-local = campus)
+    const L = BRIDGE.lobby, bx = (L.x0 + L.x1) / 2, z0 = BRIDGE.z - 0.4, z1 = L.z1 + 0.1;
+    return [[0, 0, 51.5, 0.8], [bx, (z0 + z1) / 2, 0.8, z1 - z0], [(bx - 0.4 + BRIDGE.x0) / 2, BRIDGE.z, BRIDGE.x0 - bx + 0.4, 0.8]];
+  }
   return [[0, 0, 51.5, 0.8]];
 }
 /** desk fold factor from its person's presence: folds while the person walks away */

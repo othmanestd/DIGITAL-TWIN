@@ -174,7 +174,7 @@ export function StairTowers({ openKey }: { openKey: string | null }) {
     for (let i = 0; i < 2; i++) {
       const b = i ? "annex" : "main";
       let want = 1e6;
-      if (W.phase === "on") { if (W.cutB === b && W.clipY < 1e5) want = W.clipY; }
+      if (W.phase === "on") { if ((W.cutB === b || (W.bridge && W.cutB)) && W.clipY < 1e5) want = W.clipY; }
       else if (openRef.current && openRef.current.b === b) want = (openRef.current.f + 1) * FLOOR_H - 0.5;
       const cur = clip.current[b];
       // snap when far (no slow sweep through the whole tower), ease when close

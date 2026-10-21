@@ -10,8 +10,10 @@ import { buildNet, findLane, type Net, type NodeDef, type RoadDef } from "./road
 import type { BusLine } from "./trafficSim";
 
 /** A building box: centre, footprint (w along x, d along z), height, yaw, palette tone 0…1, and façade style:
- *  shop = street-level shop band, acc = awning colour (0 none, 1…4), win = 0 punched windows / 1 balconies / 2 ribbon, warm = painted façade. */
-export type Bx = { x: number; z: number; w: number; d: number; h: number; yaw: number; c: number; shop?: number; acc?: number; win?: number; warm?: boolean };
+ *  shop = street-level shop band, acc = awning colour (0 none, 1…6), win = façade style (see CityContent: 0 punched windows,
+ *  1 balconies, 2 ribbon, 3 Art Deco, 4 medina, 5 villa, 6 shed, 7 curtain wall, 8 rampart, 9 beach club), warm = painted
+ *  façade (legacy), pal = colour family (see CityContent PALETTES). */
+export type Bx = { x: number; z: number; w: number; d: number; h: number; yaw: number; c: number; shop?: number; acc?: number; win?: number; warm?: boolean; pal?: number };
 export type DSeg = { x0: number; z0: number; x1: number; z1: number; w: number; c: number; d?: boolean };
 export type Quad = { x0: number; z0: number; x1: number; z1: number; w: number; y: number; c: number };
 

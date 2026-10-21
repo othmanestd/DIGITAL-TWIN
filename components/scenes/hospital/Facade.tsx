@@ -78,14 +78,57 @@ function notchedShape(hw: number, hd: number, r: number, off: (theta: number) =>
   return new THREE.Shape(pts);
 }
 
+/** The ribbon open on the −x side over z in [a2, b2] (the skybridge), and also on the +x side over [a1, b1] when given:
+ *  two pieces (back half, front half), or one "C" open on −x. */
+function notchedShapesX(hw: number, hd: number, r: number, off: (theta: number) => number, nN: [number, number], nP?: [number, number], n = 22) {
+  let pts: THREE.Vector2[] = [];
+  const push = (x: number, z: number, nx: number, nz: number) => {
+    const o = off(Math.atan2(z / hd, x / hw));
+    pts.push(new THREE.Vector2(x + nx * o, -(z + nz * o)));
+  };
+  const side = (sx: 1 | -1, z0: number, z1: number, last: boolean) => {
+    const k = Math.max(2, Math.ceil((Math.abs(z1 - z0) / (2 * hd)) * n));
+    for (let i = 0; i < k + (last ? 1 : 0); i++) push(sx * hw, z0 + ((z1 - z0) * i) / k, sx, 0);
+  };
+  const seg = (x0: number, z0: number, x1: number, z1: number, nx: number, nz: number) => {
+    for (let i = 0; i < n; i++) { const t = i / n; push(x0 + (x1 - x0) * t, z0 + (z1 - z0) * t, nx, nz); }
+  };
+  const arc = (cx: number, cz: number, a0: number) => {
+    for (let i = 0; i < 8; i++) { const a = a0 - (i / 8) * (Math.PI / 2); push(cx + Math.cos(a) * r, cz + Math.sin(a) * r, Math.cos(a), Math.sin(a)); }
+  };
+  const front = () => { seg(-hw + r, hd, hw - r, hd, 0, 1); arc(hw - r, hd - r, Math.PI / 2); };   // ends on +x, top
+  const back = () => { arc(hw - r, -hd + r, 0); seg(hw - r, -hd, -hw + r, -hd, 0, -1); arc(-hw + r, -hd + r, -Math.PI / 2); }; // +x bottom → −x bottom
+  const iw = hw - 0.25, idd = hd - 0.25;
+  const inner = (list: [number, number][]) => { for (const [x, z] of list) pts.push(new THREE.Vector2(x, -z)); };
+  const [a2, b2] = nN;
+  const shapes: THREE.Shape[] = [];
+  if (nP) {
+    const [a1, b1] = nP;
+    // back half: +x side below its notch → back → −x side up to the bridge
+    side(1, a1, -hd + r, false); back(); side(-1, -hd + r, a2, true);
+    inner([[-iw, a2], [-iw, -idd], [iw, -idd], [iw, a1]]);
+    shapes.push(new THREE.Shape(pts)); pts = [];
+    // front half: −x side above the bridge → front → +x side down to its notch
+    side(-1, b2, hd - r, false); arc(-hw + r, hd - r, Math.PI); front(); side(1, hd - r, b1, true);
+    inner([[iw, b1], [iw, idd], [-iw, idd], [-iw, b2]]);
+    shapes.push(new THREE.Shape(pts));
+  } else {
+    side(-1, b2, hd - r, false); arc(-hw + r, hd - r, Math.PI); front(); side(1, hd - r, -hd + r, false); back(); side(-1, -hd + r, a2, true);
+    inner([[-iw, a2], [-iw, -idd], [iw, -idd], [iw, idd], [-iw, idd], [-iw, b2]]);
+    shapes.push(new THREE.Shape(pts));
+  }
+  return shapes;
+}
+
 /** A white ribbon (ring) around a plate: inner edge at the façade line, outer edge = waving rounded rectangle.
  *  `notch` opens the ring on the +x side over that z range (building-local), where a stair tower adjoins the façade. */
-export function ribbonGeometry(w: number, d: number, o: { base: number; r: number; height: number; wave?: number; phase?: number; notch?: [number, number] }) {
+export function ribbonGeometry(w: number, d: number, o: { base: number; r: number; height: number; wave?: number; phase?: number; notch?: [number, number]; notchW?: [number, number] }) {
   const hw = w / 2, hd = d / 2;
   // the ribbon swells out and back as it wraps the building (fluid, like the Ibn Yassine bands); continuous all around
   const off = (theta: number) => o.base + (o.wave ? o.wave * (0.5 + 0.5 * Math.cos(2 * theta + (o.phase ?? 0))) : 0);
-  let shape: THREE.Shape;
-  if (o.notch) shape = notchedShape(hw, hd, o.r, off, o.notch[0], o.notch[1]);
+  let shape: THREE.Shape | THREE.Shape[];
+  if (o.notchW) shape = notchedShapesX(hw, hd, o.r, off, o.notchW, o.notch); // −x side open (skybridge), +x too if given
+  else if (o.notch) shape = notchedShape(hw, hd, o.r, off, o.notch[0], o.notch[1]);
   else {
     shape = new THREE.Shape(contour(hw, hd, o.r, off));
     const ih = new THREE.Path();
@@ -160,16 +203,17 @@ function piers(w: number, d: number, h: number, floor: number, cut: (side: Side)
 export function FloorFacade({ kind, floor, w, d, H, mats }: { kind: FacadeKind; floor: number; w: number; d: number; H: number; mats: FloorMats }) {
   const res = useMemo(() => {
     // stair tower on the +x façade: the ribbons stop against it, louvres / piers make room (walk/plan.ts)
+    // (and the skybridge on the +x side of the main building / the −x side of the head office)
     const cut = (side: Side) => sideCuts(kind, floor, side);
-    const tz = cut("+x");
-    const notch = tz.length ? ([Math.min(...tz.map((c) => c[0])) - 0.03, Math.max(...tz.map((c) => c[1])) + 0.03] as [number, number]) : undefined;
+    const span = (tz: [number, number][]) => tz.length ? ([Math.min(...tz.map((c) => c[0])) - 0.03, Math.max(...tz.map((c) => c[1])) + 0.03] as [number, number]) : undefined;
+    const notch = span(cut("+x")), notchW = span(cut("-x"));
     if (kind === "main") {
       const band = floor >= 1
-        ? ribbonGeometry(w, d, { base: 0.5 + 0.2 * (floor % 2), r: 4.2, height: 0.88, wave: 1.1, phase: [0, -0.9, 1.0, 2.6, -2.2][floor] ?? floor, notch })
+        ? ribbonGeometry(w, d, { base: 0.5 + 0.2 * (floor % 2), r: 4.2, height: 0.88, wave: 1.1, phase: [0, -0.9, 1.0, 2.6, -2.2][floor] ?? floor, notch, notchW })
         : null;
       return { band, louv: floor >= 1 ? louvres(w, d, H - 0.6, cut) : [], piers: null };
     }
-    const band = floor >= 1 ? ribbonGeometry(w, d, { base: 0.75, r: 0.5, height: 0.75, notch }) : null;
+    const band = floor >= 1 ? ribbonGeometry(w, d, { base: 0.75, r: 0.5, height: 0.75, notch, notchW }) : null;
     return { band, louv: [] as Box[], piers: piers(w, d, H, floor, cut) };
   }, [kind, floor, w, d, H]);
   const accent = useMemo(() => new THREE.MeshStandardMaterial({ color: "#C8734C", roughness: 0.85 }), []);

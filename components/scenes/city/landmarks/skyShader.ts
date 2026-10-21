@@ -19,7 +19,7 @@ const HAZE_FN = /* glsl */ `
 vec3 hazeColor(vec3 dir) {
   float sunUp = smoothstep(-0.12, 0.12, uSun.y);
   float twilight = smoothstep(-0.2, 0.0, uSun.y) * smoothstep(0.38, 0.0, uSun.y);
-  vec3 haze = mix(vec3(0.06, 0.08, 0.17), vec3(0.80, 0.84, 0.95), sunUp);
+  vec3 haze = mix(vec3(0.06, 0.08, 0.17), vec3(0.83, 0.86, 0.92), sunUp);
   vec2 hs = normalize(uSun.xz + 1e-4), hd = normalize(dir.xz + 1e-4);
   float towardSun = pow(max(dot(hs, hd), 0.0), 3.0);
   haze = mix(haze, vec3(0.98, 0.70, 0.55), twilight * (0.35 + 0.65 * towardSun) * 0.85);

@@ -57,7 +57,8 @@ const ROWS: [string, string][] = [
   ["E", "ouvrir / fermer les cas"],
   ["Échap", "libérer la souris · quitter"],
 ];
-const label = (where: string | null, floor: number, tower: boolean) => {
+const label = (where: string | null, floor: number, tower: boolean, bridge = false) => {
+  if (bridge) return "Passerelle · bâtiment principal ↔ siège";
   if (!where) return "Extérieur · parvis de l'hôpital";
   const b = where === "main" ? "Bâtiment principal" : "Siège";
   const f = floor === 0 ? "rez-de-chaussée" : floor === 1 ? "1er étage" : `${floor}e étage`;
@@ -112,7 +113,7 @@ export default function WalkHud() {
       {/* where the visitor is */}
       <div style={{ ...glass, position: "absolute", top: 84, left: "50%", transform: "translateX(-50%)", padding: "6px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 500, whiteSpace: "nowrap", transition: "opacity .4s", opacity: entering ? 0 : 1 }}>
         <span style={{ display: "inline-block", width: 7, height: 7, borderRadius: 7, background: "#8EA4FF", marginRight: 8, verticalAlign: 1 }} />
-        {label(walk.where, walk.floor, walk.tower)}
+        {label(walk.where, walk.floor, walk.tower, !!walk.bridge)}
       </div>
       {entering && (
         <div style={{ ...glass, position: "absolute", top: 84, left: "50%", transform: "translateX(-50%)", padding: "7px 15px", borderRadius: 999, fontSize: 12.5, whiteSpace: "nowrap" }}>

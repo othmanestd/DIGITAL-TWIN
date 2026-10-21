@@ -1,42 +1,38 @@
 "use client";
-// Stylised people of one floor (instanced: 6 draw calls per floor whatever the head count) + their AI agent companions.
-// Each figure is built from primitives (legs, coat/torso, arms, head, hair) and animated procedurally:
-// breathing, head turns, typing at desks, walking along short paths, lying in beds.
+// The staff and patients of one floor, drawn with the shared human kit (components/scenes/people/human.ts): one instanced
+// draw call per floor whatever the head count, dressed by role (white coats, teal / navy scrubs, light scrubs, business
+// casual, polos, jackets, gowns), plus their AI agent companions. Animated procedurally: breathing, look-around, typing at
+// desks (hands on the keyboard), seated exactly on their chairs (seat top, thighs level, feet on the floor), walking short
+// paths with a natural gait, lying in beds under the blanket; leaving staff stand up, walk to the department door and fade.
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { useApp } from "@/lib/store";
 import { registerAnchor } from "@/lib/anchors";
-import type { FloorLayout } from "./layout";
+import type { FloorLayout, Person } from "./layout";
 import { haloTexture, rt, type FloorMats } from "./mats";
 import { keptShrinkable, visibleStaff } from "./staffing";
 import { FINAL_YEAR, type Year } from "@/lib/model";
 import { W, walkOn } from "../walk/state";
+import { BONE, dress, hex, mixPose, newPose, poseIdle, poseLie, poseSit, poseType, poseWalk, type Garb } from "../people/human";
+import { useHumanCrowd } from "../people/useHumans";
 
-const legGeo = new THREE.CapsuleGeometry(0.085, 0.7, 2, 7).translate(0, -0.435, 0);
-const armGeo = new THREE.CapsuleGeometry(0.056, 0.5, 2, 6).translate(0, -0.3, 0);
-const torsoGeo = new THREE.CapsuleGeometry(0.2, 0.36, 3, 12);
-const headGeo = new THREE.SphereGeometry(0.13, 12, 9);
-const hairGeo = new THREE.SphereGeometry(0.138, 12, 5, 0, Math.PI * 2, 0, Math.PI * 0.56);
 const hitGeo = new THREE.BoxGeometry(0.75, 1.95, 0.7).translate(0, 0.97, 0);
-/** The figure's primitives, shared with the walk-mode visitor (components/scenes/walk/Visitor.tsx). */
-export const FIGURE = { legGeo, armGeo, torsoGeo, headGeo, hairGeo };
 /** person id → how present the figure is (1 drawn … 0 gone), for the walk-mode collisions. */
 export const PERSON_VIS = new Map<string, number>();
 
+/** Seat top of the layout's chairs (desk chairs, waiting rows, meeting chairs: layout.ts). */
+const SEAT_TOP = 0.5;
+/** A layout bed slot's y is the old figure's body centre: the mattress top is 0.14 lower. */
+const BED_DROP = 0.14;
+
 const Y = new THREE.Vector3(0, 1, 0);
 const qLie = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
-const _m = new THREE.Matrix4(), _root = new THREE.Matrix4(), _q = new THREE.Quaternion(), _qy = new THREE.Quaternion();
-const _e = new THREE.Euler(), _v = new THREE.Vector3(), _p = new THREE.Vector3(), _s = new THREE.Vector3(), _one = new THREE.Vector3(1, 1, 1);
-const _c = new THREE.Color(), _w = new THREE.Color("#FFFFFF"), _sel = new THREE.Color("#C8D3FF");
+const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _qy = new THREE.Quaternion();
+const _v = new THREE.Vector3(), _s = new THREE.Vector3();
+const _w = new THREE.Color("#FFFFFF"), _sel = new THREE.Color("#C8D3FF");
 const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
-
-function part(out: THREE.Matrix4, px: number, py: number, pz: number, rx: number, ry: number, rz: number, sx: number, sy: number, sz: number, order: THREE.EulerOrder = "XYZ") {
-  _e.set(rx, ry, rz, order);
-  _q.setFromEuler(_e);
-  _m.compose(_p.set(px, py, pz), _q, _s.set(sx, sy, sz));
-  out.multiplyMatrices(_root, _m);
-}
+const P0 = newPose(), P1 = newPose(), P2 = newPose();
 
 const smooth = (x: number) => { const t = Math.min(1, Math.max(0, x)); return t * t * (3 - 2 * t); };
 function dampAngle(a: number, b: number, k: number) {
@@ -45,13 +41,21 @@ function dampAngle(a: number, b: number, k: number) {
   while (d < -Math.PI) d += Math.PI * 2;
   return a + d * k;
 }
+function hash(s: string) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+/** The look of a layout person: their role's wardrobe, their skin and hair; patients in beds wear a gown, others are dressed. */
+function lookOf(p: Person) {
+  const garb: Garb = p.role === "patient" ? (p.slot.pose === "lie" ? "patient" : "visitor") : p.role;
+  const lab = p.label.toLowerCase();
+  const fem = /sage-femme|patiente\b|^infirmière|secrétaire/.test(lab) ? true : undefined;
+  return dress(garb, hash(p.id), { fem, skin: hex(p.skin), hair: p.hair ? hex(p.hair) : null, gown: p.slot.pose === "lie" ? true : undefined });
+}
 
 export default function People({ fl, mats, group, active }: {
   fl: FloorLayout; mats: FloorMats; group: React.RefObject<THREE.Group | null>; active: () => boolean;
 }) {
   const N = fl.people.length;
-  const torso = useRef<THREE.InstancedMesh>(null), head = useRef<THREE.InstancedMesh>(null), hair = useRef<THREE.InstancedMesh>(null);
-  const legs = useRef<THREE.InstancedMesh>(null), arms = useRef<THREE.InstancedMesh>(null), hit = useRef<THREE.InstancedMesh>(null);
+  const crowd = useHumanCrowd(N);
+  const hit = useRef<THREE.InstancedMesh>(null);
   const orb = useRef<THREE.InstancedMesh>(null), halo = useRef<THREE.InstancedMesh>(null);
   const agents = useMemo(() => fl.people.map((p, i) => (p.agent >= 0 ? i : -1)).filter((i) => i >= 0), [fl]);
   const st = useMemo(() => ({
@@ -79,27 +83,14 @@ export default function People({ fl, mats, group, active }: {
   selRef.current = selIdx;
   const camera = useThree((s) => s.camera);
 
-  // colours (re-applied when hover / selection changes)
+  // wardrobe (once per floor), highlight of the hovered / selected person
+  useLayoutEffect(() => { fl.people.forEach((p, i) => crowd.setLook(i, lookOf(p))); }, [fl, crowd]);
   useLayoutEffect(() => {
-    const setC = (mesh: THREE.InstancedMesh | null, per: number, f: (i: number) => string, hl = false) => {
-      if (!mesh) return;
-      for (let i = 0; i < N; i++) {
-        _c.set(f(i));
-        if (hl && i === selIdx) _c.lerp(_sel, 0.45);
-        else if (hl && i === hovIdx) _c.lerp(_w, 0.4);
-        for (let k = 0; k < per; k++) mesh.setColorAt(i * per + k, _c);
-      }
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    };
-    setC(torso.current, 1, (i) => fl.people[i].torso, true);
-    setC(arms.current, 2, (i) => fl.people[i].torso, true);
-    setC(legs.current, 2, (i) => fl.people[i].legs);
-    setC(head.current, 1, (i) => fl.people[i].skin);
-    setC(hair.current, 1, (i) => fl.people[i].hair ?? "#000000");
-  }, [fl, N, selIdx, hovIdx]);
+    for (let i = 0; i < N; i++) crowd.tint(i, i === selIdx ? _sel : i === hovIdx ? _w : null, i === selIdx ? 0.45 : 0.4);
+  }, [crowd, N, selIdx, hovIdx]);
 
   useLayoutEffect(() => {
-    for (const r of [torso, head, hair, legs, arms, hit, orb, halo]) {
+    for (const r of [hit, orb, halo]) {
       const m = r.current;
       if (!m) continue;
       m.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 1, 0), 40);
@@ -128,8 +119,9 @@ export default function People({ fl, mats, group, active }: {
     if (!g) return;
     if (!g.visible) return;
     g.updateWorldMatrix(true, false);
-    const T = torso.current!, H = head.current!, Hr = hair.current!, Lg = legs.current!, Ar = arms.current!, Hit = hit.current!;
-    if (T.parent && T.parent.parent && !T.parent.parent.visible) return; // floor interior not drawn (LOD)
+    const Hit = hit.current!, mesh = crowd.mesh;
+    if (mesh.parent && mesh.parent.parent && !mesh.parent.parent.visible) return; // floor interior not drawn (LOD)
+    crowd.sync(mats.figure);
     const dts = Math.min(dt, 0.25);
     const PL = pilotRef.current;
     for (let i = 0; i < N; i++) {
@@ -149,9 +141,9 @@ export default function People({ fl, mats, group, active }: {
       }
       if (selRef.current !== i && !yieldTo) st.clock[i] += dts;
       const ck = st.clock[i];
-      let x = s.x, z = s.z, yaw = s.yaw, hip = 0.88, legL = 0, legR = 0, armL = 0.02, armR = 0.02, hy = 0, hp = 0, bob = 0;
-      const y0 = s.y ?? 0;
-      const breathe = 1 + 0.013 * Math.sin(1.55 * t + sd);
+      const sc = crowd.height[i];
+      let x = s.x, z = s.z, yaw = s.yaw, y0 = s.y ?? 0;
+      const P = P0;
       if (s.pose === "walk" && s.path) {
         const [x1, z1, x2, z2] = s.path;
         const L = Math.hypot(x2 - x1, z2 - z1) || 1;
@@ -160,33 +152,25 @@ export default function People({ fl, mats, group, active }: {
         const a = (1 - Math.cos(ph)) / 2;
         const vel = Math.sin(ph);
         x = x1 + (x2 - x1) * a; z = z1 + (z2 - z1) * a;
-        const dist = a * L;
         const amp = Math.min(1, Math.abs(vel) * 2.4) * (selRef.current === i || yieldTo ? 0 : 1);
-        const gait = Math.sin(dist * 3.6);
-        legL = 0.5 * gait * amp; legR = -legL; armL = -0.38 * gait * amp; armR = -armL;
-        bob = 0.03 * Math.abs(gait) * amp;
+        const hc = Math.floor(ph / Math.PI), dist = (hc + (1 - Math.cos(ph - hc * Math.PI)) / 2) * L; // travelled, always forward
+        poseWalk(P, (dist * 3.6) / sc, amp, crowd.robe[i] === 1);
+        P.hy += 0.15 * Math.sin(0.4 * t + sd);
         const base = Math.atan2(x2 - x1, z2 - z1);
-        const target = vel >= 0 ? base : base + Math.PI;
-        st.yaw[i] = dampAngle(st.yaw[i], target, 1 - Math.exp(-dts * 5));
+        st.yaw[i] = dampAngle(st.yaw[i], vel >= 0 ? base : base + Math.PI, 1 - Math.exp(-dts * 5));
         yaw = st.yaw[i];
-        hy = 0.15 * Math.sin(0.4 * t + sd);
       } else if (s.pose === "sit") {
-        hip = 0.5; legL = legR = -1.05;
-        if (s.type) {
-          armL = -1.12 + 0.05 * Math.sin(12 * t + sd); armR = -1.12 + 0.05 * Math.sin(12 * t + sd + 1.9);
-          hp = 0.1 + 0.04 * Math.sin(0.3 * t + sd); hy = 0.12 * Math.sin(0.17 * t + sd) * Math.max(0, Math.sin(0.05 * t + sd));
-        } else {
-          armL = armR = -0.5; hy = 0.35 * Math.sin(0.19 * t + sd) * Math.sin(0.07 * t + sd * 2);
-        }
+        if (s.type) poseType(P, SEAT_TOP + y0, sc, t, sd, 0.785, 0.52); else poseSit(P, SEAT_TOP + y0, sc, t, sd);
+        y0 = 0;
       } else if (s.pose === "lie") {
-        hy = 0.3 * Math.sin(0.13 * t + sd); armL = armR = 0;
+        poseLie(P, t, sd);
+        y0 = (s.y ?? 0.76) - BED_DROP;
       } else {
-        hy = 0.42 * Math.sin(0.21 * t + sd) * Math.sin(0.083 * t + sd * 2.3);
-        hp = 0.05 * Math.sin(0.31 * t + sd);
-        armL = 0.03 + 0.03 * Math.sin(1.55 * t + sd); armR = 0.03 - 0.03 * Math.sin(1.55 * t + sd);
+        poseIdle(P, t, sd);
         yaw += 0.06 * Math.sin(0.11 * t + sd);
       }
       let vs = 1;
+      let out = P;
       if (pr < 0.999) {
         const w = smooth((1 - pr) / 0.7);              // walk towards the door …
         const [dx, dz] = p.door;
@@ -194,56 +178,35 @@ export default function People({ fl, mats, group, active }: {
         x = bx + (dx - bx) * w; z = bz + (dz - bz) * w;
         if (w > 0.001) {
           const up = smooth(w / 0.15);                  // … standing up first if seated
-          hip = hip + (0.88 - hip) * up;
-          const gait = Math.sin(w * Math.hypot(dx - bx, dz - bz) * 3.6) * up;
-          legL = legL * (1 - up) + 0.5 * gait; legR = legR * (1 - up) - 0.5 * gait;
-          armL = armL * (1 - up) - 0.38 * gait; armR = armR * (1 - up) + 0.38 * gait;
+          poseWalk(P1, (w * Math.hypot(dx - bx, dz - bz) * 3.6) / sc, up);
+          out = mixPose(P2, P, P1, up);
           yaw = dampAngle(yaw, Math.atan2(dx - bx, dz - bz), up);
         }
         vs = smooth(pr / 0.3);                          // … then fade (shrink) away at the door
       }
       st.vis[i] = vs;
       PERSON_VIS.set(p.id, vs);
+      crowd.write(i, x, y0, z, yaw, vs, out);
+      // hit proxy
       _qy.setFromAxisAngle(Y, yaw);
       if (s.pose === "lie") _qy.multiply(qLie);
-      _root.compose(_v.set(x, y0 + bob, z), _qy, _rs.set(vs, vs, vs));
-
-      // torso / coat
-      if (p.coat) part(_m, 0, hip + 0.2, 0, 0, 0, 0, 1.04, 1.32 * breathe, 0.76);
-      else part(_m, 0, hip + 0.34, 0, 0, 0, 0, 1, breathe, 0.72);
-      T.setMatrixAt(i, _m);
-      // head + hair
-      part(_m, 0, hip + 0.87, 0.01, hp, hy, 0, 1, 1, 1, "YXZ");
-      H.setMatrixAt(i, _m);
-      if (p.hair) {
-        part(_m, 0, hip + 0.875, 0.0, hp - 0.32, hy, 0, 1, 1, 1, "YXZ");
-        Hr.setMatrixAt(i, _m);
-      } else Hr.setMatrixAt(i, ZERO);
-      // legs
-      part(_m, -0.1, hip, 0, legL, 0, 0, 1, 1, 1); Lg.setMatrixAt(i * 2, _m);
-      part(_m, 0.1, hip, 0, legR, 0, 0, 1, 1, 1); Lg.setMatrixAt(i * 2 + 1, _m);
-      // arms
-      part(_m, -0.26, hip + 0.62, 0, armL, 0, -0.07, 1, 1, 1); Ar.setMatrixAt(i * 2, _m);
-      part(_m, 0.26, hip + 0.62, 0, armR, 0, 0.07, 1, 1, 1); Ar.setMatrixAt(i * 2 + 1, _m);
-      // hit proxy
       if (pr < 0.3) Hit.setMatrixAt(i, ZERO);
-      else { part(_m, 0, s.pose === "sit" ? -0.25 : 0, 0, 0, 0, 0, 1, 1, 1); Hit.setMatrixAt(i, _m); }
+      else { _m.compose(_v.set(x, y0 + (s.pose === "sit" ? -0.25 * vs : 0), z), _qy, _s.set(vs, vs, vs)); Hit.setMatrixAt(i, _m); }
       // pilots: the remaining staff of a shrinking department get a soft blue halo once agents are at work
       if (PL) {
         const pt = shrinks[i] && tgt > 0.5 ? smooth(rt.eco / 0.3) : 0;
         st.pilot[i] += (pt - st.pilot[i]) * Math.min(1, dts * 2);
         const k = st.pilot[i] * vs;
         if (k < 0.01) PL.setMatrixAt(i, ZERO);
-        else { _m.compose(_v.set(x, y0 + 0.025, z), qFlat, _rs.set(1.5 * k, 1.5 * k, 1.5 * k)); PL.setMatrixAt(i, _m); }
+        else { _m.compose(_v.set(x, (s.y ?? 0) + 0.025, z), qFlat, _rs.set(1.5 * k, 1.5 * k, 1.5 * k)); PL.setMatrixAt(i, _m); }
       }
       // chest in world space (anchors, highlight ring, tooltips)
-      st.local[i].set(0, hip + 0.3, 0).applyMatrix4(_root);
+      crowd.point(st.local[i], BONE.chest, 0, 0.2, 0);
       st.chest[i].copy(st.local[i]).applyMatrix4(g.matrixWorld);
       rt.pos.set(p.id, st.chest[i]);
     }
-    T.instanceMatrix.needsUpdate = true; H.instanceMatrix.needsUpdate = true; Hr.instanceMatrix.needsUpdate = true;
     if (PL) PL.instanceMatrix.needsUpdate = true;
-    Lg.instanceMatrix.needsUpdate = true; Ar.instanceMatrix.needsUpdate = true; Hit.instanceMatrix.needsUpdate = true;
+    Hit.instanceMatrix.needsUpdate = true;
 
     // AI agents: one luminous companion per assisted staff member, appearing along the programme ramp
     const O = orb.current, Hl = halo.current;
@@ -260,15 +223,15 @@ export default function People({ fl, mats, group, active }: {
         const lx = sit ? 0.62 : 0.5, lz = sit ? 0.15 : 0.1, h = (sit ? 1.45 : 2.05) + 0.07 * Math.sin(1.3 * t + sd);
         const orbit = 0.12 * Math.sin(0.6 * t + sd);
         const c = Math.cos(yaw), sn = Math.sin(yaw);
-        // person position (floor-local) from the chest (world) minus the floor offset
+        // person position (floor-local) from the chest
         const px = st.local[i].x, pz = st.local[i].z;
         const tx = px + (lx + orbit) * c + lz * sn, tz = pz - (lx + orbit) * sn + lz * c, ty = (s.y ?? 0) + h;
         const o = st.orb[i];
         if (Number.isNaN(o.x)) o.set(tx, ty, tz); else o.set(o.x + (tx - o.x) * k, o.y + (ty - o.y) * k, o.z + (tz - o.z) * k);
-        const sc = a * st.vis[i] * (1 + 0.06 * Math.sin(2.1 * t + sd));
-        _m.compose(o, _q.identity(), _s.set(sc, sc, sc));
+        const scl = a * st.vis[i] * (1 + 0.06 * Math.sin(2.1 * t + sd));
+        _m.compose(o, _q.identity(), _s.set(scl, scl, scl));
         O.setMatrixAt(j, _m);
-        _m.compose(o, camera.quaternion, _s.set(sc * 1.15, sc * 1.15, sc * 1.15));
+        _m.compose(o, camera.quaternion, _s.set(scl * 1.15, scl * 1.15, scl * 1.15));
         Hl.setMatrixAt(j, _m);
       }
       O.instanceMatrix.needsUpdate = true; Hl.instanceMatrix.needsUpdate = true;
@@ -302,11 +265,7 @@ export default function People({ fl, mats, group, active }: {
 
   return (
     <group>
-      <instancedMesh ref={torso} args={[torsoGeo, mats.figure, N]} castShadow receiveShadow />
-      <instancedMesh ref={head} args={[headGeo, mats.figure, N]} castShadow />
-      <instancedMesh ref={hair} args={[hairGeo, mats.figure, N]} castShadow />
-      <instancedMesh ref={legs} args={[legGeo, mats.figure, N * 2]} castShadow />
-      <instancedMesh ref={arms} args={[armGeo, mats.figure, N * 2]} castShadow />
+      <primitive object={crowd.mesh} />
       <instancedMesh ref={hit} args={[hitGeo, mats.hit, N]} onPointerMove={onMove} onPointerOut={onOut} onClick={onClick} />
       <instancedMesh ref={pilotRef} args={[pilotGeo, pilotMatGet(), N]} renderOrder={4} frustumCulled={false} />
       {agents.length > 0 && (
