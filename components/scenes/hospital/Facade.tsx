@@ -7,6 +7,7 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { GEO, type FloorMats } from "./mats";
+import { inCuts, sideCuts, subtract, type Side } from "../walk/plan";
 
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _v = new THREE.Vector3(), _s = new THREE.Vector3();
 type Box = { x: number; y: number; z: number; sx: number; sy: number; sz: number; yaw?: number };
@@ -49,16 +50,49 @@ function contour(hw: number, hd: number, r: number, off: (theta: number) => numb
   return pts;
 }
 
-/** A white ribbon (ring) around a plate: inner edge at the façade line, outer edge = waving rounded rectangle. */
-export function ribbonGeometry(w: number, d: number, o: { base: number; r: number; height: number; wave?: number; phase?: number }) {
+/** The ribbon as a "C": open on the +x side over z in [za, zb] (where a stair tower meets the façade). */
+function notchedShape(hw: number, hd: number, r: number, off: (theta: number) => number, za: number, zb: number, n = 22) {
+  const pts: THREE.Vector2[] = [];
+  const push = (x: number, z: number, nx: number, nz: number) => {
+    const o = off(Math.atan2(z / hd, x / hw));
+    pts.push(new THREE.Vector2(x + nx * o, -(z + nz * o)));
+  };
+  const side = (z0: number, z1: number, last: boolean) => {
+    const k = Math.max(2, Math.ceil((Math.abs(z1 - z0) / (2 * hd)) * n));
+    for (let i = 0; i < k + (last ? 1 : 0); i++) push(hw, z0 + ((z1 - z0) * i) / k, 1, 0);
+  };
+  const seg = (x0: number, z0: number, x1: number, z1: number, nx: number, nz: number) => {
+    for (let i = 0; i < n; i++) { const t = i / n; push(x0 + (x1 - x0) * t, z0 + (z1 - z0) * t, nx, nz); }
+  };
+  const arc = (cx: number, cz: number, a0: number) => {
+    for (let i = 0; i < 8; i++) { const a = a0 - (i / 8) * (Math.PI / 2); push(cx + Math.cos(a) * r, cz + Math.sin(a) * r, Math.cos(a), Math.sin(a)); }
+  };
+  side(za, -hd + r, false); arc(hw - r, -hd + r, 0);
+  seg(hw - r, -hd, -hw + r, -hd, 0, -1); arc(-hw + r, -hd + r, -Math.PI / 2);
+  seg(-hw, -hd + r, -hw, hd - r, -1, 0); arc(-hw + r, hd - r, Math.PI);
+  seg(-hw + r, hd, hw - r, hd, 0, 1); arc(hw - r, hd - r, Math.PI / 2);
+  side(hd - r, zb, true);
+  // back along the inner edge (0.25 m inside the façade line), the other way round
+  const iw = hw - 0.25, idd = hd - 0.25;
+  for (const [x, z] of [[iw, zb], [iw, idd], [-iw, idd], [-iw, -idd], [iw, -idd], [iw, za]]) pts.push(new THREE.Vector2(x, -z));
+  return new THREE.Shape(pts);
+}
+
+/** A white ribbon (ring) around a plate: inner edge at the façade line, outer edge = waving rounded rectangle.
+ *  `notch` opens the ring on the +x side over that z range (building-local), where a stair tower adjoins the façade. */
+export function ribbonGeometry(w: number, d: number, o: { base: number; r: number; height: number; wave?: number; phase?: number; notch?: [number, number] }) {
   const hw = w / 2, hd = d / 2;
   // the ribbon swells out and back as it wraps the building (fluid, like the Ibn Yassine bands); continuous all around
   const off = (theta: number) => o.base + (o.wave ? o.wave * (0.5 + 0.5 * Math.cos(2 * theta + (o.phase ?? 0))) : 0);
-  const shape = new THREE.Shape(contour(hw, hd, o.r, off));
-  const ih = new THREE.Path();
-  const iw = hw - 0.25, idd = hd - 0.25;
-  ih.moveTo(-iw, -idd); ih.lineTo(iw, -idd); ih.lineTo(iw, idd); ih.lineTo(-iw, idd); ih.lineTo(-iw, -idd);
-  shape.holes.push(ih);
+  let shape: THREE.Shape;
+  if (o.notch) shape = notchedShape(hw, hd, o.r, off, o.notch[0], o.notch[1]);
+  else {
+    shape = new THREE.Shape(contour(hw, hd, o.r, off));
+    const ih = new THREE.Path();
+    const iw = hw - 0.25, idd = hd - 0.25;
+    ih.moveTo(-iw, -idd); ih.lineTo(iw, -idd); ih.lineTo(iw, idd); ih.lineTo(-iw, idd); ih.lineTo(-iw, -idd);
+    shape.holes.push(ih);
+  }
   const g = new THREE.ExtrudeGeometry(shape, { depth: o.height, bevelEnabled: true, bevelThickness: 0.07, bevelSize: 0.07, bevelSegments: 2, curveSegments: 6 });
   g.rotateX(-Math.PI / 2);
   return g;
@@ -67,8 +101,9 @@ export function ribbonGeometry(w: number, d: number, o: { base: number; r: numbe
 // ---------------------------------------------------------------- per-floor façade
 export type FacadeKind = "main" | "annex";
 
-/** Louvres (horizontal slats) for a main-building floor, with a few vertical dark-glass strips left free. */
-function louvres(w: number, d: number, top: number): Box[] {
+/** Louvres (horizontal slats) for a main-building floor, with a few vertical dark-glass strips left free
+ *  (and none where a stair tower or an entrance meets the façade: `cut` per side, building-local). */
+function louvres(w: number, d: number, top: number, cut: (side: Side) => [number, number][] = () => []): Box[] {
   const out: Box[] = [];
   const gx = w / 2 + 0.42, gz = d / 2 + 0.42;
   const ys: number[] = [];
@@ -82,31 +117,33 @@ function louvres(w: number, d: number, top: number): Box[] {
     return r;
   };
   const front = runs(w, [-14.5, 9.5]), side = runs(d, [2.5]);
+  const cuts = { "+z": cut("+z"), "-z": cut("-z"), "+x": cut("+x"), "-x": cut("-x") };
   for (const y of ys) {
-    for (const [a, b] of front) {
-      out.push({ x: (a + b) / 2, y, z: gz, sx: b - a, sy: 0.07, sz: 0.2 });
-      out.push({ x: (a + b) / 2, y, z: -gz, sx: b - a, sy: 0.07, sz: 0.2 });
+    for (const [a0, b0] of front) {
+      for (const [a, b] of subtract(a0, b0, cuts["+z"])) out.push({ x: (a + b) / 2, y, z: gz, sx: b - a, sy: 0.07, sz: 0.2 });
+      for (const [a, b] of subtract(a0, b0, cuts["-z"])) out.push({ x: (a + b) / 2, y, z: -gz, sx: b - a, sy: 0.07, sz: 0.2 });
     }
-    for (const [a, b] of side) {
-      out.push({ x: gx, y, z: (a + b) / 2, sx: 0.2, sy: 0.07, sz: b - a });
-      out.push({ x: -gx, y, z: (a + b) / 2, sx: 0.2, sy: 0.07, sz: b - a });
+    for (const [a0, b0] of side) {
+      for (const [a, b] of subtract(a0, b0, cuts["+x"])) out.push({ x: gx, y, z: (a + b) / 2, sx: 0.2, sy: 0.07, sz: b - a });
+      for (const [a, b] of subtract(a0, b0, cuts["-x"])) out.push({ x: -gx, y, z: (a + b) / 2, sx: 0.2, sy: 0.07, sz: b - a });
     }
   }
   return out;
 }
 
 /** Staggered vertical piers (fins) of the head office + planters on some bays. */
-function piers(w: number, d: number, h: number, floor: number): { piers: Box[]; planters: Box[]; plants: Box[] } {
+function piers(w: number, d: number, h: number, floor: number, cut: (side: Side) => [number, number][] = () => []): { piers: Box[]; planters: Box[]; plants: Box[] } {
   const P: Box[] = [], pl: Box[] = [], pt: Box[] = [];
   const step = 2.2, stag = floor % 2 ? step / 2 : 0;
   const gx = w / 2 + 0.3, gz = d / 2 + 0.3;
+  const cuts = { "+z": cut("+z"), "-z": cut("-z"), "+x": cut("+x"), "-x": cut("-x") };
   for (let x = -w / 2 + 0.6 + stag; x <= w / 2 - 0.5; x += step) {
-    P.push({ x, y: h / 2, z: gz, sx: 0.42, sy: h, sz: 0.75 });
-    P.push({ x, y: h / 2, z: -gz, sx: 0.42, sy: h, sz: 0.75 });
+    if (!inCuts(x, cuts["+z"])) P.push({ x, y: h / 2, z: gz, sx: 0.42, sy: h, sz: 0.75 });
+    if (!inCuts(x, cuts["-z"])) P.push({ x, y: h / 2, z: -gz, sx: 0.42, sy: h, sz: 0.75 });
   }
   for (let z = -d / 2 + 0.6 + stag; z <= d / 2 - 0.5; z += step) {
-    P.push({ x: gx, y: h / 2, z, sx: 0.75, sy: h, sz: 0.42 });
-    P.push({ x: -gx, y: h / 2, z, sx: 0.75, sy: h, sz: 0.42 });
+    if (!inCuts(z, cuts["+x"])) P.push({ x: gx, y: h / 2, z, sx: 0.75, sy: h, sz: 0.42 });
+    if (!inCuts(z, cuts["-x"])) P.push({ x: -gx, y: h / 2, z, sx: 0.75, sy: h, sz: 0.42 });
   }
   if (floor > 0) {
     // planted balconies: a few bays on the front and on the right side
@@ -122,14 +159,18 @@ function piers(w: number, d: number, h: number, floor: number): { piers: Box[]; 
 
 export function FloorFacade({ kind, floor, w, d, H, mats }: { kind: FacadeKind; floor: number; w: number; d: number; H: number; mats: FloorMats }) {
   const res = useMemo(() => {
+    // stair tower on the +x façade: the ribbons stop against it, louvres / piers make room (walk/plan.ts)
+    const cut = (side: Side) => sideCuts(kind, floor, side);
+    const tz = cut("+x");
+    const notch = tz.length ? ([Math.min(...tz.map((c) => c[0])) - 0.03, Math.max(...tz.map((c) => c[1])) + 0.03] as [number, number]) : undefined;
     if (kind === "main") {
       const band = floor >= 1
-        ? ribbonGeometry(w, d, { base: 0.5 + 0.2 * (floor % 2), r: 4.2, height: 0.88, wave: 1.1, phase: [0, -0.9, 1.0, 2.6, -2.2][floor] ?? floor })
+        ? ribbonGeometry(w, d, { base: 0.5 + 0.2 * (floor % 2), r: 4.2, height: 0.88, wave: 1.1, phase: [0, -0.9, 1.0, 2.6, -2.2][floor] ?? floor, notch })
         : null;
-      return { band, louv: floor >= 1 ? louvres(w, d, H - 0.6) : [], piers: null };
+      return { band, louv: floor >= 1 ? louvres(w, d, H - 0.6, cut) : [], piers: null };
     }
-    const band = floor >= 1 ? ribbonGeometry(w, d, { base: 0.75, r: 0.5, height: 0.75 }) : null;
-    return { band, louv: [] as Box[], piers: piers(w, d, H, floor) };
+    const band = floor >= 1 ? ribbonGeometry(w, d, { base: 0.75, r: 0.5, height: 0.75, notch }) : null;
+    return { band, louv: [] as Box[], piers: piers(w, d, H, floor, cut) };
   }, [kind, floor, w, d, H]);
   const accent = useMemo(() => new THREE.MeshStandardMaterial({ color: "#C8734C", roughness: 0.85 }), []);
   useLayoutEffect(() => () => { res.band?.dispose(); accent.dispose(); }, [res, accent]);

@@ -62,6 +62,10 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 
 @layer components {
+/* sign-in pages: a faint dashed orbit turning very slowly */
+.gate-orbit { border-style: dashed; animation: gate-spin 240s linear infinite; }
+@keyframes gate-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .gate-orbit { animation: none; } }
 /* ---------------------------------------------------------------- adaptive ink (lib/ui/tone.ts, set by ToneSampler)
    icons over the 3D scene: white over dark ground, dark over light ground */
 .tone-adapt { color: var(--txt-2); transition: color .3s ease, background-color .2s ease, opacity .3s ease; }

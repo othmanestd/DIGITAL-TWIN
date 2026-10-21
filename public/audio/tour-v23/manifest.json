@@ -1,0 +1,258 @@
+{
+  "generated": "2026-10-21T05:06:39.397Z",
+  "voice": "Iapetus",
+  "beats": {
+    "x-constat": {
+      "file": "x-constat.mp3",
+      "duration": 19.65,
+      "hash": "2f24c6a127d4",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "x-amina": {
+      "file": "x-amina.mp3",
+      "duration": 33.07,
+      "hash": "65f5360b025c",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "x-titre": {
+      "file": "x-titre.mp3",
+      "duration": 34.29,
+      "hash": "1aa27ca55d6b",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "x-salma": {
+      "file": "x-salma.mp3",
+      "duration": 33.32,
+      "hash": "4dd960b0a39e",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "x-karim": {
+      "file": "x-karim.mp3",
+      "duration": 27.65,
+      "hash": "d5360be5e948",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "x-hicham": {
+      "file": "x-hicham.mp3",
+      "duration": 32.74,
+      "hash": "34d51db204f8",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "x-fin": {
+      "file": "x-fin.mp3",
+      "duration": 24.62,
+      "hash": "bbbc2c606b63",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "x-compte": {
+      "file": "x-compte.mp3",
+      "duration": 32.83,
+      "hash": "02958b4c30eb",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "x-youssef": {
+      "file": "x-youssef.mp3",
+      "duration": 32.13,
+      "hash": "dbe45ef2aded",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "x-ligne": {
+      "file": "x-ligne.mp3",
+      "duration": 10.4,
+      "hash": "35d59e126f7a",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "o-titre": {
+      "file": "o-titre.mp3",
+      "duration": 24.53,
+      "hash": "48375aac5f1b",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "o-cast": {
+      "file": "o-cast.mp3",
+      "duration": 28.07,
+      "hash": "f39a106d638f",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-constat": {
+      "file": "c-constat.mp3",
+      "duration": 31.31,
+      "hash": "b93c8d790f5e",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-amina-hall": {
+      "file": "c-amina-hall.mp3",
+      "duration": 28.49,
+      "hash": "dc7d691815e2",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-amina-appel": {
+      "file": "c-amina-appel.mp3",
+      "duration": 37.16,
+      "hash": "be0c469c5f55",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-amina-valeur": {
+      "file": "c-amina-valeur.mp3",
+      "duration": 28.1,
+      "hash": "51d0fe69b6c9",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-salma-avant": {
+      "file": "c-salma-avant.mp3",
+      "duration": 18.61,
+      "hash": "00665c18992c",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-salma-apres": {
+      "file": "c-salma-apres.mp3",
+      "duration": 28.63,
+      "hash": "9dcc209a35d5",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-salma-valeur": {
+      "file": "c-salma-valeur.mp3",
+      "duration": 33.3,
+      "hash": "fe89a9df144a",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-karim-avant": {
+      "file": "c-karim-avant.mp3",
+      "duration": 19.92,
+      "hash": "fc99669089dc",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-karim-valeur": {
+      "file": "c-karim-valeur.mp3",
+      "duration": 22.21,
+      "hash": "08cc03bfd5d5",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-karim-apres": {
+      "file": "c-karim-apres.mp3",
+      "duration": 31.51,
+      "hash": "4791018a85d1",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-hicham": {
+      "file": "c-hicham.mp3",
+      "duration": 36.02,
+      "hash": "b5ad654ba4af",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-hicham-valeur": {
+      "file": "c-hicham-valeur.mp3",
+      "duration": 22.42,
+      "hash": "a75de465c464",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-nouveau": {
+      "file": "c-nouveau.mp3",
+      "duration": 35.43,
+      "hash": "c35e7a3d3de7",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-youssef": {
+      "file": "c-youssef.mp3",
+      "duration": 32.67,
+      "hash": "1c4937ba9610",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-siege": {
+      "file": "c-siege.mp3",
+      "duration": 32.39,
+      "hash": "fa2158dc99d8",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-emplois": {
+      "file": "c-emplois.mp3",
+      "duration": 42.88,
+      "hash": "2b0164a68c4f",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-net": {
+      "file": "c-net.mp3",
+      "duration": 21.71,
+      "hash": "e7d9d80ce980",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-leila": {
+      "file": "c-leila.mp3",
+      "duration": 38.82,
+      "hash": "7128d2bee981",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-casa": {
+      "file": "c-casa.mp3",
+      "duration": 10.34,
+      "hash": "6e960e181246",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-maroc": {
+      "file": "c-maroc.mp3",
+      "duration": 20.07,
+      "hash": "13a78880f669",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-decision": {
+      "file": "c-decision.mp3",
+      "duration": 29.99,
+      "hash": "ef3c37e41e0e",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-courbe": {
+      "file": "c-courbe.mp3",
+      "duration": 40.25,
+      "hash": "3360bec4e981",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-monde": {
+      "file": "c-monde.mp3",
+      "duration": 12.78,
+      "hash": "31dd8e677cfb",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    },
+    "c-ligne": {
+      "file": "c-ligne.mp3",
+      "duration": 15.7,
+      "hash": "48453775e30b",
+      "model": "gemini-2.5-flash-preview-tts",
+      "voice": "Iapetus"
+    }
+  }
+}

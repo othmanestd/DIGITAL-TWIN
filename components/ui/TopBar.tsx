@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useApp, type Section } from "@/lib/store";
-import { yearTotals, YEAR_LABEL } from "@/lib/model";
+import { yearTotals, YEAR_LABEL, V23, DATASET } from "@/lib/model";
+import { DATASET_LABEL } from "@/lib/data/dataset";
 import { Num, Segmented, Tip, GlassDefs } from "./kit";
 import { I } from "./icons";
 import AkditalLogo from "./AkditalLogo";
@@ -13,15 +14,8 @@ import s from "./styles";
 
 if (typeof window !== "undefined") (window as unknown as { __atlas: typeof useApp }).__atlas = useApp;
 
-export function JabbMark({ size = 18, color = "#fff" }: { size?: number; color?: string }) {
-  return (
-    <svg viewBox="0 0 196 291" height={size} width={(size * 196) / 291} fill={color} aria-hidden>
-      <path d="M151.5,193.8c0,18.4-3.8,33-11.5,43.9c-7.6,10.9-21.6,16.4-41.8,16.4c-10.9,0-19.9-1.6-26.9-4.9s-12.5-7.9-16.4-13.8c-3.9-5.9-6.6-12.9-8.2-21c-1.6-8.1-2.3-17-2.3-26.6v-14H0v20.6c0,31.8,8.4,55.9,25.2,72.2c16.8,16.4,40.8,24.5,72,24.5c18.7,0,34.4-2.6,47-7.7c12.6-5.1,22.7-12,30.4-20.6c7.6-8.6,13.1-18.3,16.4-29.2c3.3-10.9,4.9-22,4.9-33.2v-27.1h-44.4V193.8z" />
-      <polygon points="151.5,27 151.5,149.3 195.9,149.3 195.9,0" />
-      <circle cx="32.7" cy="52" r="25" />
-    </svg>
-  );
-}
+export { JabbMark } from "./JabbMark";
+import { JabbMark } from "./JabbMark";
 
 export function Brand({ compact = false }: { compact?: boolean }) {
   // Akdital first (the client), the two partners smaller underneath: same order as the zoomed-out logo
@@ -44,11 +38,17 @@ export function Brand({ compact = false }: { compact?: boolean }) {
 function Ticker({ mode }: { mode: "full" | "compact" }) {
   const year = useApp((st) => st.year);
   const t = yearTotals(year);
-  const all = [
-    { v: t.eco, label: "économisés", tip: "Masse salariale économisée sur l'année, en MDH (millions de dirhams).", color: "var(--green)" },
-    { v: t.cout, label: "d'agents", tip: "Coût de fonctionnement des agents IA sur l'année (licences, calcul, supervision), en MDH (millions de dirhams).", color: "var(--txt-2)" },
-    { v: t.net, label: "nets", tip: "Gain net : économie moins coût des agents, en MDH (millions de dirhams).", color: "#fff" },
-  ];
+  const all = V23
+    ? [
+        { v: t.eco, label: "de gains", tip: "Gains bruts de l'année : économies (masse salariale et hors masse salariale) plus la marge sur le CA additionnel, en MDH (millions de dirhams).", color: "var(--green)" },
+        { v: t.cout, label: "de coût", tip: "Coût du programme sur l'année : agents, plateformes, coûts transverses et contingence, en MDH (millions de dirhams).", color: "var(--txt-2)" },
+        { v: t.net, label: "nets", tip: "Valeur nette : gains bruts moins coût du programme, en MDH (millions de dirhams).", color: "#fff" },
+      ]
+    : [
+        { v: t.eco, label: "économisés", tip: "Masse salariale économisée sur l'année, en MDH (millions de dirhams).", color: "var(--green)" },
+        { v: t.cout, label: "d'agents", tip: "Coût de fonctionnement des agents IA sur l'année (licences, calcul, supervision), en MDH (millions de dirhams).", color: "var(--txt-2)" },
+        { v: t.net, label: "nets", tip: "Gain net : économie moins coût des agents, en MDH (millions de dirhams).", color: "#fff" },
+      ];
   const items = mode === "full" ? all : [all[2]];
   return (
     <div className="flex shrink-0 items-center gap-2.5" data-anchor="ticker">
@@ -124,6 +124,11 @@ export default function TopBar() {
       <div className="relative grid h-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-5 px-5">
         <div className={`pointer-events-auto flex min-w-0 items-center gap-5 overflow-hidden transition-opacity duration-300 ${searchOpen ? "opacity-30" : ""}`}>
           <button type="button" className="shrink-0" onClick={() => useApp.getState().home()} title="Retour à l'hôpital type" data-anchor="home"><Brand compact={compactBrand} /></button>
+          <Tip content={<>Jeu de données : <b className="text-[var(--txt)]">{DATASET_LABEL[DATASET].name}</b> ({DATASET_LABEL[DATASET].short}). Cliquez pour changer.</>} side="bottom">
+            <a href="/choisir" data-anchor="dataset" className={`shrink-0 rounded-full px-2 py-[3px] text-[10px] font-semibold tracking-[0.02em] ring-1 transition-colors ${V23 ? "bg-[rgba(76,199,154,.14)] text-[var(--green)] ring-[rgba(76,199,154,.35)] hover:bg-[rgba(76,199,154,.22)]" : "bg-white/[0.06] text-[var(--txt-2)] ring-white/[0.1] hover:bg-white/[0.1]"}`}>
+              {DATASET_LABEL[DATASET].short}
+            </a>
+          </Tip>
           {tickerMode && <span className="h-6 w-px shrink-0 bg-white/10" />}
           {tickerMode && <Ticker mode={tickerMode} />}
         </div>

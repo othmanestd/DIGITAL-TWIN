@@ -68,6 +68,16 @@ export const TOOL_DEFS = [
   },
 ] as const;
 
+/** The tools for a dataset: v23 has a 2026 → 2031 timeline and a Finances section. */
+export function toolDefs(v23: boolean) {
+  if (!v23) return TOOL_DEFS;
+  return TOOL_DEFS.map((t) => {
+    if (t.function.name === "set_year") return { type: "function", function: { name: "set_year", description: "Place la frise sur une année : 2026 (aujourd'hui), 2027 … 2031 (horizon du business case v2.3).", parameters: { type: "object", properties: { year: { type: "integer", enum: [2026, 2027, 2028, 2029, 2030, 2031] } }, required: ["year"], additionalProperties: false } } };
+    if (t.function.name === "open_section") return { type: "function", function: { name: "open_section", description: "Ouvre une section plein écran : synthese, finances (le business case v2.3 : pont, années, scénarios), cas (les 85 cas), gouvernance, emplois (zéro licenciement), deploiement (vagues), sources ; explorer = retour à la vue 3D.", parameters: { type: "object", properties: { section: { type: "string", enum: ["explorer", "synthese", "finances", "cas", "preuves", "gouvernance", "emplois", "deploiement", "sources"] } }, required: ["section"], additionalProperties: false } } };
+    return t;
+  });
+}
+
 export function parseToolCall(name: string, raw: string): ToolCall | null {
   if (!(TOOL_NAMES as readonly string[]).includes(name)) return null;
   try {

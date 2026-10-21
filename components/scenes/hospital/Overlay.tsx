@@ -7,7 +7,7 @@ import { createRoot } from "react-dom/client";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { ANNEX, DEPT, DEPTS, FLOOR_H, KIND_COLOR, MAIN, type Dept } from "@/lib/hospital";
-import { CASE, agg, fr } from "@/lib/model";
+import { CASE, agg, fr, V23 } from "@/lib/model";
 import { useApp } from "@/lib/store";
 import { PERSON_BY_ID } from "./layout";
 import { rt } from "./mats";
@@ -78,7 +78,7 @@ function DeptChip({ d, on, focus }: { d: Dept; on: boolean; focus: string | null
         )}
         {outN > 0 && (
           <span style={{ fontSize: 10.5, color: "#C9C2F0", padding: "1px 6px", borderRadius: 999, background: "rgba(155,140,224,0.18)" }}>
-            {in302.length ? `+${outN} hors masse salariale` : "hors masse salariale"}
+            {V23 ? `+${outN} fusionné${outN > 1 ? "s" : ""}` : in302.length ? `+${outN} hors masse salariale` : "hors masse salariale"}
           </span>
         )}
         {!has && (
@@ -196,10 +196,15 @@ function OverlayUI() {
   const level = useApp((s) => s.level);
   const f = focusOf(sel);
   const live = level === "hospital";
+  // walk mode: only the departments of the visitor's floor (wayfinding), no floor chips
+  const walk = useApp((s) => s.walk);
+  const walking = walk.phase !== "off";
+  const walkFloor = walk.phase === "on" && walk.where && !walk.tower ? `${walk.where}:${walk.floor}` : null;
   return (
     <>
-      {DEPTS.map((d) => <DeptChip key={d.id} d={d} on={live && f.floor === `${d.building}:${d.floor}`} focus={f.dept} />)}
-      {CHIPS.map((c) => <FloorChip key={c.key} c={c} on={live && !f.floor} />)}
+      {DEPTS.map((d) => <DeptChip key={d.id} d={d} focus={f.dept}
+        on={live && (walking ? (walk.view === "first" ? walk.near === d.id : walkFloor === `${d.building}:${d.floor}`) : f.floor === `${d.building}:${d.floor}`)} />)}
+      {CHIPS.map((c) => <FloorChip key={c.key} c={c} on={live && !f.floor && !walking} />)}
       <PersonTip />
       <YearCaption on={live} />
     </>

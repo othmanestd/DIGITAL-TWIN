@@ -1,5 +1,5 @@
-import AtlasApp from "@/components/AtlasApp";
+import AtlasClient from "@/components/AtlasClient";
 
 export default function Page() {
-  return <AtlasApp />;
+  return <AtlasClient />;
 }

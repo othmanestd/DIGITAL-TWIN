@@ -5,7 +5,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { KIND_COLOR, FLOOR_H, type Dept } from "@/lib/hospital";
-import { META, fr } from "@/lib/model";
+import { META, fr, V23 } from "@/lib/model";
 import { useApp } from "@/lib/store";
 import { registerAnchor } from "@/lib/anchors";
 import type { FloorLayout, Part } from "./layout";
@@ -16,6 +16,10 @@ import { FourthFloor } from "./Twin";
 import { Ambient } from "./Ambient";
 import People, { THREE_STATE } from "./People";
 import { isHidden } from "./nav";
+import { Openings, glassPanels, openSides } from "./Openings";
+import { FpCeiling, WallInst } from "./WalkInterior";
+import { columnCut, openingsOf, type BId, type Side } from "../walk/plan";
+import { W, floorCut } from "../walk/state";
 
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _v = new THREE.Vector3(), _s = new THREE.Vector3();
 
@@ -46,24 +50,47 @@ function corridorBands(floor: number): [number, number, number, number][] {
 /** desk fold factor from its person's presence: folds while the person walks away */
 const deskFold = (pr: number) => { const t = Math.min(1, Math.max(0, (pr - 0.2) / 0.5)); return t * t * (3 - 2 * t); };
 
-/** Façade elements (columns, mullions, rails) for a plate of w × d. */
-function shellParts(w: number, d: number, h: number, basement: boolean): { cols: Part[]; mull: Part[] } {
+/** Façade elements (columns, mullions, rails) for a plate of w × d — none inside a door opening (walk/plan.ts). */
+function shellParts(w: number, d: number, h: number, basement: boolean, b: BId, floor: number): { cols: Part[]; mull: Part[] } {
   const cols: Part[] = [], mull: Part[] = [];
   const P = (x: number, y: number, z: number, sx: number, sy: number, sz: number, yaw = 0): Part => ({ g: "box", m: "white", x, y, z, yaw, sx, sy, sz, dept: "" });
   const hx = w / 2 - 0.3, hz = d / 2 - 0.3;
   const nx = Math.max(2, Math.round(w / 6.5)), nz = Math.max(2, Math.round(d / 6.5));
-  for (let i = 0; i <= nx; i++) for (const z of [-hz, hz]) cols.push(P(-hx + (2 * hx * i) / nx, h / 2, z, 0.38, h, 0.38));
-  for (let j = 1; j < nz; j++) for (const x of [-hx, hx]) cols.push(P(x, h / 2, -hz + (2 * hz * j) / nz, 0.38, h, 0.38));
+  for (let i = 0; i <= nx; i++) for (const [z, sd] of [[-hz, "-z"], [hz, "+z"]] as const) {
+    const x = -hx + (2 * hx * i) / nx;
+    if (!columnCut(b, floor, sd, x)) cols.push(P(x, h / 2, z, 0.38, h, 0.38));
+  }
+  for (let j = 1; j < nz; j++) for (const [x, sd] of [[-hx, "-x"], [hx, "+x"]] as const) {
+    const z = -hz + (2 * hz * j) / nz;
+    if (!columnCut(b, floor, sd, z)) cols.push(P(x, h / 2, z, 0.38, h, 0.38));
+  }
   if (basement) return { cols, mull };
+  const ops = (sd: Side) => openingsOf(b, floor, sd).map((o): [number, number] => [o.c - o.w / 2 - 0.08, o.c + o.w / 2 + 0.08]);
+  const inOp = (v: number, sd: Side) => ops(sd).some(([a, c]) => v > a && v < c);
   const gx = w / 2 + 0.06, gz = d / 2 + 0.06, step = 3.3;
-  for (let i = 0, n = Math.round(w / step); i <= n; i++) for (const z of [-gz, gz]) mull.push(P(-w / 2 + (w * i) / n, h / 2, z, 0.07, h, 0.12));
-  for (let j = 1, n = Math.round(d / step); j < n; j++) for (const x of [-gx, gx]) mull.push(P(x, h / 2, -d / 2 + (d * j) / n, 0.12, h, 0.07));
-  for (const z of [-gz, gz]) mull.push(P(0, 1.0, z, w, 0.035, 0.06));
-  for (const x of [-gx, gx]) mull.push(P(x, 1.0, 0, 0.06, 0.035, d));
+  for (let i = 0, n = Math.round(w / step); i <= n; i++) for (const [z, sd] of [[-gz, "-z"], [gz, "+z"]] as const) {
+    const x = -w / 2 + (w * i) / n;
+    if (!inOp(x, sd)) mull.push(P(x, h / 2, z, 0.07, h, 0.12));
+  }
+  for (let j = 1, n = Math.round(d / step); j < n; j++) for (const [x, sd] of [[-gx, "-x"], [gx, "+x"]] as const) {
+    const z = -d / 2 + (d * j) / n;
+    if (!inOp(z, sd)) mull.push(P(x, h / 2, z, 0.12, h, 0.07));
+  }
+  const rail = (a0: number, a1: number, sd: Side, along: "x" | "z", at: number) => {
+    let runs: [number, number][] = [[a0, a1]];
+    for (const [c0, c1] of ops(sd)) runs = runs.flatMap(([r0, r1]): [number, number][] => (c1 <= r0 || c0 >= r1 ? [[r0, r1]] : [...(c0 > r0 ? [[r0, c0] as [number, number]] : []), ...(c1 < r1 ? [[c1, r1] as [number, number]] : [])]));
+    for (const [r0, r1] of runs) mull.push(along === "x" ? P((r0 + r1) / 2, 1.0, at, r1 - r0, 0.035, 0.06) : P(at, 1.0, (r0 + r1) / 2, 0.06, 0.035, r1 - r0));
+  };
+  rail(-w / 2, w / 2, "-z", "x", -gz); rail(-w / 2, w / 2, "+z", "x", gz);
+  rail(-d / 2, d / 2, "-x", "z", -gx); rail(-d / 2, d / 2, "+x", "z", gx);
   return { cols, mull };
 }
 
-export default function Floor({ fl, openKey, focusDept }: { fl: FloorLayout; openKey: string | null; focusDept: string | null }) {
+export default function Floor({ fl, openKey, focusDept, walkKey = null, walking = false }: {
+  fl: FloorLayout; openKey: string | null; focusDept: string | null;
+  /** walk mode: the floor the visitor stands on (shadows, selection outline) and whether walk mode is on */
+  walkKey?: string | null; walking?: boolean;
+}) {
   const style: FacadeStyle = fl.floor < 0 ? "basement" : fl.building === "annex" ? "annex" : fl.floor === 0 ? "main-ground" : "main";
   const mats = useMemo<FloorMats>(() => makeFloorMats(style), [style]);
   const xray = useRef(0);
@@ -115,7 +142,12 @@ export default function Floor({ fl, openKey, focusDept }: { fl: FloorLayout; ope
     return new Map([...acc.entries()].map(([k, [x, z, n]]) => [k, [x / n, z / n] as [number, number]]));
   }, [fl]);
   const papers = useMemo(() => fl.parts.filter((p) => p.paper), [fl]);
-  const shell = useMemo(() => shellParts(fl.w, fl.d, H, basement), [fl, H, basement]);
+  const shell = useMemo(() => shellParts(fl.w, fl.d, H, basement, fl.building, fl.floor), [fl, H, basement]);
+  const sides = useMemo(() => openSides(fl.building, fl.floor), [fl]);
+  const panels = useMemo(() => glassPanels(fl.building, fl.floor, fl.w, fl.d, H), [fl, H]);
+  useEffect(() => () => { panels?.dispose(); }, [panels]);
+  const cut = useRef(0);
+  const here = isOpen || walkKey === fl.key;
   const paperRef = useRef<THREE.InstancedMesh>(null);
   const deskRefs = useRef<(THREE.InstancedMesh | null)[]>([]);
   const lastDeskVer = useRef(-1);
@@ -123,8 +155,8 @@ export default function Floor({ fl, openKey, focusDept }: { fl: FloorLayout; ope
   const hoverZone = useRef<string | null>(null);
   const content = useRef<THREE.Group>(null);
   useEffect(() => {
-    content.current?.traverse((o) => { if ((o as THREE.Mesh).isMesh) o.castShadow = isOpen; });
-  }, [isOpen]);
+    content.current?.traverse((o) => { if ((o as THREE.Mesh).isMesh) o.castShadow = here; });
+  }, [here]);
   const hoverGlass = useRef(false);
 
   const casesOf = useMemo(() => Object.fromEntries(fl.depts.map((d) => [d.id, d.cases.length > 0])), [fl]);
@@ -134,18 +166,24 @@ export default function Floor({ fl, openKey, focusDept }: { fl: FloorLayout; ope
     const g = group.current;
     if (!g) return;
     const k = 1 - Math.exp(-Math.min(dt, 0.25) * 4.2);
-    const cur = rt.lift[fl.key] ?? (hidden ? 1 : 0);
-    const nxt = cur + ((hiddenRef.current ? 1 : 0) - cur) * k;
-    rt.lift[fl.key] = Math.abs(nxt - (hiddenRef.current ? 1 : 0)) < 0.002 ? (hiddenRef.current ? 1 : 0) : nxt;
+    // walk mode: no exploded view; floors above the visitor are cut away in place (third person)
+    const walkOn = W.phase === "on";
+    const liftT = walkOn ? 0 : hiddenRef.current ? 1 : 0;
+    const cur = rt.lift[fl.key] ?? liftT;
+    const nxt = cur + (liftT - cur) * k;
+    rt.lift[fl.key] = Math.abs(nxt - liftT) < 0.002 ? liftT : nxt;
     const h = rt.lift[fl.key];
-    const e = h * h * (3 - 2 * h);
-    g.position.y = baseY + e * 11;
-    g.visible = h < 0.985;
+    const cutT = walkOn && floorCut(fl.building, fl.floor) ? 1 : 0;
+    cut.current += (cutT - cut.current) * (1 - Math.exp(-Math.min(dt, 0.25) * 10));
+    if (Math.abs(cut.current - cutT) < 0.004) cut.current = cutT;
+    const e = Math.max(h * h * (3 - 2 * h), cut.current);
+    g.position.y = baseY + h * h * (3 - 2 * h) * 11;
+    g.visible = e < 0.985;
     if (!g.visible) return;
     // X-ray: the realistic façade (tinted glass, louvres) fades when this floor is open or the camera comes close
     g.getWorldPosition(_v);
     const dist = camera.position.distanceTo(_v);
-    const xt = openRef.current ? 1 : Math.min(1, Math.max(0, (75 - dist) / 35));
+    const xt = walkOn ? 0 : openRef.current ? 1 : Math.min(1, Math.max(0, (75 - dist) / 35));
     xray.current += (xt - xray.current) * k;
     const xr = xray.current;
     const hov = hoverGlass.current || rt.hoverFloor === fl.key;
@@ -154,7 +192,14 @@ export default function Floor({ fl, openKey, focusDept }: { fl: FloorLayout; ope
     mats.louvre.userData.baseOpacity = 1 - xr;
     mats.glass.emissiveIntensity = (1 - rt.day) * 0.55;
     // level of detail: the furnished interior is drawn for the open floor, or when the camera is close
-    if (content.current) content.current.visible = openRef.current || dist < 120;
+    if (content.current) {
+      if (walkOn) {
+        // walk mode LOD: furnished interiors near the visitor only (distance to the plate's box)
+        const dx = Math.max(0, Math.abs(W.x - fl.ox) - fl.w / 2), dz = Math.max(0, Math.abs(W.z - fl.oz) - fl.d / 2);
+        const dy = Math.max(0, baseY - (W.y + 1.2), W.y + 1.2 - (baseY + FLOOR_H));
+        content.current.visible = dx * dx + dy * dy + dz * dz < 26 * 26;
+      } else content.current.visible = openRef.current || dist < 120;
+    }
     // calm signs of life: blinking status LEDs, softly flickering screens
     const tt = performance.now() / 1000;
     mats.parts.led.emissiveIntensity = 0.55 + 0.55 * Math.max(0, Math.sin(tt * 2.6 + fl.floor));
@@ -275,7 +320,9 @@ export default function Floor({ fl, openKey, focusDept }: { fl: FloorLayout; ope
   const camera = useThree((s) => s.camera);
   const slabT = basement ? 0.8 : 0.36;
   const slabMats = useMemo(() => [mats.slabEdge, mats.slabEdge, mats.slabTop, mats.slabTop, mats.slabEdge, mats.slabEdge], [mats]);
-  const glassMats = useMemo(() => [mats.glass, mats.glass, mats.hit, mats.hit, mats.glass, mats.glass], [mats]);
+  // sides with openings are drawn as panels (glassPanels) around the doors; the box keeps them as invisible hit faces
+  const glassMats = useMemo(() => [sides["+x"] ? mats.hit : mats.glass, sides["-x"] ? mats.hit : mats.glass, mats.hit, mats.hit,
+    sides["+z"] ? mats.hit : mats.glass, sides["-z"] ? mats.hit : mats.glass], [mats, sides]);
 
   return (
     <group ref={group} position={[fl.ox, baseY, fl.oz]}>
@@ -291,6 +338,8 @@ export default function Floor({ fl, openKey, focusDept }: { fl: FloorLayout; ope
           <mesh position={[0, H / 2, 0]} material={glassMats} onPointerMove={glassOver} onPointerOut={glassOut} onClick={glassClick} renderOrder={1}>
             <boxGeometry args={[fl.w + 0.12, H, fl.d + 0.12]} />
           </mesh>
+          {panels && <mesh geometry={panels} material={mats.glass} renderOrder={1} />}
+          <Openings fl={fl} mats={mats} H={H} />
         </>
       )}
       {/* department zones */}
@@ -304,8 +353,10 @@ export default function Floor({ fl, openKey, focusDept }: { fl: FloorLayout; ope
       <group ref={content}>
       {groups.map(([k, parts]) => {
         const [g, m] = k.split("|") as [Part["g"], Part["m"]];
+        if (k === "box|wall") return <WallInst key={k} fl={fl} geo={GEO.box} mat={mats.parts.wall} parts={parts} />;
         return <Inst key={k} geo={GEO[g]} mat={mats.parts[m]} parts={parts} shadow={m !== "lamp"} />;
       })}
+      {!basement && <FpCeiling fl={fl} />}
       {deskGroups.map(([k, parts], gi) => {
         const [g, m] = k.split("|") as [Part["g"], Part["m"]];
         return (
@@ -318,14 +369,14 @@ export default function Floor({ fl, openKey, focusDept }: { fl: FloorLayout; ope
       {fl.key === "main:0" && <Experiences mats={mats} />}
       {fl.key === "main:4" && <FourthFloor mats={mats} />}
       <People fl={fl} mats={mats} group={group} active={active} />
-      {fl.building === "main" && <Ambient floor={fl.floor} mats={mats} />}
+      {fl.building === "main" && !walking && <Ambient floor={fl.floor} mats={mats} />}
       {fl.building === "main" && corridorBands(fl.floor).map(([x, z, w, d], i) => (
         <mesh key={"band" + i} position={[x, 0.014, z]} rotation-x={-Math.PI / 2} material={mats.parts.band} receiveShadow>
           <planeGeometry args={[w, d]} />
         </mesh>
       ))}
       </group>
-      <SelectedOutline fl={fl} focusDept={isOpen ? focusDept : null} />
+      <SelectedOutline fl={fl} focusDept={here ? focusDept : null} />
     </group>
   );
 }
@@ -360,11 +411,11 @@ function CommandCenterScreen({ mats }: { mats: FloorMats }) {
     for (let i = 0; i < 3; i++) g.fillRect(24 + i * 332, 24, 312, 372);
     // tiles
     g.fillStyle = "#4CC79A"; g.font = "600 46px system-ui, sans-serif"; g.fillText(fr(META.eco, 0), 48, 104);
-    g.fillStyle = "#8D97B0"; g.font = "500 18px system-ui, sans-serif"; g.fillText("MDH économisés / an (plein régime)", 48, 134);
+    g.fillStyle = "#8D97B0"; g.font = "500 18px system-ui, sans-serif"; g.fillText(V23 ? "MDH de gains bruts en 2031" : "MDH économisés / an (plein régime)", 48, 134);
     g.fillStyle = "#9CB0FF"; g.font = "600 46px system-ui, sans-serif"; g.fillText(fr(META.budget, 0), 380, 104);
-    g.fillStyle = "#8D97B0"; g.font = "500 18px system-ui, sans-serif"; g.fillText("MDH d'agents / an", 380, 134);
+    g.fillStyle = "#8D97B0"; g.font = "500 18px system-ui, sans-serif"; g.fillText(V23 ? "MDH de coût du programme" : "MDH d'agents / an", 380, 134);
     g.fillStyle = "#EDF0F7"; g.font = "600 46px system-ui, sans-serif"; g.fillText(fr(META.net, 0), 712, 104);
-    g.fillStyle = "#8D97B0"; g.font = "500 18px system-ui, sans-serif"; g.fillText("MDH net / an", 712, 134);
+    g.fillStyle = "#8D97B0"; g.font = "500 18px system-ui, sans-serif"; g.fillText(V23 ? "MDH de valeur nette / an" : "MDH net / an", 712, 134);
     // bars + line
     const bars = [0.18, 0.3, 0.42, 0.55, 0.66, 0.78, 0.86, 0.94];
     bars.forEach((b, i) => { g.fillStyle = "rgba(91,124,255,0.65)"; g.fillRect(48 + i * 32, 370 - b * 190, 20, b * 190); });

@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { FLOOR_H } from "@/lib/hospital";
-import { share } from "@/lib/model";
+import { yearProgress } from "@/lib/model";
 import { useApp } from "@/lib/store";
 import { FLOOR_LAYOUTS, PERSON_BY_ID } from "./layout";
 import { PAL, rt, tickEcg } from "./mats";
@@ -19,6 +19,9 @@ import Overlay from "./Overlay";
 import { FocusFlights } from "./Focus";
 import TimeTravel from "./TimeTravel";
 import { SensorNet } from "./Twin";
+import { StairTowers } from "./StairTower";
+import { HospitalProps } from "./props";
+import StoryStage from "../story/StoryStage";
 
 /** Offset applied inside HospitalContent so that the campus (building frame of lib/hospital) is centred on the origin. */
 export { CAMPUS_OFFSET };
@@ -49,27 +52,35 @@ export function HospitalContent({ standalone = false }: { standalone?: boolean }
   const first = useRef(true);
   useFrame((st, dt) => {
     tickEcg(st.clock.elapsedTime);
-    const target = share(year).eco;
+    const target = yearProgress(year);
     if (first.current) { rt.eco = target; first.current = false; }
     rt.eco += (target - rt.eco) * (1 - Math.exp(-Math.min(dt, 0.25) * 1.8));
   });
 
-  const open = f.floor;
+  // walk mode: every floor in place (no exploded view); roofs / skybridge cut away above a visitor inside, third person
+  const walk = useApp((s) => s.walk);
+  const walking = walk.phase !== "off";
+  const cutting = walk.phase === "on" && walk.view === "third" && !!walk.where;
+  const open = walking ? null : f.floor;
   const [ob, of] = open ? open.split(":") : [null, "9"];
-  const bridgeHidden = !!open && Number(of) < 1;
+  const bridgeHidden = cutting ? walk.floor < 1 : !!open && Number(of) < 1;
+  const walkKey = walk.phase === "on" && walk.where && !walk.tower ? `${walk.where}:${walk.floor}` : null;
 
   return (
     <group>
       <group ref={campus} position={CAMPUS_OFFSET}>
         <Site standalone={standalone} />
         {FLOOR_LAYOUTS.map((fl) => (
-          <Floor key={fl.key} fl={fl} openKey={open} focusDept={f.dept} />
+          <Floor key={fl.key} fl={fl} openKey={open} focusDept={f.dept} walkKey={walkKey} walking={walking} />
         ))}
-        <Roof building="main" hidden={ob === "main"} />
-        <Roof building="annex" hidden={ob === "annex"} />
+        <StairTowers openKey={open} />
+        <Roof building="main" hidden={cutting ? walk.where === "main" : ob === "main"} />
+        <Roof building="annex" hidden={cutting ? walk.where === "annex" : ob === "annex"} />
         <Skybridge hidden={bridgeHidden} />
         <PersonHighlight />
         <SensorNet />
+        <HospitalProps />
+        <StoryStage />
       </group>
       <TimeTravel />
       <Overlay />

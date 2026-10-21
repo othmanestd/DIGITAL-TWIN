@@ -1,0 +1,1653 @@
+{
+ "version": 23,
+ "dataset": "v23",
+ "mode": "express",
+ "chapters": [
+  {
+   "id": "ouverture",
+   "title": "Le même mardi",
+   "beats": [
+    {
+     "id": "x-titre",
+     "title": "Le même mardi",
+     "text": "Casablanca, un mardi d'octobre, sept heures et demie. Nous allons vivre ce mardi deux fois : aujourd'hui, en 2026, puis en 2031, quand chaque collaborateur de l'hôpital type d'Akdital pilotera ses agents IA. Six personnes nous guident : Amina, qui attend une prothèse du genou ; Youssef, au guichet des admissions ; Salma, infirmière ; Karim, technicien biomédical ; Hicham, facturier ; et Leïla, au siège. Ils sont fictifs ; les chiffres, eux, sont ceux du business case actualisé.",
+     "speech": "Casablanca, un mardi d'octobre, sept heures et demie. Nous allons vivre ce mardi deux fois : aujourd'hui, en 2026, puis en 2031, quand chaque collaborateur de l'hôpital type d'Akdital pilotera ses agents IA. Six personnes nous guident : Amina, qui attend une prothèse du genou ; Youssef, au guichet des admissions ; Salma, infirmière ; Karim, technicien biomédical ; Hicham, facturier ; et Leïla, au siège. Ils sont fictifs ; les chiffres, eux, sont ceux du business case actualisé.",
+     "actions": [
+      {
+       "do": "section",
+       "section": "explorer",
+       "silent": true,
+       "pre": true
+      },
+      {
+       "do": "view",
+       "perSite": false,
+       "silent": true,
+       "pre": true
+      },
+      {
+       "do": "year",
+       "year": 2026,
+       "silent": true,
+       "pre": true
+      },
+      {
+       "do": "cue",
+       "pre": true,
+       "reset": true,
+       "fade": 1,
+       "letterbox": true,
+       "title": true,
+       "sfx": "title",
+       "sel": {
+        "kind": "overview",
+        "id": "hospital"
+       }
+      },
+      {
+       "do": "cue",
+       "pre": true,
+       "cam": "sky"
+      },
+      {
+       "do": "cue",
+       "pre": true,
+       "fade": 0,
+       "delay": 0.6
+      },
+      {
+       "do": "cue",
+       "pre": true,
+       "cam": "glide",
+       "delay": 1.4
+      },
+      {
+       "do": "cue",
+       "title": false,
+       "at": 0.112
+      },
+      {
+       "do": "cue",
+       "stamp": {
+        "t": "Mardi · 7 h 30",
+        "year": 2026
+       },
+       "at": 0.112
+      },
+      {
+       "do": "cue",
+       "cam": "cast",
+       "at": 0.432
+      },
+      {
+       "do": "cue",
+       "intro": "amina",
+       "cast": {
+        "amina": {
+         "at": "fc-1"
+        }
+       },
+       "at": 0.492
+      },
+      {
+       "do": "cue",
+       "intro": "youssef",
+       "cast": {
+        "youssef": {
+         "at": "fc-2"
+        }
+       },
+       "at": 0.579
+      },
+      {
+       "do": "cue",
+       "intro": "salma",
+       "cast": {
+        "salma": {
+         "at": "fc-3"
+        }
+       },
+       "at": 0.656
+      },
+      {
+       "do": "cue",
+       "intro": "karim",
+       "cast": {
+        "karim": {
+         "at": "fc-4"
+        }
+       },
+       "at": 0.697
+      },
+      {
+       "do": "cue",
+       "intro": "hicham",
+       "cast": {
+        "hicham": {
+         "at": "fc-5"
+        }
+       },
+       "at": 0.761
+      },
+      {
+       "do": "cue",
+       "intro": "leila",
+       "cast": {
+        "leila": {
+         "at": "fc-6"
+        }
+       },
+       "at": 0.803
+      },
+      {
+       "do": "cue",
+       "letterbox": false,
+       "at": 0.844
+      }
+     ],
+     "lead": 6.5,
+     "story0": {
+      "cast": {},
+      "props": {},
+      "stamp": null,
+      "ledger": {
+       "ms": 0,
+       "hms": 0,
+       "rec": 0,
+       "neu": 0
+      },
+      "hud": false,
+      "cost": false,
+      "net": false,
+      "finale": false,
+      "chart": null,
+      "letterbox": false
+     }
+    },
+    {
+     "id": "x-constat",
+     "title": "Personne ne décroche",
+     "text": "En 2026, au standard, le téléphone sonne, et personne ne décroche : Amina rappellera. Ce n'est la faute de personne : au premier semestre, les charges de personnel du groupe ont progressé de 28 %, le chiffre d'affaires de 21 %. Rejouons ce mardi en 2031.",
+     "speech": "En 2026, au standard, le téléphone sonne, et personne ne décroche : Amina rappellera. Ce n'est la faute de personne : au premier semestre, les charges de personnel du groupe ont progressé de 28 %, le chiffre d'affaires de 21 %. Rejouons ce mardi en 2031.",
+     "actions": [
+      {
+       "do": "cue",
+       "cast": {
+        "amina": null,
+        "youssef": null,
+        "salma": null,
+        "karim": null,
+        "hicham": null,
+        "leila": null
+       }
+      },
+      {
+       "do": "year",
+       "year": 2026,
+       "silent": true
+      },
+      {
+       "do": "cue",
+       "sel": {
+        "kind": "dept",
+        "id": "standard"
+       }
+      },
+      {
+       "do": "cue",
+       "props": {
+        "calls": "before"
+       }
+      },
+      {
+       "do": "cue",
+       "stamp": {
+        "t": "Mardi · 7 h 32",
+        "year": 2026
+       }
+      },
+      {
+       "do": "cue",
+       "cam": "standard"
+      },
+      {
+       "do": "year",
+       "year": 2031,
+       "silent": true,
+       "at": 0.898
+      },
+      {
+       "do": "cue",
+       "props": {
+        "calls": "after"
+       },
+       "at": 0.898
+      },
+      {
+       "do": "cue",
+       "stamp": {
+        "t": "Mardi · 7 h 32",
+        "year": 2031
+       },
+       "at": 0.898
+      }
+     ],
+     "story0": {
+      "cast": {
+       "amina": {
+        "at": "fc-1"
+       },
+       "youssef": {
+        "at": "fc-2"
+       },
+       "salma": {
+        "at": "fc-3"
+       },
+       "karim": {
+        "at": "fc-4"
+       },
+       "hicham": {
+        "at": "fc-5"
+       },
+       "leila": {
+        "at": "fc-6"
+       }
+      },
+      "props": {},
+      "stamp": {
+       "t": "Mardi · 7 h 30",
+       "year": 2026
+      },
+      "ledger": {
+       "ms": 0,
+       "hms": 0,
+       "rec": 0,
+       "neu": 0
+      },
+      "hud": false,
+      "cost": false,
+      "net": false,
+      "finale": false,
+      "chart": null,
+      "letterbox": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "patient",
+   "title": "Amina : l'attente qui disparaît",
+   "beats": [
+    {
+     "id": "x-amina",
+     "title": "Le parcours d'Amina",
+     "text": "Un agent vocal décroche, en darija, en français ou en arabe. Sept jours avant l'opération, Rafiq prépare Amina sur WhatsApp ; un créneau annulé est aussitôt proposé au patient suivant : dans un essai randomisé, ces rappels ont fait passer les absences de 29 à 23 %. Le jour venu, les Expériences IA l'accueillent ; pas de file : au guichet, Youssef vérifie et fait signer. Ce parcours rapporte 94 MDH par an, dont 45 de marge sur les patients qu'il ramène.",
+     "speech": "Un agent vocal décroche, en darija, en français ou en arabe. Sept jours avant l'opération, Rafiq prépare Amina sur WhatsApp ; un créneau annulé est aussitôt proposé au patient suivant : dans un essai randomisé, ces rappels ont fait passer les absences de 29 à 23 %. Le jour venu, les Expériences IA l'accueillent ; pas de file : au guichet, Youssef vérifie et fait signer. Ce parcours rapporte 94 millions de dirhams par an, dont 45 millions de marge sur les patients qu'il ramène.",
+     "actions": [
+      {
+       "do": "year",
+       "year": 2031,
+       "silent": true
+      },
+      {
+       "do": "cue",
+       "sel": {
+        "kind": "dept",
+        "id": "standard"
+       }
+      },
+      {
+       "do": "cue",
+       "cam": "standard"
+      },
+      {
+       "do": "cue",
+       "props": {
+        "calls": "after"
+       }
+      },
+      {
+       "do": "cue",
+       "stamp": {
+        "t": "Mardi · 9 h 10",
+        "year": 2031
+       }
+      },
+      {
+       "do": "cue",
+       "sel": {
+        "kind": "dept",
+        "id": "accueil"
+       },
+       "at": 0.553
+      },
+      {
+       "do": "cue",
+       "props": {
+        "calls": "off",
+        "queue": "after",
+        "ydesk": "after"
+       },
+       "at": 0.553
+      },
+      {
+       "do": "cue",
+       "cast": {
+        "amina": {
+         "at": "hall-plan",
+         "from": "door-in"
+        },
+        "youssef": {
+         "at": "adm-pilot",
+         "pose": "tablet"
+        }
+       },
+       "at": 0.553
+      },
+      {
+       "do": "cue",
+       "cam": "hall",
+       "at": 0.553
+      },
+      {
+       "do": "cue",
+       "chip": [
+        "amina"
+       ],
+       "at": 0.553
+      },
+      {
+       "do": "cue",
+       "cast": {
+        "amina": {
+         "at": "adm-front"
+        }
+       },
+       "at": 0.684
+      },
+      {
+       "do": "cue",
+       "cam": "admissions",
+       "at": 0.684
+      },
+      {
+       "do": "cue",
+       "chip": [
+        "youssef"
+       ],
+       "at": 0.684
+      },
+      {
+       "do": "cue",
+       "hud": true,
+       "at": 0.775
+      },
+      {
+       "do": "cue",
+       "ledger": {
+        "ms": 46.3186,
+        "hms": 3.1036,
+        "rec": 0,
+        "neu": 44.7848,
+        "from": "amina",
+        "stream": "patient"
+       },
+       "at": 0.775
+      }
+     ],
+     "story0": {
+      "cast": {},
+      "props": {
+       "calls": "after"
+      },
+      "stamp": {
+       "t": "Mardi · 7 h 32",
+       "year": 2031
+      },
+      "ledger": {
+       "ms": 0,
+       "hms": 0,
+       "rec": 0,
+       "neu": 0
+      },
+      "hud": false,
+      "cost": false,
+      "net": false,
+      "finale": false,
+      "chart": null,
+      "letterbox": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "soin",
+   "title": "Salma : la nuit au troisième étage",
+   "beats": [
+    {
+     "id": "x-salma",
+     "title": "La nuit de Salma",
+     "text": "Troisième étage, en 2026 : Salma ressaisit au poste, en fin de garde, ce qu'elle a noté sur papier. En 2031, elle dicte son dossier au chevet d'Amina, opérée dans l'après-midi. Cette nuit, Keeps repère une chute dans le couloir et la prévient en dix-huit secondes, sans reconnaître personne. La chambre libérée est prête plus tôt, sans un seul appel. Qualité et sécurité pèsent 103 MDH par an : du temps soignant rendu, de l'intérim évité, des lits prêts plus tôt.",
+     "speech": "Troisième étage, en 2026 : Salma ressaisit au poste, en fin de garde, ce qu'elle a noté sur papier. En 2031, elle dicte son dossier au chevet d'Amina, opérée dans l'après-midi. Cette nuit, Keeps repère une chute dans le couloir et la prévient en dix-huit secondes, sans reconnaître personne. La chambre libérée est prête plus tôt, sans un seul appel. Qualité et sécurité pèsent 103 millions de dirhams par an : du temps soignant rendu, de l'intérim évité, des lits prêts plus tôt.",
+     "actions": [
+      {
+       "do": "cue",
+       "cast": {
+        "amina": null,
+        "youssef": null
+       }
+      },
+      {
+       "do": "cue",
+       "props": {
+        "queue": "off",
+        "ydesk": "off"
+       }
+      },
+      {
+       "do": "year",
+       "year": 2026,
+       "silent": true
+      },
+      {
+       "do": "cue",
+       "sel": {
+        "kind": "dept",
+        "id": "hospitalisation"
+       }
+      },
+      {
+       "do": "cue",
+       "stamp": {
+        "t": "Mardi · 23 h 40",
+        "year": 2026
+       }
+      },
+      {
+       "do": "cue",
+       "props": {
+        "npaper": "before"
+       }
+      },
+      {
+       "do": "cue",
+       "cast": {
+        "salma": {
+         "at": "nurse-station",
+         "pose": "type"
+        }
+       }
+      },
+      {
+       "do": "cue",
+       "cam": "station"
+      },
+      {
+       "do": "cue",
+       "chip": [
+        "salma"
+       ]
+      },
+      {
+       "do": "year",
+       "year": 2031,
+       "silent": true,
+       "at": 0.208
+      },
+      {
+       "do": "cue",
+       "stamp": {
+        "t": "Mardi · 23 h 40",
+        "year": 2031
+       },
+       "at": 0.208
+      },
+      {
+       "do": "cue",
+       "props": {
+        "npaper": "after"
+       },
+       "at": 0.208
+      },
+      {
+       "do": "cue",
+       "cast": {
+        "amina": {
+         "at": "room-chair",
+         "pose": "sit"
+        },
+        "salma": {
+         "at": "room-bedside",
+         "from": "nurse-station",
+         "via": [
+          "corr-e",
+          "room-door",
+          "room-in"
+         ],
+         "pose": "tablet"
+        }
+       },
+       "at": 0.208
+      },
+      {
+       "do": "cue",
+       "cam": "room",
+       "at": 0.208
+      },
+      {
+       "do": "cue",
+       "alert": "corridor-fall",
+       "at": 0.369
+      },
+      {
+       "do": "cue",
+       "props": {
+        "fall": "after"
+       },
+       "at": 0.369
+      },
+      {
+       "do": "cue",
+       "cam": "corridor",
+       "at": 0.369
+      },
+      {
+       "do": "cue",
+       "cast": {
+        "salma": {
+         "at": "corridor-fall-help",
+         "from": "room-bedside",
+         "via": [
+          "room-in",
+          "room-door"
+         ],
+         "pose": "kneel"
+        }
+       },
+       "at": 0.369
+      },
+      {
+       "do": "cue",
+       "hud": true,
+       "at": 0.608
+      },
+      {
+       "do": "cue",
+       "ledger": {
+        "ms": 58.5237,
+        "hms": 36.6361,
+        "rec": 0,
+        "neu": 8.1469,
+        "from": "salma",
+        "stream": "soin"
+       },
+       "at": 0.608
+      }
+     ],
+     "story0": {
+      "cast": {
+       "amina": {
+        "at": "adm-front"
+       },
+       "youssef": {
+        "at": "adm-pilot",
+        "pose": "tablet"
+       }
+      },
+      "props": {
+       "calls": "off",
+       "queue": "after",
+       "ydesk": "after"
+      },
+      "stamp": {
+       "t": "Mardi · 9 h 10",
+       "year": 2031
+      },
+      "ledger": {
+       "ms": 46.3186,
+       "hms": 3.1036,
+       "rec": 0,
+       "neu": 44.7848
+      },
+      "hud": true,
+      "cost": false,
+      "net": false,
+      "finale": false,
+      "chart": null,
+      "letterbox": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "actifs",
+   "title": "Karim et le jumeau",
+   "beats": [
+    {
+     "id": "x-karim",
+     "title": "Le jumeau numérique",
+     "text": "Quatrième étage. En 2026, Karim court après les pannes. En 2031, le JABB Twin voit la dérive d'une machine dix jours avant l'arrêt, et Karim suit un parc plus grand sans courir ; le jumeau localise le pousse-seringue libre en trois secondes, surveille le froid et l'oxygène, et met le bloc en veille la nuit. Énergie, maintenance, équipements : les actifs rapportent 59 MDH par an.",
+     "speech": "Quatrième étage. En 2026, Karim court après les pannes. En 2031, le Jabb Twin voit la dérive d'une machine dix jours avant l'arrêt, et Karim suit un parc plus grand sans courir ; le jumeau localise le pousse-seringue libre en trois secondes, surveille le froid et l'oxygène, et met le bloc en veille la nuit. Énergie, maintenance, équipements : les actifs rapportent 59 millions de dirhams par an.",
+     "actions": [
+      {
+       "do": "cue",
+       "cast": {
+        "amina": null,
+        "salma": null
+       }
+      },
+      {
+       "do": "cue",
+       "props": {
+        "npaper": "off",
+        "fall": "off"
+       }
+      },
+      {
+       "do": "year",
+       "year": 2026,
+       "silent": true
+      },
+      {
+       "do": "cue",
+       "sel": {
+        "kind": "dept",
+        "id": "technique"
+       }
+      },
+      {
+       "do": "cue",
+       "stamp": {
+        "t": "Mardi · 14 h 05",
+        "year": 2026
+       }
+      },
+      {
+       "do": "cue",
+       "props": {
+        "machine": "before"
+       }
+      },
+      {
+       "do": "cue",
+       "cast": {
+        "karim": {
+         "at": "machine-fix",
+         "pose": "kneel"
+        }
+       }
+      },
+      {
+       "do": "cue",
+       "cam": "machine"
+      },
+      {
+       "do": "cue",
+       "chip": [
+        "karim"
+       ]
+      },
+      {
+       "do": "cue",
+       "alert": "machine"
+      },
+      {
+       "do": "year",
+       "year": 2031,
+       "silent": true,
+       "at": 0.141
+      },
+      {
+       "do": "cue",
+       "stamp": {
+        "t": "Mardi · 14 h 05",
+        "year": 2031
+       },
+       "at": 0.141
+      },
+      {
+       "do": "cue",
+       "props": {
+        "machine": "after"
+       },
+       "at": 0.141
+      },
+      {
+       "do": "cue",
+       "cast": {
+        "karim": {
+         "at": "twin-console",
+         "from": "machine-fix",
+         "via": [
+          "tech-mid"
+         ],
+         "pose": "tablet"
+        }
+       },
+       "at": 0.141
+      },
+      {
+       "do": "cue",
+       "cam": "twin",
+       "at": 0.141
+      },
+      {
+       "do": "cue",
+       "ping": "pump",
+       "at": 0.451
+      },
+      {
+       "do": "cue",
+       "hud": true,
+       "at": 0.778
+      },
+      {
+       "do": "cue",
+       "ledger": {
+        "ms": 0,
+        "hms": 50.1796,
+        "rec": 0,
+        "neu": 8.3797,
+        "from": "karim",
+        "stream": "actifs"
+       },
+       "at": 0.778
+      }
+     ],
+     "story0": {
+      "cast": {
+       "salma": {
+        "at": "corridor-fall-help",
+        "pose": "kneel"
+       },
+       "amina": {
+        "at": "room-chair",
+        "pose": "sit"
+       }
+      },
+      "props": {
+       "calls": "off",
+       "queue": "off",
+       "ydesk": "off",
+       "npaper": "after",
+       "fall": "after"
+      },
+      "stamp": {
+       "t": "Mardi · 23 h 40",
+       "year": 2031
+      },
+      "ledger": {
+       "ms": 104.8423,
+       "hms": 39.7397,
+       "rec": 0,
+       "neu": 52.9317
+      },
+      "hud": true,
+      "cost": false,
+      "net": false,
+      "finale": false,
+      "chart": null,
+      "letterbox": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "revenu",
+   "title": "Hicham : le revenu retrouvé",
+   "beats": [
+    {
+     "id": "x-hicham",
+     "title": "Les soins enfin facturés",
+     "text": "À la facturation, en 2026, Hicham clôture après la sortie, et la mutuelle rejette. En 2031, la facture d'Amina est prête avant sa sortie, le rejet prévenu avant l'envoi : dans un hôpital américain, les factures bloquées après la sortie ont été divisées par deux. 88 MDH de soins déjà réalisés sont enfin facturés. Ajoutez l'activité nouvelle que tout cela ramène, 186 MDH ; nous n'en comptons que la marge. Au total, 159 MDH de marge par an.",
+     "speech": "À la facturation, en 2026, Hicham clôture après la sortie, et la mutuelle rejette. En 2031, la facture d'Amina est prête avant sa sortie, le rejet prévenu avant l'envoi : dans un hôpital américain, les factures bloquées après la sortie ont été divisées par deux. 88 millions de dirhams de soins déjà réalisés sont enfin facturés. Ajoutez l'activité nouvelle que tout cela ramène, 186 millions ; nous n'en comptons que la marge. Au total, 159 millions de dirhams de marge par an.",
+     "actions": [
+      {
+       "do": "cue",
+       "cast": {
+        "karim": null
+       }
+      },
+      {
+       "do": "cue",
+       "props": {
+        "machine": "off"
+       }
+      },
+      {
+       "do": "year",
+       "year": 2026,
+       "silent": true
+      },
+      {
+       "do": "cue",
+       "sel": {
+        "kind": "dept",
+        "id": "facturation"
+       }
+      },
+      {
+       "do": "cue",
+       "stamp": {
+        "t": "Mardi · 16 h 20",
+        "year": 2026
+       }
+      },
+      {
+       "do": "cue",
+       "props": {
+        "invoices": "before"
+       }
+      },
+      {
+       "do": "cue",
+       "cast": {
+        "hicham": {
+         "at": "billing-desk",
+         "pose": "type"
+        }
+       }
+      },
+      {
+       "do": "cue",
+       "cam": "billing"
+      },
+      {
+       "do": "cue",
+       "chip": [
+        "hicham"
+       ]
+      },
+      {
+       "do": "year",
+       "year": 2031,
+       "silent": true,
+       "at": 0.174
+      },
+      {
+       "do": "cue",
+       "stamp": {
+        "t": "Mardi · 16 h 20",
+        "year": 2031
+       },
+       "at": 0.174
+      },
+      {
+       "do": "cue",
+       "props": {
+        "invoices": "after"
+       },
+       "at": 0.174
+      },
+      {
+       "do": "cue",
+       "cast": {
+        "hicham": {
+         "at": "billing-stand",
+         "from": "billing-desk",
+         "pose": "tablet"
+        }
+       },
+       "at": 0.174
+      },
+      {
+       "do": "cue",
+       "hud": true,
+       "at": 0.55
+      },
+      {
+       "do": "cue",
+       "ledger": {
+        "ms": 31.8298,
+        "hms": 1.707,
+        "rec": 84.0297,
+        "neu": 5.8192,
+        "from": "hicham",
+        "stream": "revenu"
+       },
+       "at": 0.55
+      },
+      {
+       "do": "cue",
+       "ledger": {
+        "ms": 0.52,
+        "hms": 0,
+        "rec": 0,
+        "neu": 7.3605,
+        "from": "hicham",
+        "stream": "ouvertures"
+       },
+       "at": 0.69
+      },
+      {
+       "do": "cue",
+       "focus": "marge",
+       "at": 0.895
+      }
+     ],
+     "story0": {
+      "cast": {
+       "karim": {
+        "at": "twin-console",
+        "pose": "tablet"
+       }
+      },
+      "props": {
+       "calls": "off",
+       "queue": "off",
+       "ydesk": "off",
+       "npaper": "off",
+       "fall": "off",
+       "machine": "after"
+      },
+      "stamp": {
+       "t": "Mardi · 14 h 05",
+       "year": 2031
+      },
+      "ledger": {
+       "ms": 104.8423,
+       "hms": 89.9193,
+       "rec": 0,
+       "neu": 61.3114
+      },
+      "hud": true,
+      "cost": false,
+      "net": false,
+      "finale": false,
+      "chart": null,
+      "letterbox": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "temps",
+   "title": "Youssef, cinq ans après",
+   "beats": [
+    {
+     "id": "x-youssef",
+     "title": "Le temps rendu",
+     "text": "Revenons à Youssef, et faisons défiler le temps. 2027 : ses premiers agents arrivent. 2029 : une collègue part à la retraite ; son poste n'est pas remplacé. 2031 : il pilote son escouade. 1 680 équivalents temps plein libérés, 153,5 MDH de masse salariale, et pas un seul licenciement : un peu plus d'un an de départs naturels suffit, et les 20 ouvertures font le reste. Avec le siège et les autres dépenses évitées, les économies atteignent 273 MDH par an.",
+     "speech": "Revenons à Youssef, et faisons défiler le temps. 2027 : ses premiers agents arrivent. 2029 : une collègue part à la retraite ; son poste n'est pas remplacé. 2031 : il pilote son escouade. 1 680 équivalents temps plein libérés, 153 millions et demi de dirhams de masse salariale, et pas un seul licenciement : un peu plus d'un an de départs naturels suffit, et les 20 ouvertures font le reste. Avec le siège et les autres dépenses évitées, les économies atteignent 273 millions de dirhams par an.",
+     "actions": [
+      {
+       "do": "cue",
+       "cast": {
+        "hicham": null
+       }
+      },
+      {
+       "do": "cue",
+       "props": {
+        "invoices": "off"
+       }
+      },
+      {
+       "do": "year",
+       "year": 2026,
+       "silent": true
+      },
+      {
+       "do": "cue",
+       "sel": {
+        "kind": "dept",
+        "id": "admissions"
+       }
+      },
+      {
+       "do": "cue",
+       "cam": "admissions-wide"
+      },
+      {
+       "do": "cue",
+       "stamp": {
+        "t": "2026",
+        "year": 2026
+       }
+      },
+      {
+       "do": "cue",
+       "props": {
+        "queue": "before",
+        "ydesk": "before"
+       }
+      },
+      {
+       "do": "cue",
+       "cast": {
+        "youssef": {
+         "at": "adm-desk",
+         "pose": "type"
+        }
+       }
+      },
+      {
+       "do": "cue",
+       "chip": [
+        "youssef"
+       ]
+      },
+      {
+       "do": "year",
+       "year": 2027,
+       "silent": true,
+       "at": 0.099
+      },
+      {
+       "do": "cue",
+       "stamp": {
+        "t": "2027",
+        "year": 2027
+       },
+       "at": 0.099
+      },
+      {
+       "do": "cue",
+       "props": {
+        "ydesk": "mid"
+       },
+       "at": 0.099
+      },
+      {
+       "do": "year",
+       "year": 2029,
+       "silent": true,
+       "at": 0.174
+      },
+      {
+       "do": "cue",
+       "stamp": {
+        "t": "2029",
+        "year": 2029
+       },
+       "at": 0.174
+      },
+      {
+       "do": "cue",
+       "props": {
+        "queue": "after"
+       },
+       "at": 0.174
+      },
+      {
+       "do": "year",
+       "year": 2031,
+       "silent": true,
+       "at": 0.317
+      },
+      {
+       "do": "cue",
+       "stamp": {
+        "t": "2031",
+        "year": 2031
+       },
+       "at": 0.317
+      },
+      {
+       "do": "cue",
+       "props": {
+        "ydesk": "after"
+       },
+       "at": 0.317
+      },
+      {
+       "do": "cue",
+       "cast": {
+        "youssef": {
+         "at": "adm-pilot",
+         "from": "adm-desk",
+         "pose": "tablet"
+        }
+       },
+       "at": 0.317
+      },
+      {
+       "do": "cue",
+       "hud": true,
+       "focus": "ms",
+       "at": 0.38
+      },
+      {
+       "do": "cue",
+       "ledger": {
+        "ms": 16.2609,
+        "hms": 27.6186,
+        "rec": 0,
+        "neu": 0,
+        "from": "youssef",
+        "stream": "siege"
+       },
+       "at": 0.794
+      }
+     ],
+     "story0": {
+      "cast": {
+       "hicham": {
+        "at": "billing-stand",
+        "pose": "tablet"
+       }
+      },
+      "props": {
+       "calls": "off",
+       "queue": "off",
+       "ydesk": "off",
+       "npaper": "off",
+       "fall": "off",
+       "machine": "off",
+       "invoices": "after"
+      },
+      "stamp": {
+       "t": "Mardi · 16 h 20",
+       "year": 2031
+      },
+      "ledger": {
+       "ms": 137.1921,
+       "hms": 91.6263,
+       "rec": 84.0297,
+       "neu": 74.4911
+      },
+      "hud": true,
+      "cost": false,
+      "net": false,
+      "finale": false,
+      "chart": null,
+      "letterbox": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "compte",
+   "title": "Leïla fait le compte",
+   "beats": [
+    {
+     "id": "x-compte",
+     "title": "La valeur nette",
+     "text": "Au siège, dans l'Agentic Command Center, Leïla lit le rapport de sept heures. Économies, 272,7 MDH ; marge, 158,5 ; gains bruts, 431,2. Moins le coût complet du programme, 154,9 MDH : 276,3 MDH de valeur nette par an en 2031. Positive dès 2028, 695 MDH cumulés sur cinq ans. Chaque dirham investi en rapporte 2,78 dirhams.",
+     "speech": "Au siège, dans l'Agentic Command Center, Leïla lit le rapport de sept heures. Économies, 272,7 millions de dirhams ; marge, 158,5 ; gains bruts, 431,2. Moins le coût complet du programme, 154,9 millions : 276,3 millions de dirhams de valeur nette par an en 2031. Positive dès 2028, 695 millions cumulés sur cinq ans. Chaque dirham investi en rapporte 2 dirhams 78.",
+     "actions": [
+      {
+       "do": "cue",
+       "cast": {
+        "youssef": null
+       }
+      },
+      {
+       "do": "cue",
+       "props": {
+        "queue": "off",
+        "ydesk": "off"
+       }
+      },
+      {
+       "do": "year",
+       "year": 2031,
+       "silent": true
+      },
+      {
+       "do": "cue",
+       "sel": {
+        "kind": "dept",
+        "id": "siege-pilotage"
+       }
+      },
+      {
+       "do": "cue",
+       "cam": "command"
+      },
+      {
+       "do": "cue",
+       "stamp": {
+        "t": "Mercredi · 7 h 00",
+        "year": 2031
+       }
+      },
+      {
+       "do": "cue",
+       "props": {
+        "sheets": "after"
+       }
+      },
+      {
+       "do": "cue",
+       "cast": {
+        "leila": {
+         "at": "cmd-screen",
+         "pose": "stand"
+        }
+       }
+      },
+      {
+       "do": "cue",
+       "chip": [
+        "leila"
+       ]
+      },
+      {
+       "do": "cue",
+       "hud": true,
+       "focus": "gains",
+       "at": 0.214
+      },
+      {
+       "do": "cue",
+       "cost": true,
+       "from": "leila",
+       "at": 0.418
+      },
+      {
+       "do": "cue",
+       "net": true,
+       "sfx": "finale",
+       "at": 0.563
+      },
+      {
+       "do": "cue",
+       "finale": "on",
+       "chart": "cumul",
+       "at": 0.723
+      }
+     ],
+     "story0": {
+      "cast": {
+       "youssef": {
+        "at": "adm-pilot",
+        "pose": "tablet"
+       }
+      },
+      "props": {
+       "calls": "off",
+       "queue": "after",
+       "ydesk": "after",
+       "npaper": "off",
+       "fall": "off",
+       "machine": "off",
+       "invoices": "off"
+      },
+      "stamp": {
+       "t": "2031",
+       "year": 2031
+      },
+      "ledger": {
+       "ms": 153.453,
+       "hms": 119.2449,
+       "rec": 84.0297,
+       "neu": 74.4911
+      },
+      "hud": true,
+      "cost": false,
+      "net": false,
+      "finale": false,
+      "chart": null,
+      "letterbox": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "fin",
+   "title": "Le monde et la décision",
+   "beats": [
+    {
+     "id": "x-fin",
+     "title": "Le Maroc, le monde, la décision",
+     "text": "Prenons de la hauteur : de Casablanca au Maroc, de 45 établissements à 65, puis au monde. Ce qui est prouvé dans une clinique se déploie dans toutes. Le chemin commence petit : une clinique et le siège, dès la mi-décembre. La décision qui vous revient : lancer le cadrage en novembre. Pour qu'Amina n'attende plus jamais au bout du fil.",
+     "speech": "Prenons de la hauteur : de Casablanca au Maroc, de 45 établissements à 65, puis au monde. Ce qui est prouvé dans une clinique se déploie dans toutes. Le chemin commence petit : une clinique et le siège, dès la mi-décembre. La décision qui vous revient : lancer le cadrage en novembre. Pour qu'Amina n'attende plus jamais au bout du fil.",
+     "actions": [
+      {
+       "do": "cue",
+       "cast": {
+        "leila": null
+       }
+      },
+      {
+       "do": "cue",
+       "props": {
+        "sheets": "off"
+       }
+      },
+      {
+       "do": "cue",
+       "finale": "off",
+       "hud": true
+      },
+      {
+       "do": "section",
+       "section": "explorer",
+       "silent": true
+      },
+      {
+       "do": "zoom",
+       "g": 0.31,
+       "at": 0.02
+      },
+      {
+       "do": "zoom",
+       "g": 0.62,
+       "at": 0.12
+      },
+      {
+       "do": "zoom",
+       "g": 0.79,
+       "at": 0.223
+      },
+      {
+       "do": "cue",
+       "hud": false,
+       "at": 0.446
+      }
+     ],
+     "story0": {
+      "cast": {
+       "leila": {
+        "at": "cmd-screen",
+        "pose": "stand"
+       }
+      },
+      "props": {
+       "calls": "off",
+       "queue": "off",
+       "ydesk": "off",
+       "npaper": "off",
+       "fall": "off",
+       "machine": "off",
+       "invoices": "off",
+       "sheets": "after"
+      },
+      "stamp": {
+       "t": "Mercredi · 7 h 00",
+       "year": 2031
+      },
+      "ledger": {
+       "ms": 153.453,
+       "hms": 119.2449,
+       "rec": 84.0297,
+       "neu": 74.4911
+      },
+      "hud": true,
+      "cost": true,
+      "net": true,
+      "finale": true,
+      "chart": "cumul",
+      "letterbox": false
+     }
+    },
+    {
+     "id": "x-ligne",
+     "title": "JABB × AKDITAL × mibtech",
+     "text": "JABB × AKDITAL × mibtech, ensemble : 276 MDH de valeur nette par an, sans un seul licenciement.",
+     "speech": "Jabb, Akdital et Mibtech, ensemble : 276 millions de dirhams de valeur nette par an, sans un seul licenciement.",
+     "actions": [
+      {
+       "do": "zoom",
+       "g": 1,
+       "at": 0.02
+      },
+      {
+       "do": "cue",
+       "letterbox": true,
+       "closing": true,
+       "at": 0.3
+      }
+     ],
+     "story0": {
+      "cast": {},
+      "props": {
+       "calls": "off",
+       "queue": "off",
+       "ydesk": "off",
+       "npaper": "off",
+       "fall": "off",
+       "machine": "off",
+       "invoices": "off",
+       "sheets": "off"
+      },
+      "stamp": {
+       "t": "Mercredi · 7 h 00",
+       "year": 2031
+      },
+      "ledger": {
+       "ms": 153.453,
+       "hms": 119.2449,
+       "rec": 84.0297,
+       "neu": 74.4911
+      },
+      "hud": false,
+      "cost": true,
+      "net": true,
+      "finale": false,
+      "chart": "cumul",
+      "letterbox": false
+     }
+    }
+   ]
+  }
+ ],
+ "note": "Generated by scripts/build-tour-v23.mjs from lib/data/v23 — edit the story there. Beat: text (captions), speech (said), actions {do,…, at: fraction} incl. story cues {do:\"cue\"}, story0 (state at the beat start), lead (silent seconds).",
+ "ledger": {
+  "year": 2031,
+  "unit": "MDH par an",
+  "final": {
+   "ms": 153.452963,
+   "hms": 119.24481,
+   "rec": 84.0297,
+   "neu": 74.49110000000002,
+   "caR": 88.452398,
+   "caN": 186.228134,
+   "eco": 272.697773,
+   "marge": 158.521032,
+   "gains": 431.218806,
+   "cout": 154.888786,
+   "net": 276.33002
+  },
+  "cost": {
+   "cases": 121.80789999999998,
+   "transverse": 19,
+   "contingence": 14.080799
+  },
+  "series": {
+   "2027": {
+    "net": -44.274562,
+    "cumul": -44.274562,
+    "gains": 39.984725,
+    "cout": 84.259288
+   },
+   "2028": {
+    "net": 49.088609,
+    "cumul": 4.814047,
+    "gains": 186.795911,
+    "cout": 137.707302
+   },
+   "2029": {
+    "net": 166.882965,
+    "cumul": 171.697012,
+    "gains": 308.722895,
+    "cout": 141.83993
+   },
+   "2030": {
+    "net": 247.457374,
+    "cumul": 419.154386,
+    "gains": 398.130728,
+    "cout": 150.673354
+   },
+   "2031": {
+    "net": 276.33002,
+    "cumul": 695.484406,
+    "gains": 431.218806,
+    "cout": 154.888786
+   }
+  },
+  "cumul": 695.484406,
+  "van": 466.297056,
+  "ratio": 2.784054,
+  "etp": 1679.950658,
+  "etab": {
+   "from": 45,
+   "to": 65
+  },
+  "streams": {
+   "patient": {
+    "ms": 46.318599999999996,
+    "hms": 3.1036,
+    "rec": 0,
+    "neu": 44.7848,
+    "gains": 94.207,
+    "cost": 31.8906,
+    "etp": 503.2663,
+    "cases": [
+     "A-01",
+     "A-02",
+     "A-04",
+     "A-05",
+     "A-06",
+     "A-07",
+     "A-15",
+     "A-16",
+     "A-17",
+     "A-18",
+     "X-01",
+     "X-02",
+     "X-03",
+     "X-09",
+     "X-10",
+     "X-11",
+     "R-06"
+    ]
+   },
+   "soin": {
+    "ms": 58.5237,
+    "hms": 36.6361,
+    "rec": 0,
+    "neu": 8.1469,
+    "gains": 103.30669999999999,
+    "cost": 26.2913,
+    "etp": 790.3635,
+    "cases": [
+     "P-01",
+     "P-02",
+     "P-03",
+     "P-04",
+     "P-05",
+     "P-06",
+     "P-07",
+     "P-08",
+     "X-06",
+     "X-07",
+     "X-08",
+     "C-01",
+     "C-02",
+     "C-04",
+     "H-01",
+     "H-02",
+     "H-03",
+     "H-04",
+     "A-20"
+    ]
+   },
+   "actifs": {
+    "ms": 0,
+    "hms": 50.1796,
+    "rec": 0,
+    "neu": 8.3797,
+    "gains": 58.5593,
+    "cost": 24.742399999999996,
+    "etp": 0,
+    "cases": [
+     "I-01",
+     "I-02",
+     "I-03",
+     "I-04",
+     "I-05",
+     "I-06",
+     "I-07",
+     "I-08",
+     "I-09",
+     "I-11",
+     "R-04",
+     "R-05"
+    ]
+   },
+   "revenu": {
+    "ms": 31.8298,
+    "hms": 1.707,
+    "rec": 84.0297,
+    "neu": 5.8192,
+    "gains": 123.3857,
+    "cost": 17.596,
+    "etp": 294.8545,
+    "cases": [
+     "A-03",
+     "A-08",
+     "A-09",
+     "A-10",
+     "A-11",
+     "A-12",
+     "A-13",
+     "A-14",
+     "A-19",
+     "R-01",
+     "R-02"
+    ]
+   },
+   "ouvertures": {
+    "ms": 0.52,
+    "hms": 0,
+    "rec": 0,
+    "neu": 7.3605,
+    "gains": 7.8805,
+    "cost": 1.956,
+    "etp": 2.7755,
+    "cases": [
+     "S-16",
+     "T-06",
+     "I-10"
+    ]
+   },
+   "siege": {
+    "ms": 16.2609,
+    "hms": 27.6186,
+    "rec": 0,
+    "neu": 0,
+    "gains": 43.8795,
+    "cost": 10.6116,
+    "etp": 88.69099999999999,
+    "cases": [
+     "S-01",
+     "S-02",
+     "S-03",
+     "S-04",
+     "S-05",
+     "S-06",
+     "S-07",
+     "S-08",
+     "S-09",
+     "S-10",
+     "S-11",
+     "S-12",
+     "S-13",
+     "S-14",
+     "S-15",
+     "R-03"
+    ]
+   },
+   "leviers": {
+    "ms": 0,
+    "hms": 0,
+    "rec": 0,
+    "neu": 0,
+    "gains": 0,
+    "cost": 8.72,
+    "etp": 0,
+    "cases": [
+     "T-01",
+     "T-02",
+     "T-03",
+     "T-04",
+     "T-05",
+     "T-07",
+     "T-08"
+    ]
+   }
+  }
+ }
+}

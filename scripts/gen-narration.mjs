@@ -5,6 +5,8 @@
 //   node scripts/build-tour.mjs && node scripts/gen-narration.mjs --uniform   ← all it takes once the Gemini cap is raised
 //   --uniform  also redoes beats recorded with another model or voice   · --force  redoes every beat
 //   --verify   transcribes each file back (checks nothing extra was read aloud)
+//   --set v23  records the visits of the v2.3 dataset into public/audio/tour-v23/ (default: v13 → public/audio/tour/)
+//   --check    no generation: per-file duration, peak level of the last 150 ms (static / noise at the end) and verdict
 //   TTS_MODEL=… TTS_VOICE=… to choose the model / voice (default gemini-3.8-flash-tts / Iapetus) · TTS_WORKERS=3
 // Exit code 1 and a "NOT READY" verdict when any beat is missing, out of date or from another model/voice.
 import fs from "node:fs";
@@ -14,14 +16,20 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const OUT = path.join(ROOT, "public", "audio", "tour");
-const SCRIPT = JSON.parse(fs.readFileSync(path.join(ROOT, "lib", "ai", "tour-script.json"), "utf8"));
+const argv = process.argv.slice(2);
+const args = new Set(argv);
+// --set v23: the visits of the v2.3 dataset (lib/ai/tour-v23-*.json → public/audio/tour-v23/, own manifest).
+// Default (v13): lib/ai/tour-script.json + tour-complete.json → public/audio/tour/ (unchanged).
+const SET = argv.includes("--set") ? argv[argv.indexOf("--set") + 1] : "v13";
+if (!["v13", "v23"].includes(SET)) { console.error(`unknown --set ${SET} (v13 | v23)`); process.exit(1); }
+const OUT = path.join(ROOT, "public", "audio", SET === "v23" ? "tour-v23" : "tour");
+const SCRIPT_PATH = path.join(ROOT, "lib", "ai", SET === "v23" ? "tour-v23-express.json" : "tour-script.json");
+const SCRIPT = JSON.parse(fs.readFileSync(SCRIPT_PATH, "utf8"));
 // chapters → beats (v2), or a flat beats list (v1); both tours (express + complete), each beat id once
 const flat = (s) => (s.chapters ? s.chapters.flatMap((c) => c.beats) : s.beats || []);
-const COMPLETE_PATH = path.join(ROOT, "lib", "ai", "tour-complete.json");
+const COMPLETE_PATH = path.join(ROOT, "lib", "ai", SET === "v23" ? "tour-v23-complete.json" : "tour-complete.json");
 const ALL = [...flat(SCRIPT), ...(fs.existsSync(COMPLETE_PATH) ? flat(JSON.parse(fs.readFileSync(COMPLETE_PATH, "utf8"))) : [])];
 const BEATS = ALL.filter((b, i) => ALL.findIndex((x) => String(x.id) === String(b.id)) === i);
-const args = new Set(process.argv.slice(2));
 
 function loadEnv() {
   for (const f of [".env.local", ".env"]) {
@@ -42,6 +50,48 @@ const VOICE = process.env.TTS_VOICE || SCRIPT.voice || "Iapetus";
 const API = "https://generativelanguage.googleapis.com/v1beta/models";
 
 const hasFfmpeg = (() => { try { execFileSync("ffmpeg", ["-version"], { stdio: "ignore" }); return true; } catch { return false; } })();
+
+// --check: the end of every clip must be silence (no static burst, no noise tail)
+if (args.has("--check")) {
+  const man = JSON.parse(fs.readFileSync(path.join(OUT, "manifest.json"), "utf8"));
+  let bad = 0, total = 0;
+  for (const b of BEATS) {
+    const e = man.beats[String(b.id)];
+    if (!e) { console.log(`  #${b.id} MISSING`); bad++; continue; }
+    const pcm = execFileSync("ffmpeg", ["-v", "error", "-i", path.join(OUT, e.file), "-f", "s16le", "-ac", "1", "-ar", "24000", "-"], { maxBuffer: 64 << 20 });
+    const s16 = new Int16Array(pcm.buffer, pcm.byteOffset, Math.floor(pcm.length / 2));
+    // 10 ms windows over the last 800 ms: a "burst" is a loud window after ≥ 80 ms of silence (container junk read as
+    // audio = static), the "cut" is the level of the very last 50 ms (the voice must have ended before the file does)
+    const win = 240, from = Math.max(0, s16.length - 24000 * 0.8);
+    const rmsOf = (a, b) => { let e = 0; for (let i = a; i < b; i++) e += s16[i] * s16[i]; return Math.sqrt(e / Math.max(1, b - a)); };
+    // a burst = the LAST loud run is short (≤ 300 ms), ends in the last 400 ms, follows ≥ 80 ms of silence, and is
+    // hiss-like or clipped (a final plosive or a short last word after a pause is speech, not static)
+    const w = [];
+    for (let i = from; i + win <= s16.length; i += win) w.push(rmsOf(i, i + win));
+    let burst = 0, tailInfo = "";
+    let z = w.length - 1; while (z >= 0 && w[z] < 1500) z--;
+    if (z >= 0 && w.length - 1 - z <= 40) {
+      let a = z; while (a > 0 && w[a - 1] >= 150) a--;
+      let q = 0, k = a - 1; while (k >= 0 && w[k] < 150) { q++; k--; }
+      const i0 = from + a * win, i1 = from + (z + 1) * win;
+      let zc = 0; for (let i = i0 + 1; i < i1; i++) if ((s16[i] >= 0) !== (s16[i - 1] >= 0)) zc++;
+      const zcr = zc / Math.max(1, i1 - i0);
+      let pk = 0; for (let i = i0; i < i1; i++) pk = Math.max(pk, Math.abs(s16[i]));
+      // static = hiss-like (zero-crossing rate) or clipped; a plosive release or a short final word is neither
+      if (z - a + 1 <= 30 && q >= 8 && (zcr > 0.3 || pk > 28000)) burst = Math.max(...w.slice(a, z + 1));
+      tailInfo = `zcr ${zcr.toFixed(2)}`;
+    }
+    let peak = 0;
+    for (let i = Math.max(0, s16.length - 1200); i < s16.length; i++) peak = Math.max(peak, Math.abs(s16[i]));
+    const rms = rmsOf(Math.max(0, s16.length - 1200), s16.length);
+    const dur = s16.length / 24000; total += dur;
+    const ok = !burst && peak < 2500;
+    if (!ok) bad++;
+    console.log(`  ${ok ? "ok " : "BAD"} #${String(b.id).padEnd(16)} ${dur.toFixed(2).padStart(6)} s   last 50 ms peak ${String(peak).padStart(5)} rms ${rms.toFixed(0).padStart(4)}${burst ? `   BURST after silence (rms ${burst.toFixed(0)}, ${tailInfo})` : ""}`);
+  }
+  console.log(`${BEATS.length} clips · ${Math.floor(total / 60)} min ${String(Math.round(total % 60)).padStart(2, "0")} s · ${bad ? bad + " to check" : "all clean"}`);
+  process.exit(bad ? 1 : 0);
+}
 
 function wav(pcm, rate = 24000) {
   const h = Buffer.alloc(44);

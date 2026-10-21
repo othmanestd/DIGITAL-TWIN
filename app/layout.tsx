@@ -6,7 +6,7 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"], wei
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"], weight: ["400", "500", "600"] });
 
 export const metadata: Metadata = {
-  title: "Akdital augmenté · 302 MDH de masse salariale · Mibtech × JABB",
+  title: "Akdital augmenté · jumeau numérique du programme · Mibtech × JABB",
   description: "Jumeau numérique interactif du programme : l'hôpital type Akdital, le réseau marocain et le monde, augmentés par les agents IA.",
   robots: { index: false, follow: false },
 };

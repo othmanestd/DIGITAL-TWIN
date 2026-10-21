@@ -1,5 +1,6 @@
 "use client";
-// Split-screen analytics panel (right). Opens when something is selected; content per selection kind; no scrolling.
+// Split-screen analytics panel (right). Opens when something is selected; content per selection kind.
+// Only the use-case dossier scrolls (inside the panel); the app frame never does.
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useApp, type Sel } from "@/lib/store";
@@ -32,6 +33,8 @@ export default function SidePanel() {
   const kind = cur?.sel.kind;
   const key = cur ? `${cur.sel.kind}:${cur.sel.id}:${cur.caseId ?? ""}` : "none";
   const bc = cur ? crumbs(cur.sel.kind, cur.sel.id, cur.caseId) : [];
+  // a use case opens as a scrollable dossier that manages its own padding (sticky header, scrolling page)
+  const flush = !!cur && (!!cur.caseId || kind === "case");
 
   let body: React.ReactNode = null;
   if (cur) {
@@ -78,7 +81,7 @@ export default function SidePanel() {
       </div>
       <div className="relative min-h-0 flex-1">
         <AnimatePresence mode="popLayout" initial={false}>
-          <motion.div key={key} className="absolute inset-0 px-6 pb-5 pt-5 [@media(max-height:960px)]:px-5 [@media(max-height:960px)]:pt-4"
+          <motion.div key={key} className={flush ? "absolute inset-0" : "absolute inset-0 px-6 pb-5 pt-5 [@media(max-height:960px)]:px-5 [@media(max-height:960px)]:pt-4"}
             initial={{ opacity: 0, x: 24, filter: "blur(4px)" }} animate={{ opacity: 1, x: 0, filter: "blur(0px)" }} exit={{ opacity: 0, x: -16, filter: "blur(4px)" }}
             transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}>
             {body}

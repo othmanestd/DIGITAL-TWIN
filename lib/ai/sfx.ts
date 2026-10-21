@@ -116,6 +116,46 @@ export function swell() {
   bell(CHIME[2], t + 1.1, 0.08, -0.2);
 }
 
+/** Guided visit, value ledger: a value flows in (n lines → a short rising arpeggio) or the cost is deducted (lower, softer). */
+export function reveal(n = 1, cost = false) {
+  if (!g || !enabled) return;
+  const t = g.ctx.currentTime + 0.05;
+  if (cost) { bell(74, t, 0.1, -0.2); bell(69, t + 0.16, 0.08, 0.2); return; }
+  const notes = [81, 85, 88, 90, 93].slice(0, Math.max(2, Math.min(5, n + 1)));
+  notes.forEach((m, i) => bell(m, t + 0.35 + i * 0.11, 0.11 * (1 - i * 0.1), (i / 4) * 0.8 - 0.4));
+}
+
+/** Guided visit, title card: a low D major bloom with one high bell (under the music, no noise). */
+export function titleSting() {
+  if (!g || !enabled) return;
+  const { ctx } = g;
+  const t = ctx.currentTime + 0.05;
+  for (const [m, a] of [[38, 0.08], [45, 0.06], [50, 0.05], [57, 0.035], [62, 0.025]] as const) {
+    const o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = mtof(m); o.detune.value = rnd(-4, 4);
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(0, t); og.gain.linearRampToValueAtTime(a, t + 2.2); og.gain.exponentialRampToValueAtTime(0.0001, t + 7.5);
+    o.connect(og); og.connect(g.send); og.connect(g.dry);
+    o.start(t); o.stop(t + 7.6);
+  }
+  bell(CHIME[3], t + 1.6, 0.12, 0);
+  bell(CHIME[1], t + 2.3, 0.07, 0.25);
+}
+
+/** Guided visit, the net value: a warm full chord and a slow descending-then-rising bell figure. */
+export function finaleChord() {
+  if (!g || !enabled) return;
+  const { ctx } = g;
+  const t = ctx.currentTime + 0.05;
+  for (const [m, a] of [[50, 0.09], [57, 0.07], [62, 0.06], [66, 0.05], [69, 0.04], [74, 0.03], [78, 0.02]] as const) {
+    const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = mtof(m); o.detune.value = rnd(-5, 5);
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(0, t); og.gain.linearRampToValueAtTime(a, t + 0.9); og.gain.exponentialRampToValueAtTime(0.0001, t + 6);
+    o.connect(og); og.connect(g.send); og.connect(g.dry);
+    o.start(t); o.stop(t + 6.1);
+  }
+  [90, 86, 88, 93, 98].forEach((m, i) => bell(m, t + 0.5 + i * 0.18, 0.12 * (1 - i * 0.12), (i / 4) * 1.0 - 0.5));
+}
+
 /** JABB easter egg: a tiny ascending sparkle. */
 export function sparkle() {
   if (!g || !enabled) return;

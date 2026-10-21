@@ -5,11 +5,11 @@
 import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useApp, type Level } from "@/lib/store";
-import { agg, fr } from "@/lib/model";
+import { agg, fr, V23 } from "@/lib/model";
 import { DEPTS, CASE_DEPT, KIND_COLOR, EXPERIENCES, type Dept } from "@/lib/hospital";
 import { DeptIcon, I } from "./icons";
 import { Tip } from "./kit";
-import { money, floorShort } from "@/lib/ui/fmt";
+import { money, floorShort, yearPhrase } from "@/lib/ui/fmt";
 import { useViewport } from "@/lib/ui/hooks";
 import s from "./styles";
 
@@ -80,7 +80,7 @@ function DeptTip({ d }: { d: Dept }) {
       <div className="mt-0.5 text-[11.5px] text-[var(--mut)]">{d.building === "annex" ? "Siège" : floorShort(d.building, d.floor)}</div>
       <div className="mt-1.5 text-[12.5px]">
         {d.cases.length ? (
-          <><span className="num text-[15px] text-[var(--green)]">{fr(m.v, m.d)}</span> <span className="font-semibold">{m.unit}</span> <span className="text-[var(--mut)]">({m.unit === "MDH" ? "millions" : "milliers"} de dirhams) économisés {year === 2029 ? "au plein régime" : year === 2026 ? "aujourd'hui" : `en ${year}`}{perSite ? ", hôpital type" : ""}</span></>
+          <><span className="num text-[15px] text-[var(--green)]">{fr(m.v, m.d)}</span> <span className="font-semibold">{m.unit}</span> <span className="text-[var(--mut)]">({m.unit === "MDH" ? "millions" : "milliers"} de dirhams) {V23 ? "de gains bruts" : "économisés"} {yearPhrase(year)}{perSite ? ", hôpital type" : ""}</span></>
         ) : <span className="text-[var(--mut)]">Soin humain : pas de cas d&apos;usage propre</span>}
       </div>
       {nXp > 0 && <div className="mt-1 text-[11.5px] text-[#AFC0FF]">{nXp} expérience{nXp > 1 ? "s" : ""} IA pour les patients</div>}

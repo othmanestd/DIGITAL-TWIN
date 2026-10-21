@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { motion } from "motion/react";
 import { useApp } from "@/lib/store";
-import { agg, fr, YEARS, CASE, META, benchFor, type UseCase, type Year } from "@/lib/model";
+import { agg, fr, YEARS, CASE, META, V23, benchFor, type UseCase, type Year } from "@/lib/model";
 import { MarketTile, MiniBar, Pictogram, Tip, Dot, Segmented } from "@/components/ui/kit";
 import { I } from "@/components/ui/icons";
 import { aggSeries, deltaText, money, FAM_COLOR, STEP_COLOR, ACTOR_LABEL, in302, levelCode, LEVEL_LABEL, LEVEL_COLOR, headline, benchOf } from "@/lib/ui/fmt";
@@ -33,11 +33,11 @@ export function KpiStrip({ ids, year, perSite, note }: { ids: string[]; year: Ye
   const scale = (arr: number[], u: string) => (u === "kMAD" ? arr.map((x) => x * 1000) : arr);
   const unitTip = (u: string) => (u === "MDH" ? "MDH : millions de dirhams marocains. 1 MDH = 1 000 000 MAD." : "kMAD : milliers de dirhams marocains. 1 kMAD = 1 000 MAD.");
   const tiles = [
-    { label: "Économie", value: m.v, d: m.d, unit: m.unit, unitTip: unitTip(m.unit), series: scale(eco, m.unit), explain: <>{unitTxt(m.unit)} par an</>, color: "var(--green)", tone: "pos" as const },
+    { label: V23 ? "Gains bruts" : "Économie", value: m.v, d: m.d, unit: m.unit, unitTip: unitTip(m.unit), series: scale(eco, m.unit), explain: <>{unitTxt(m.unit)} par an{V23 ? " : économies + marge sur CA" : ""}</>, color: "var(--green)", tone: "pos" as const },
     { label: tsize === "md" ? "ETP-éq. libérés" : "ETP-éq.", value: a.etp, d: a.etp < 10 ? 1 : 0, unit: "", series: etp, explain: <>équivalents temps plein libérés</>, color: "#9FB3FF", tone: "pos" as const },
-    { label: tsize === "md" ? "Coût des agents" : "Coût agents", value: mc.v, d: mc.d, unit: mc.unit, unitTip: unitTip(mc.unit), series: scale(cout, mc.unit), explain: <>{mc.unit} par an, licences et calcul</>, color: "#B9C1D6", tone: "neutral" as const },
-    { label: "Gain net", value: mn.v, d: mn.d, unit: mn.unit, unitTip: unitTip(mn.unit), series: scale(net, mn.unit), explain: <>économie moins coût des agents</>, color: "#E6EAF5", tone: "pos" as const },
-    { label: "ROI", value: a.roi, d: 2, unit: "", series: roi, explain: <>dirhams rendus pour 1 dirham d&apos;agents</>, color: "var(--amber)", tone: "neutral" as const },
+    { label: V23 ? (tsize === "md" ? "Coût des cas" : "Coût") : tsize === "md" ? "Coût des agents" : "Coût agents", value: mc.v, d: mc.d, unit: mc.unit, unitTip: unitTip(mc.unit), series: scale(cout, mc.unit), explain: <>{mc.unit} par an, {V23 ? "agents et plateformes" : "licences et calcul"}</>, color: "#B9C1D6", tone: "neutral" as const },
+    { label: V23 ? "Valeur nette" : "Gain net", value: mn.v, d: mn.d, unit: mn.unit, unitTip: unitTip(mn.unit), series: scale(net, mn.unit), explain: <>{V23 ? "gains bruts moins coût" : "économie moins coût des agents"}</>, color: "#E6EAF5", tone: "pos" as const },
+    { label: "ROI", value: a.roi, d: 2, unit: "", series: roi, explain: <>{V23 ? "dirhams de gains pour 1 dirham de coût" : "dirhams rendus pour 1 dirham d'agents"}</>, color: "var(--amber)", tone: "neutral" as const },
   ];
   return (
     <div ref={ref}>
@@ -48,17 +48,19 @@ export function KpiStrip({ ids, year, perSite, note }: { ids: string[]; year: Ye
             delta={tsize === "sm" || tsize === "xs" ? null : deltaText(t.series, i, t.d, "")} explain={tight ? undefined : t.explain} />
         ))}
       </div>
-      {(tight || tsize === "xs") && <div className="mt-1.5 truncate text-[11px] text-[var(--mut)]">{m.unit} = {m.unit === "MDH" ? "millions" : "milliers"} de dirhams, par an · ETP-éq. = équivalents temps plein libérés · ROI = dirhams rendus pour 1 dirham d&apos;agents</div>}
+      {(tight || tsize === "xs") && <div className="mt-1.5 truncate text-[11px] text-[var(--mut)]">{m.unit} = {m.unit === "MDH" ? "millions" : "milliers"} de dirhams, par an · ETP-éq. = équivalents temps plein libérés · ROI = {V23 ? "dirhams de gains pour 1 dirham de coût" : "dirhams rendus pour 1 dirham d'agents"}</div>}
       {note && <div className="mt-1.5 text-[11.5px] text-[var(--mut)]">{note}</div>}
     </div>
   );
 }
 
 /* ---------------------------------------------------------------- people pictogram block */
-export function PeopleBlock({ value, color, title, text, size = 34 }: { value: number; color: string; title: ReactNode; text: ReactNode; size?: number }) {
-  const compact = useCompact();
-  const tight = useTight();
-  const vt = useVeryTight();
+export function PeopleBlock({ value, color, title, text, size = 34, full = false }: { value: number; color: string; title: ReactNode; text: ReactNode; size?: number; full?: boolean }) {
+  const compact = useCompact() && !full;
+  const tight = useTight() && !full;
+  const vt = useVeryTight() && !full;
+  const [boxRef, box] = useSize<HTMLDivElement>();
+  const stack = full && box.w > 0 && box.w < 500; // narrow dossier panel: pictogram on top, figures and text under it
   if (vt) return (
     <Tip content={text} className="block">
       <div className={`${s.card} flex cursor-help items-center gap-3 rounded-[14px] px-3 py-2`}>
@@ -70,13 +72,13 @@ export function PeopleBlock({ value, color, title, text, size = 34 }: { value: n
     </Tip>
   );
   return (
-    <div className={`${s.card} flex items-center ${tight ? "gap-4 py-2" : compact ? "gap-5 py-2.5" : "gap-5 py-3.5"} rounded-[16px] px-4`}>
+    <div ref={boxRef} className={`${s.card} flex ${stack ? "flex-col items-start gap-3" : "items-center"} ${tight ? "gap-4 py-2" : compact ? "gap-5 py-2.5" : stack ? "py-3.5" : "gap-5 py-3.5"} rounded-[16px] px-4`}>
       <Pictogram value={value} color={color} size={tight ? size - 10 : compact ? size - 6 : size} gap={compact ? 4 : 6} />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-1.5">
           <span className="num text-[26px] font-[800] leading-none" style={{ color }}>{fr(value, value < 1 && value > 0 ? 1 : value % 1 ? 1 : 0)}</span>
           <span className="text-[13px] font-semibold text-[var(--txt-2)]">sur 10</span>
-          <span className="ml-1 truncate text-[12.5px] text-[var(--mut)]">{title}</span>
+          <span className={`ml-1 text-[12.5px] text-[var(--mut)] ${stack ? "" : "truncate"}`}>{title}</span>
         </div>
         <p className="mt-1 text-[12.5px] leading-snug text-[var(--txt-2)]">{text}</p>
       </div>
@@ -95,8 +97,8 @@ export function CaseRows({ ids, year, perSite, max, onOpen, highlight }: { ids: 
     <div className="flex flex-col">
       <div className={`grid ${cols} items-center gap-2.5 px-3 pb-1.5 text-[10.5px] font-medium uppercase tracking-[0.08em] text-[var(--mut)]`}>
         <span>Cas</span><span>Ce que fait l&apos;IA</span>
-        <Tip content={perSite ? "Économie annuelle par établissement, en MDH (millions de dirhams) ou kMAD (milliers de dirhams). « hors MS » : valeur hors masse salariale." : "Économie annuelle, en MDH (millions de dirhams). « hors MS » : valeur hors masse salariale, non additive."}><span className="cursor-help text-right">Économie</span></Tip>
-        <Tip content="ROI : dirhams économisés pour 1 dirham d'agents."><span className="cursor-help text-right">ROI</span></Tip>
+        <Tip content={V23 ? (perSite ? "Gains bruts annuels par établissement, en MDH (millions de dirhams) ou kMAD (milliers de dirhams). « fusionné » : la valeur est comptée dans un autre cas." : "Gains bruts annuels (économies + marge sur CA), en MDH (millions de dirhams). « fusionné » : la valeur est comptée dans un autre cas.") : perSite ? "Économie annuelle par établissement, en MDH (millions de dirhams) ou kMAD (milliers de dirhams). « hors MS » : valeur hors masse salariale." : "Économie annuelle, en MDH (millions de dirhams). « hors MS » : valeur hors masse salariale, non additive."}><span className="cursor-help text-right">{V23 ? "Gains" : "Économie"}</span></Tip>
+        <Tip content={V23 ? "ROI : dirhams de gains pour 1 dirham de coût." : "ROI : dirhams économisés pour 1 dirham d'agents."}><span className="cursor-help text-right">ROI</span></Tip>
         <Tip content="Meilleur niveau de preuve mesurée ailleurs : A publication scientifique, B publié par l'hôpital, C éditeur avec client nommé."><span className="cursor-help text-center">P.</span></Tip><span />
       </div>
       {shown.map(({ c, a, lv }) => {
@@ -111,7 +113,8 @@ export function CaseRows({ ids, year, perSite, max, onOpen, highlight }: { ids: 
             <span className="truncate text-[13px] text-[var(--txt)] group-hover:text-white">{c.titre}</span>
             <span className="text-right text-[13px]">
               {c.mdh ? <><span className="num font-bold text-[var(--txt)]">{fr(m.v, m.d)}</span> <span className="text-[10.5px] font-semibold text-[var(--mut)]">{m.unit}</span></>
-                : out && c.value_out ? <Tip content={<>{c.value_out} — indicatif, non additif aux {fr(META.eco, 0)} MDH.</>}><span className="cursor-help rounded-full bg-[rgba(91,124,255,.14)] px-1.5 py-[1px] text-[10.5px] font-semibold text-[#AFC0FF]">hors MS</span></Tip>
+                : V23 && c.merged_into ? <Tip content={`Fusionné dans ${c.merged_into} : sa valeur est comptée dans ce cas.`}><span className="cursor-help rounded-full bg-[rgba(91,124,255,.14)] px-1.5 py-[1px] text-[10.5px] font-semibold text-[#AFC0FF]">fusionné</span></Tip>
+                : out && c.value_out && !V23 ? <Tip content={<>{c.value_out} — indicatif, non additif aux {fr(META.eco, 0)} MDH.</>}><span className="cursor-help rounded-full bg-[rgba(91,124,255,.14)] px-1.5 py-[1px] text-[10.5px] font-semibold text-[#AFC0FF]">hors MS</span></Tip>
                 : <span className="text-[11.5px] text-[var(--mut)]">levier</span>}
             </span>
             <span className="num text-right text-[12.5px] text-[var(--txt-2)]">{c.roi ? fr(a.roi || c.roi, 2) : "—"}</span>
@@ -213,7 +216,7 @@ export function ValueOutCard({ c }: { c: UseCase }) {
     <div className="rounded-[16px] px-4 py-3" style={{ background: "linear-gradient(90deg, rgba(91,124,255,.13), rgba(91,124,255,.03))", boxShadow: "inset 3px 0 0 #9FB3FF" }} data-anchor="value-out">
       <div className="flex items-center gap-2">
         <span className="eyebrow !text-[9.5px] !text-[#AFC0FF]">{lever ? "Verdict · levier de réalisation" : "Verdict · valeur hors masse salariale"}</span>
-        {!lever && <span className="ml-auto rounded-full bg-white/[0.07] px-2 py-[2px] text-[10.5px] text-[var(--txt-2)]">indicatif, non additif aux {fr(META.eco, 0)} MDH</span>}
+        {!lever && !V23 && <span className="ml-auto rounded-full bg-white/[0.07] px-2 py-[2px] text-[10.5px] text-[var(--txt-2)]">indicatif, non additif aux {fr(META.eco, 0)} MDH</span>}
       </div>
       <p className="mt-1 text-[clamp(15px,1.05vw,18px)] font-semibold leading-snug text-white">
         {lever ? "Sans gain propre : il transforme le temps libéré en économie réelle (décisions de poste, mobilités, mesure)." : c.value_out ?? "Valeur d'un autre type que la masse salariale."}
@@ -241,9 +244,9 @@ export function CaseListSplit({ ids, year, perSite, onOpen, max, highlight, layo
       <div className="mb-2 flex items-center gap-3">
         {inIds.length > 0 && outIds.length > 0 ? (
           <Segmented<"in" | "out"> size="sm" layoutId={layoutId} value={tab} onChange={setTab}
-            options={[{ id: "in", label: <>Masse salariale ({fr(META.eco, 0)} MDH) · {inIds.length}</> }, { id: "out", label: <>Au-delà de la masse salariale · {outIds.length}</> }]} />
+            options={[{ id: "in", label: V23 ? <>Business case · {inIds.length}</> : <>Masse salariale ({fr(META.eco, 0)} MDH) · {inIds.length}</> }, { id: "out", label: V23 ? <>Fusionnés · {outIds.length}</> : <>Au-delà de la masse salariale · {outIds.length}</> }]} />
         ) : (
-          <span className="eyebrow !text-[10px] text-[var(--txt-2)]">{inIds.length ? `Cas d'usage · masse salariale (${fr(META.eco, 0)} MDH) · ${inIds.length}` : `Cas d'usage · au-delà de la masse salariale · ${outIds.length}`}</span>
+          <span className="eyebrow !text-[10px] text-[var(--txt-2)]">{V23 ? `Cas d'usage · ${inIds.length ? "business case" : "fusionnés"} · ${inIds.length || outIds.length}` : inIds.length ? `Cas d'usage · masse salariale (${fr(META.eco, 0)} MDH) · ${inIds.length}` : `Cas d'usage · au-delà de la masse salariale · ${outIds.length}`}</span>
         )}
         <span className="h-px flex-1 bg-white/[0.07]" />
         <Tip content="Résultats mesurés et publiés ailleurs (hôpitaux, publications scientifiques, éditeurs avec client nommé) pour les cas de ce périmètre.">
@@ -256,22 +259,45 @@ export function CaseListSplit({ ids, year, perSite, onOpen, max, highlight, layo
 }
 
 /* ---------------------------------------------------------------- before / after chain */
+/** In "après" columns Rafiq, Keeps and the Twin are products that act as agents. */
+const AGENT_LIKE: Record<string, string> = { agent: "Agent IA", rafiq: "Rafiq (agent)", keeps: "Keeps (agent)", jabb_twin: "JABB Twin (agent)" };
+export const isAgentStep = (actor: string) => actor in AGENT_LIKE;
 function stepColor(actor: string, after: boolean) {
-  if (actor === "agent") return STEP_COLOR.agent;
+  if (actor in AGENT_LIKE) return STEP_COLOR.agent;
   if (actor === "humain") return after ? STEP_COLOR.validation : STEP_COLOR.human;
   if (actor === "systeme") return STEP_COLOR.system;
   return STEP_COLOR.tool;
 }
 function stepTag(actor: string, after: boolean) {
-  if (actor === "agent") return "Agent IA";
+  if (actor in AGENT_LIKE) return AGENT_LIKE[actor];
   if (actor === "humain") return after ? "Validation humaine" : "Humain";
   return ACTOR_LABEL[actor] ?? actor;
 }
 function stepIcon(actor: string, after: boolean) {
-  if (actor === "agent") return <I.spark size={12} strokeWidth={2} />;
+  if (actor in AGENT_LIKE) return <I.spark size={12} strokeWidth={2} />;
   if (actor === "humain") return after ? <I.check size={12} strokeWidth={2.2} /> : <I.person size={12} strokeWidth={2} />;
   if (actor === "systeme") return <I.layers size={12} strokeWidth={2} />;
   return <I.doc size={12} strokeWidth={2} />;
+}
+/** Full-width list of the steps of a task, one line each, coloured by who does it. `texts` optionally replaces the step texts (glossary notes). */
+export function Steps({ steps, after, texts }: { steps: UseCase["avant"]; after: boolean; texts?: ReactNode[] }) {
+  return (
+    <ol className="flex flex-col gap-[5px]">
+      {steps.map((st, k) => {
+        const color = stepColor(st.acteur, after);
+        const isAgent = st.acteur in AGENT_LIKE;
+        return (
+          <li key={k} className="flex items-start gap-2.5 rounded-[10px] px-2.5 py-[7px]"
+            style={{ background: isAgent ? "rgba(91,124,255,.14)" : "rgba(255,255,255,.035)", boxShadow: `inset 2px 0 0 ${color}` }}>
+            <Tip content={stepTag(st.acteur, after)} side="left">
+              <span className="mt-[1px] grid h-[20px] w-[20px] shrink-0 place-items-center rounded-full" style={{ background: `color-mix(in srgb, ${color} 22%, transparent)`, color }}>{stepIcon(st.acteur, after)}</span>
+            </Tip>
+            <span className="min-w-0 flex-1 text-[13px] leading-snug text-[var(--txt)]"><span className="sr-only">{stepTag(st.acteur, after)} : </span>{texts?.[k] ?? st.texte}</span>
+          </li>
+        );
+      })}
+    </ol>
+  );
 }
 export function ChainLegend() {
   return (

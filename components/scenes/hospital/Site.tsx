@@ -9,6 +9,8 @@ import { useApp } from "@/lib/store";
 import { GEO, PAL, rt, setFloorOpacity } from "./mats";
 import { letteringTexture, logoTexture, ribbonGeometry } from "./Facade";
 import { TOP_FLOOR } from "./layout";
+import { CAMPUS } from "@/components/scenes/city/district";
+import { registerSolids, type Solid } from "@/components/scenes/city/collide";
 
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _v = new THREE.Vector3(), _s = new THREE.Vector3(), _c = new THREE.Color();
 
@@ -33,8 +35,11 @@ function Boxes({ geo = GEO.box, mat, items, shadow = true }: { geo?: THREE.Buffe
 
 const std = (color: string, rough = 0.9, extra: Partial<THREE.MeshStandardMaterialParameters> = {}) => new THREE.MeshStandardMaterial({ color, roughness: rough, ...extra });
 
-// ---------------------------------------------------------------- site plan (world units, front = +z)
+// ---------------------------------------------------------------- site plan (campus frame, front = +z)
 const SITE = { x0: -60, x1: 88, z0: -42, z1: 52, r: 9, depth: 5.6 };
+// The campus group sits at CAMPUS_OFFSET = (−14, 0, −5) in the unified world: campus = world + (14, 0, 5).
+// The vehicle loop (city/district.ts CAMPUS) is defined in world metres so it lines up with the city streets.
+const OX = 14, OZ = 5;
 
 function textTexture(text: string, color: string, w = 1024, h = 160, weight = 600, spacing = 0.32, bg?: string) {
   const c = document.createElement("canvas");
@@ -133,15 +138,21 @@ export function Site({ standalone = false }: { standalone?: boolean }) {
       coral: std("#C9776C", 0.7), line: std("#F6F7FA", 0.9),
     };
 
-    // ground surfaces (thin boxes on the plinth top)
+    // ground surfaces (thin boxes on the plinth top); fw takes WORLD x0, x1, z0, z1 (see OX, OZ)
     const flat = (x0: number, x1: number, z0: number, z1: number, y = 0.02): Box => ({ x: (x0 + x1) / 2, y, z: (z0 + z1) / 2, sx: x1 - x0, sy: 0.04, sz: z1 - z0 });
+    const fw = (x0: number, x1: number, z0: number, z1: number, y = 0.02) => flat(x0 + OX, x1 + OX, z0 + OZ, z1 + OZ, y);
+    const C = CAMPUS, ca = C.ca, hE = C.rampE.w / 2, hW = C.rampW.w / 2, hdl = C.drop.w / 2, ht = C.tin.w / 2;
+    const PK = { x0: -70, x1: -44, z0: -15, z1: 28, aisle: C.tout.x };   // car park (world); its north–south aisle lines up with the exit throat
     const roads: Box[] = [
-      flat(SITE.x0 + 0.3, SITE.x1 - 0.3, 37, 44),       // boulevard
-      flat(-26, 32, 20.2, 24.6),                         // drop-off lane
-      flat(-26, -20.5, 24.6, 37), flat(26.5, 32, 24.6, 37), // ramps
-      flat(9.5, 26, 13.6, 20.2),                         // ambulance bay
-      flat(-56, -30, -10, 33),                           // parking
-      flat(-30, -26, 20.2, 24.6),
+      fw(ca.x0, ca.x1, ca.z0, ca.z1),                                                  // contre-allée (one-way, westbound)
+      fw(C.tin.x - ht, C.tin.x + ht, ca.z1 - 0.1, 47.2), fw(C.tout.x - ht, C.tout.x + ht, ca.z1 - 0.1, 47.2), // entry / exit throats
+      fw(C.rampE.x - hE, C.rampE.x + hE, C.drop.z + hdl, ca.z0 + 0.1),                    // east ramp (up to the drop-off)
+      fw(C.rampW.x - hW, C.rampW.x + hW, C.drop.z + hdl, ca.z0 + 0.1),                    // west ramp (back down)
+      fw(C.rampW.x - hW, C.rampE.x + hE, C.drop.z - hdl, C.drop.z + hdl),                  // drop-off lane under the canopy
+      fw(-4.5, 12, 8.6, C.drop.z - hdl),                                                  // ambulance bay (Urgences)
+      fw(PK.x0, PK.x1, PK.z0, PK.z1),                                                    // car park
+      fw(PK.x1, C.rampW.x - hW, C.drop.z - hdl, C.drop.z + hdl),                           // car park <- drop-off lane
+      fw(PK.aisle - 3, PK.aisle + 3, PK.z1 - 0.1, ca.z0 + 0.1),                          // car park -> exit throat
     ];
     const lawns: Box[] = [
       flat(SITE.x0 + 0.5, SITE.x1 - 0.5, -41, -16, 0.015),
@@ -149,18 +160,43 @@ export function Site({ standalone = false }: { standalone?: boolean }) {
       flat(-29, -26.6, -14, 19, 0.015),
       flat(-19, 25.5, 25.5, 36, 0.015),
       flat(33, 59, 21, 36, 0.015),
+      fw(-73.6, ca.x0, PK.z1 + 0.2, ca.z1, 0.015), fw(ca.x1, 73.6, 31, ca.z1, 0.015),   // ends of the contre-allée
+      fw(PK.x0, PK.aisle - 3, PK.z1, ca.z0, 0.015), fw(PK.aisle + 3, C.rampW.x - hW, PK.z1, ca.z0, 0.015),
     ];
     const paving: Box[] = [
       flat(-14, 9, 13.6, 20.2, 0.025),                   // entrance forecourt
       flat(-8, 6, 24.6, 36, 0.03),                       // plaza across the lane
       flat(33.5, 59, 7.4, 20.2, 0.025),                  // head-office forecourt
       flat(26.6, 34.6, -16, 13.4, 0.022),                // walkway between buildings
+      // front pavement along the boulevard (between the throats), with the bus shelter
+      fw(-73.6, C.tout.x - ht, ca.z1, 47.2, 0.022), fw(C.tout.x + ht, C.tin.x - ht, ca.z1, 47.2, 0.022), fw(C.tin.x + ht, 73.6, ca.z1, 47.2, 0.022),
     ];
-    // parking stalls (thin white lines) and lane dashes
-    const lines: Box[] = [];
-    for (const zc of [-3, 13, 26]) for (let i = 0; i <= 8; i++) lines.push({ x: -54 + i * 2.8, y: 0.05, z: zc, sx: 0.08, sy: 0.01, sz: 5.2 });
-    for (let i = 0; i < 26; i++) lines.push({ x: SITE.x0 + 4 + i * 5.6, y: 0.05, z: 40.5, sx: 2.4, sy: 0.01, sz: 0.14 });
-    for (let i = 0; i < 6; i++) lines.push({ x: -2 + i * 0.9 - 2.2, y: 0.05, z: 22.4, sx: 0.5, sy: 0.01, sz: 4.0 }); // zebra crossing
+    // markings: car-park bays, zebras (stripes along the road), one-way arrows, the ambulance bay edge
+    const lines: Box[] = [], coral: Box[] = [];
+    const ln = (x: number, z: number, sx: number, sz: number, yaw = 0) => lines.push({ x: x + OX, y: 0.05, z: z + OZ, sx, sy: 0.01, sz, yaw });
+    const stallW = 2.6, rows: [number, number][] = [[PK.z0, PK.z0 + 5], [-4, 1], [1, 6], [12, 17], [17, 22]]; // [z0, z1] of each row of bays
+    const opensSouth = (z0: number) => z0 === PK.z0 || z0 === 1 || z0 === 17;
+    for (const [z0, z1] of rows) {
+      for (let x = PK.x0 + 0.6; x <= PK.aisle - 3.2; x += stallW) ln(x, (z0 + z1) / 2, 0.1, z1 - z0);
+      ln((PK.x0 + 0.6 + PK.aisle - 3.2) / 2, opensSouth(z0) ? z0 : z1, PK.aisle - 3.2 - PK.x0 - 0.6, 0.1);
+    }
+    const zebraX = (xc: number, z0: number, z1: number) => { for (let z = z0 + 0.6; z <= z1 - 0.5; z += 1.1) ln(xc, z, 2.8, 0.5); };  // road along x
+    const zebraZ = (zc: number, x0: number, x1: number) => { for (let x = x0 + 0.6; x <= x1 - 0.5; x += 1.1) ln(x, zc, 0.5, 2.8); };  // road along z
+    zebraX(-16, C.drop.z - hdl, C.drop.z + hdl);          // entrance <-> plaza
+    zebraX(-16, ca.z0, ca.z1);                          // plaza <-> front pavement and the bus stop
+    zebraZ(42.6, C.tin.x - ht, C.tin.x + ht); zebraZ(42.6, C.tout.x - ht, C.tout.x + ht); // pavement across the throats
+    const arrow = (x: number, z: number, dx: number, dz: number) => {
+      const yaw = Math.atan2(dx, dz);
+      ln(x, z, 0.24, 2.2, yaw);
+      const hx = x + dx * 1.1, hz = z + dz * 1.1;
+      for (const sd of [-1, 1]) { const a = yaw + sd * 0.62; ln(hx - Math.sin(a) * 0.55, hz - Math.cos(a) * 0.55, 0.22, 1.25, a); }
+    };
+    arrow(36, ca.z, -1, 0); arrow(-2, ca.z, -1, 0); arrow(-30, ca.z, -1, 0);
+    arrow(C.tin.x, 41.2, 0, -1); arrow(C.tout.x, 37.4, 0, 1);
+    arrow(C.rampE.x, 26, 0, -1); arrow(C.rampW.x, 26, 0, 1); arrow(6, C.drop.z, -1, 0);
+    // ambulance bay edge (muted coral)
+    for (const [x0, x1, z0, z1] of [[-4.5, 12, 8.75, 8.9], [-4.5, 12, C.drop.z - hdl - 0.15, C.drop.z - hdl], [-4.5, -4.35, 8.6, C.drop.z - hdl], [11.85, 12, 8.6, C.drop.z - hdl]] as const)
+      coral.push({ x: (x0 + x1) / 2 + OX, y: 0.052, z: (z0 + z1) / 2 + OZ, sx: x1 - x0, sy: 0.012, sz: z1 - z0 });
 
     // cars
     const PAINT = ["#F4F5F7", "#C9CED8", "#8F98AA", "#4C5568", "#E6E1D8", "#B8C3D6", "#2F3647"];
@@ -171,12 +207,11 @@ export function Site({ standalone = false }: { standalone?: boolean }) {
       const c = Math.cos(yaw), s = Math.sin(yaw);
       cabins.push({ x: x - 0.15 * s, y: 1.18, z: z - 0.15 * c, sx: 1.62, sy: 0.55, sz: 2.2, yaw });
     };
-    for (const zc of [-3, 13, 26]) for (const side of [-1, 1]) for (let i = 0; i < 8; i++) {
+    // parked cars in the bays (nose towards the aisle), leaving gaps
+    for (const [z0, z1] of rows) for (let x = PK.x0 + 0.6; x + stallW <= PK.aisle - 3.2 + 0.01; x += stallW) {
       if (rr() < 0.3) continue;
-      car(-52.6 + i * 2.8, zc + side * 2.7, side > 0 ? Math.PI : 0, PAINT[Math.floor(rr() * PAINT.length)]);
+      car(x + stallW / 2 + OX, (z0 + z1) / 2 + OZ, opensSouth(z0) ? 0 : Math.PI, PAINT[Math.floor(rr() * PAINT.length)]);
     }
-    car(-12, 22.4, Math.PI / 2, "#F4F5F7"); car(-17.5, 21.6, Math.PI / 2, "#8F98AA");
-    car(44, 30, 0, "#4C5568"); car(47, 30, 0, "#C9CED8"); car(50, 30, 0, "#F4F5F7");
 
     // ambulances
     const amb: Box[] = [], ambCab: Box[] = [], ambStripe: Box[] = [], ambLight: Box[] = [];
@@ -187,13 +222,18 @@ export function Site({ standalone = false }: { standalone?: boolean }) {
       ambStripe.push({ x: x - 0.6 * s, y: 1.25, z: z - 0.6 * c, sx: 2.24, sy: 0.28, sz: 3.94, yaw });
       ambLight.push({ x: x + 0.9 * s, y: 2.56, z: z + 0.9 * c, sx: 1.2, sy: 0.14, sz: 0.3, yaw });
     };
-    ambulance(13.5, 17.2, Math.PI); ambulance(18.2, 17.0, Math.PI); ambulance(22.6, 22.4, -Math.PI / 2);
+    for (const wx of [-1.2, 3.6, 8.4]) ambulance(wx + OX, 12.3 + OZ, Math.PI); // nose towards the Urgences doors
 
     // trees
     const trees: { x: number; z: number; s: number; color: string }[] = [];
     const TREE = ["#A3B99E", "#93AD94", "#B4C6AE", "#9AB3A0"];
     const tree = (x: number, z: number, s = 1) => trees.push({ x, z, s: s * (0.85 + rr() * 0.35), color: TREE[Math.floor(rr() * TREE.length)] });
-    for (let x = SITE.x0 + 5; x < SITE.x1 - 3; x += 7.5) { tree(x, 46.5); if (x < -32 || x > 34) tree(x + 3, 34.5, 0.9); }
+    const clear = (wx: number, a: number, b: number) => wx > a && wx < b;
+    for (let x = SITE.x0 + 5; x < SITE.x1 - 3; x += 7.5) {
+      const wx = x - OX; // front row along the boulevard pavement: not in the throats, the bus shelter or the entrance axis
+      if (!clear(wx, C.tout.x - ht - 2, C.tout.x + ht + 2) && !clear(wx, C.tin.x - ht - 2, C.tin.x + ht + 2) && !clear(wx, 3, 14) && !clear(wx, -20, -12)) tree(x, 46.5);
+      if ((x < -32 && !clear(wx + 3, PK.aisle - 5, PK.aisle + 5)) || x > 34) tree(x + 3, 34.5, 0.9);
+    }
     for (let i = 0; i < 26; i++) tree(SITE.x0 + 4 + rr() * (SITE.x1 - SITE.x0 - 8), -38 + rr() * 19, 1.1);
     for (let z = -12; z < 34; z += 7) tree(64 + rr() * 16, z + rr() * 3, 1.05);
     for (const x of [-6, -2, 2, 6]) tree(x - 1, 33.5, 0.8);
@@ -230,15 +270,37 @@ export function Site({ standalone = false }: { standalone?: boolean }) {
     const urg = textTexture("URGENCES", "#B8635A", 1024, 150, 650, 0.28, "#F3F4F7");
     const siege = textTexture("SIÈGE", "#22305E", 512, 120, 600, 0.35);
     const shadow = shadowTexture();
+    const paintDrop = textTexture("DÉPOSE MINUTE", "#F6F7FA", 1024, 150, 700, 0.18);
+    const paintAmb = textTexture("AMBULANCES", "#F6F7FA", 1024, 150, 700, 0.2);
+    // walk-mode colliders (WORLD metres): main building outer walls with the two entrances open, the annex, posts,
+    // benches, tree trunks, parked cars and ambulances (see city/collide.ts for the contract)
+    const solids: Solid[] = [];
+    const sw = (x0: number, x1: number, z0: number, z1: number, h: number) => solids.push({ x0, x1, z0, z1, h });
+    const mx0 = MAIN.x - MAIN.w / 2 - OX, mx1 = MAIN.x + MAIN.w / 2 - OX, mz0 = MAIN.z - MAIN.d / 2 - OZ, mz1 = MAIN.z + MAIN.d / 2 - OZ, H = (TOP_FLOOR.main + 1) * FLOOR_H;
+    sw(mx0 - 0.5, mx1 + 0.5, mz0 - 0.5, mz0, H); sw(mx0 - 0.5, mx0, mz0, mz1 + 0.5, H); sw(mx1, mx1 + 0.5, mz0, mz1 + 0.5, H);
+    const gaps: [number, number][] = [[-18.1, -11.8], [0.5, 6.5]]; // main entrance (Accueil), emergency entrance (Urgences)
+    let gx = mx0 - 0.5;
+    for (const [a, b] of gaps) { sw(gx, a, mz1, mz1 + 0.5, H); gx = b; }
+    sw(gx, mx1 + 0.5, mz1, mz1 + 0.5, H);
+    sw(ANNEX.x - ANNEX.w / 2 - OX - 0.4, ANNEX.x + ANNEX.w / 2 - OX + 0.4, ANNEX.z - ANNEX.d / 2 - OZ - 0.4, ANNEX.z + ANNEX.d / 2 - OZ + 0.4, (TOP_FLOOR.annex + 1) * FLOOR_H);
+    const boxSolid = (b: Box) => {
+      const c = Math.abs(Math.cos(b.yaw ?? 0)), sn = Math.abs(Math.sin(b.yaw ?? 0));
+      const ex = (b.sx * c + b.sz * sn) / 2, ez = (b.sx * sn + b.sz * c) / 2;
+      sw(b.x - OX - ex, b.x - OX + ex, b.z - OZ - ez, b.z - OZ + ez, b.y + b.sy / 2);
+    };
+    for (const b of [...posts, ...benches, ...cars, ...amb, ...ambCab]) boxSolid(b);
+    for (const t of [...trunks, ...gTrunks]) boxSolid({ ...t, sx: 0.5, sz: 0.5 });
     const apron = apronGeometry(46);
     const apronMat = new THREE.MeshStandardMaterial({ color: PAL.plinthTop, roughness: 0.95, vertexColors: true, transparent: true, depthWrite: false });
     const growMat = std("#9AB89A", 0.9, { flatShading: true });
-    return { gTrunks, gCrowns, growMat, apron, apronMat, plinth, mats, roads, lawns, paving, lines, cars, cabins, amb, ambCab, ambStripe, ambLight, trunks, crowns, benches, canopy, posts, sign, urg, siege, shadow };
+    return { gTrunks, gCrowns, growMat, apron, apronMat, plinth, mats, roads, lawns, paving, lines, coral, cars, cabins, amb, ambCab, ambStripe, ambLight, trunks, crowns, benches, canopy, posts, sign, urg, siege, shadow, paintDrop, paintAmb, solids };
   }, []);
   useEffect(() => () => {
     res.plinth.dispose(); Object.values(res.mats).forEach((m) => m.dispose());
     res.sign.dispose(); res.urg.dispose(); res.siege.dispose(); res.shadow.dispose(); res.apron.dispose(); res.apronMat.dispose(); res.growMat.dispose();
+    res.paintDrop.dispose(); res.paintAmb.dispose();
   }, [res]);
+  useEffect(() => { registerSolids("campus", res.solids); }, [res]);
 
   const plinthMats = useMemo(() => [res.mats.top, res.mats.side], [res]);
   const growRef = useRef<THREE.Group>(null);
@@ -262,13 +324,21 @@ export function Site({ standalone = false }: { standalone?: boolean }) {
           <planeGeometry args={[W, D]} />
           <meshBasicMaterial map={res.shadow} transparent depthWrite={false} toneMapped={false} />
         </mesh>
-      ) : (
-        <mesh geometry={res.apron} material={res.apronMat} receiveShadow renderOrder={-1} />
-      )}
+      ) : null /* unified world: the city's white hospital square surrounds the plinth (city/CityContent) */}
       <Boxes mat={res.mats.road} items={res.roads} shadow={false} />
       <Boxes mat={res.mats.lawn} items={res.lawns} shadow={false} />
       <Boxes mat={res.mats.paving} items={res.paving} shadow={false} />
       <Boxes mat={res.mats.line} items={res.lines} shadow={false} />
+      <Boxes mat={res.mats.coral} items={res.coral} shadow={false} />
+      {/* painted words: drop-off under the canopy, the ambulance bay */}
+      <mesh position={[-29 + OX, 0.056, CAMPUS.drop.z + OZ]} rotation={[-Math.PI / 2, 0, Math.PI / 2]}>
+        <planeGeometry args={[5.6, 0.82]} />
+        <meshStandardMaterial map={res.paintDrop} transparent alphaTest={0.05} roughness={0.9} depthWrite={false} />
+      </mesh>
+      <mesh position={[3.75 + OX, 0.056, 13.6 + OZ]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[6.4, 0.95]} />
+        <meshStandardMaterial map={res.paintAmb} transparent alphaTest={0.05} roughness={0.9} depthWrite={false} />
+      </mesh>
       <Boxes geo={GEO.rbox} mat={res.mats.car} items={res.cars} />
       <Boxes geo={GEO.rbox} mat={res.mats.glass} items={res.cabins} />
       <Boxes geo={GEO.rbox} mat={res.mats.white} items={res.amb} />

@@ -1,0 +1,44 @@
+/* Dossier (use-case page) and "Par cas" sources view: calm thin scrollbars, edge fades, focus ring.
+   Prefixed "dz-". Plain CSS, no Tailwind directives. */
+
+/* scrolling area: thin scrollbar that only brightens on hover, stable gutter so nothing shifts when it appears */
+.dz-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scroll-behavior: auto;
+}
+.dz-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.dz-scroll::-webkit-scrollbar-track { background: transparent; margin: 10px 0; }
+.dz-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.13); border-radius: 6px; transition: background 200ms ease; }
+.dz-scroll:hover::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.24); }
+.dz-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.38); }
+@supports (-moz-appearance: none) {
+  .dz-scroll { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.2) transparent; }
+}
+/* soft top and bottom edges: content fades under the sticky header instead of being cut */
+.dz-edge-y {
+  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 14px), transparent 100%);
+}
+
+/* horizontal chip row: no scrollbar, edges fade when more chips are hidden (--fl / --fr set from JS) */
+.dz-chips { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior-x: contain; }
+.dz-chips::-webkit-scrollbar { display: none; }
+.dz-fade-x {
+  mask-image: linear-gradient(90deg, transparent 0, #000 var(--fl, 0px), #000 calc(100% - var(--fr, 0px)), transparent 100%);
+}
+
+/* keyboard focus: one consistent soft ring */
+.dz-focus { outline: none; }
+.dz-focus:focus-visible { outline: 2px solid rgba(159, 179, 255, 0.8); outline-offset: 2px; }
+.dz-focus-in:focus-within { outline: 2px solid rgba(159, 179, 255, 0.55); outline-offset: 1px; }
+
+/* native select, dark popup */
+.dz-select { color-scheme: dark; appearance: none; -webkit-appearance: none; }
+.dz-select option { background: #10172f; color: #edf0f7; }
+
+.dz-mark { background: rgba(226, 176, 90, 0.28); color: inherit; border-radius: 3px; padding: 0 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dz-scroll { scroll-behavior: auto; }
+}

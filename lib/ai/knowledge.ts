@@ -12,7 +12,7 @@ const floorName = (b: string, f: number) => FLOORS.find((x) => x.building === b 
 // ---------------------------------------------------------------- evidence ("ça a marché ailleurs")
 const lvlRank = (l: string) => (l.startsWith("A") ? 0 : l.startsWith("B") ? 1 : 2);
 /** References of a case: measured ones first (best level, most recent). */
-function refsFor(id: string): { measured: Benchmark[]; other: Benchmark[] } {
+export function refsFor(id: string): { measured: Benchmark[]; other: Benchmark[] } {
   const all = BENCH.filter((b) => b.v13.includes(id) || b.app.includes(id));
   const sort = (a: Benchmark, b: Benchmark) => lvlRank(a.level) - lvlRank(b.level) || (b.year || 0) - (a.year || 0);
   const measured = all.filter((b) => b.measured).sort(sort);
@@ -22,8 +22,8 @@ function refsFor(id: string): { measured: Benchmark[]; other: Benchmark[] } {
   if (fi > 0) measured.unshift(...measured.splice(fi, 1));
   return { measured, other: all.filter((b) => !b.measured).sort(sort) };
 }
-const firstClause = (s: string, max = 150) => { const t = s.split(" ; ")[0].trim(); return t.length > max ? t.slice(0, t.lastIndexOf(" ", max)) + "…" : t; };
-const benchShort = (b: Benchmark) => `${b.who}${b.year ? `, ${b.year}` : ""} : ${firstClause(b.result)} [niveau ${b.level.slice(0, 1)}, ${b.source}]`;
+export const firstClause = (s: string, max = 150) => { const t = s.split(" ; ")[0].trim(); return t.length > max ? t.slice(0, t.lastIndexOf(" ", max)) + "…" : t; };
+export const benchShort = (b: Benchmark) => `${b.who}${b.year ? `, ${b.year}` : ""} : ${firstClause(b.result)} [niveau ${b.level.slice(0, 1)}, ${b.source}]`;
 
 function valueOf(id: string) {
   const c = CASE[id];

@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useApp, type Section, type Sel } from "@/lib/store";
-import { CASES, META, BENCH, CASE as CASE_BY_ID, fr } from "@/lib/model";
+import { CASES, META, BENCH, CASE as CASE_BY_ID, fr, V23, HEAD } from "@/lib/model";
 import { DEPTS, DEPT, FLOORS, floorKey, ROLE_LABEL, CASE_DEPT, EXPERIENCES, type Role } from "@/lib/hospital";
 import { SITES, CITIES, INTERNATIONAL } from "@/lib/geo/network";
 import { DeptIcon, I } from "./icons";
@@ -14,6 +14,8 @@ import s from "./styles";
 export const SECTIONS: { id: Section; label: string; short: string; hint: string }[] = [
   { id: "explorer", label: "Explorer", short: "Explorer", hint: "Le jumeau numérique : monde, Maroc, hôpital type" },
   { id: "synthese", label: "Synthèse", short: "Synthèse", hint: "Les chiffres du programme en un écran" },
+  // v2.3 only: the full financial picture of the business case 2027-2031, and the projections of each case
+  ...(V23 ? [{ id: "finances" as Section, label: "Finances", short: "Finances", hint: "Business case 2027-2031 : économies, CA additionnel, coût, valeur nette, VAN, projections par cas" }] : []),
   { id: "cas", label: "Cas d'usage", short: "Cas d'usage", hint: `Les ${CASES.length} cas, carte de marché et liste` },
   { id: "preuves" as Section, label: "Preuves", short: "Preuves", hint: "Ce qui a marché ailleurs : résultats mesurés et sources" },
   { id: "gouvernance", label: "Gouvernance et risques", short: "Gouvernance", hint: "Instances, règle d'or, risques et parades, données" },
@@ -79,7 +81,7 @@ function buildIndex(select: (s: Sel) => void, setSection: (s: Section) => void):
     items.push({ kind: "site", key: "si:" + x.slug, label: x.name, sub: `${x.city} · ${x.brand} · ${x.status}`, hay: norm([x.name, x.city, x.brand, x.type, ...x.specialties].join(" ")), prim: norm(x.name),
       icon: <I.hospital size={17} />, run: () => select({ kind: "site", id: x.slug }) });
   }
-  const countries = [{ iso: "MA", country: "Maroc", sub: `Réseau Akdital · programme de ${fr(META.eco, 0)} MDH` }, ...[...new Map(INTERNATIONAL.filter((x) => x.iso).map((x) => [x.iso, x])).values()].map((x) => ({ iso: x.iso, country: x.country, sub: `International · ${INTERNATIONAL.filter((y) => y.iso === x.iso).length} projets` }))];
+  const countries = [{ iso: "MA", country: "Maroc", sub: V23 ? `Réseau Akdital · ${fr(HEAD.net, 0)} MDH de valeur nette par an en 2031` : `Réseau Akdital · programme de ${fr(META.eco, 0)} MDH` }, ...[...new Map(INTERNATIONAL.filter((x) => x.iso).map((x) => [x.iso, x])).values()].map((x) => ({ iso: x.iso, country: x.country, sub: `International · ${INTERNATIONAL.filter((y) => y.iso === x.iso).length} projets` }))];
   for (const c of countries) {
     items.push({ kind: "country", key: "co:" + c.iso, id: c.iso, label: c.country, sub: c.sub, hay: norm(c.country + " " + c.iso), prim: norm(c.country), icon: <I.globe size={17} />, run: () => select({ kind: "country", id: c.iso }) });
   }

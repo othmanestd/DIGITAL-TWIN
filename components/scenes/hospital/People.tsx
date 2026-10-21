@@ -10,7 +10,8 @@ import { registerAnchor } from "@/lib/anchors";
 import type { FloorLayout } from "./layout";
 import { haloTexture, rt, type FloorMats } from "./mats";
 import { keptShrinkable, visibleStaff } from "./staffing";
-import type { Year } from "@/lib/model";
+import { FINAL_YEAR, type Year } from "@/lib/model";
+import { W, walkOn } from "../walk/state";
 
 const legGeo = new THREE.CapsuleGeometry(0.085, 0.7, 2, 7).translate(0, -0.435, 0);
 const armGeo = new THREE.CapsuleGeometry(0.056, 0.5, 2, 6).translate(0, -0.3, 0);
@@ -18,6 +19,10 @@ const torsoGeo = new THREE.CapsuleGeometry(0.2, 0.36, 3, 12);
 const headGeo = new THREE.SphereGeometry(0.13, 12, 9);
 const hairGeo = new THREE.SphereGeometry(0.138, 12, 5, 0, Math.PI * 2, 0, Math.PI * 0.56);
 const hitGeo = new THREE.BoxGeometry(0.75, 1.95, 0.7).translate(0, 0.97, 0);
+/** The figure's primitives, shared with the walk-mode visitor (components/scenes/walk/Visitor.tsx). */
+export const FIGURE = { legGeo, armGeo, torsoGeo, headGeo, hairGeo };
+/** person id → how present the figure is (1 drawn … 0 gone), for the walk-mode collisions. */
+export const PERSON_VIS = new Map<string, number>();
 
 const Y = new THREE.Vector3(0, 1, 0);
 const qLie = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
@@ -66,7 +71,7 @@ export default function People({ fl, mats, group, active }: {
   const yearRef = useRef(year);
   yearRef.current = year;
   const pilotRef = useRef<THREE.InstancedMesh>(null);
-  const shrinks = useMemo(() => fl.people.map((p) => p.shrink >= 0 && visibleStaff(p.dept, 2029).removed > 0), [fl]);
+  const shrinks = useMemo(() => fl.people.map((p) => p.shrink >= 0 && visibleStaff(p.dept, FINAL_YEAR).removed > 0), [fl]);
   const hover = useApp((s) => s.hover);
   const selIdx = sel?.kind === "person" ? fl.people.findIndex((p) => p.id === sel.id) : -1;
   const hovIdx = hover?.startsWith("person:") ? fl.people.findIndex((p) => "person:" + p.id === hover) : -1;
@@ -136,7 +141,13 @@ export default function People({ fl, mats, group, active }: {
       const pr = st.pres[i];
       if (p.desk >= 0 && Math.abs(pr - prev) > 1e-4) { rt.desk.set(p.desk, pr); rt.deskVer++; }
       else if (p.desk >= 0 && !rt.desk.has(p.desk)) { rt.desk.set(p.desk, pr); rt.deskVer++; }
-      if (selRef.current !== i) st.clock[i] += dts;
+      // walk mode: someone walking toward the visitor stops for a moment and lets them pass
+      let yieldTo = false;
+      if (s.pose === "walk" && walkOn() && W.where === fl.building && W.level === fl.floor) {
+        const lx = st.local[i].x + fl.ox, lz = st.local[i].z + fl.oz, dx = W.x - lx, dz = W.z - lz, d2 = dx * dx + dz * dz;
+        yieldTo = d2 < 2.6 && dx * Math.sin(st.yaw[i]) + dz * Math.cos(st.yaw[i]) > 0;
+      }
+      if (selRef.current !== i && !yieldTo) st.clock[i] += dts;
       const ck = st.clock[i];
       let x = s.x, z = s.z, yaw = s.yaw, hip = 0.88, legL = 0, legR = 0, armL = 0.02, armR = 0.02, hy = 0, hp = 0, bob = 0;
       const y0 = s.y ?? 0;
@@ -150,7 +161,7 @@ export default function People({ fl, mats, group, active }: {
         const vel = Math.sin(ph);
         x = x1 + (x2 - x1) * a; z = z1 + (z2 - z1) * a;
         const dist = a * L;
-        const amp = Math.min(1, Math.abs(vel) * 2.4) * (selRef.current === i ? 0 : 1);
+        const amp = Math.min(1, Math.abs(vel) * 2.4) * (selRef.current === i || yieldTo ? 0 : 1);
         const gait = Math.sin(dist * 3.6);
         legL = 0.5 * gait * amp; legR = -legL; armL = -0.38 * gait * amp; armR = -armL;
         bob = 0.03 * Math.abs(gait) * amp;
@@ -192,6 +203,7 @@ export default function People({ fl, mats, group, active }: {
         vs = smooth(pr / 0.3);                          // … then fade (shrink) away at the door
       }
       st.vis[i] = vs;
+      PERSON_VIS.set(p.id, vs);
       _qy.setFromAxisAngle(Y, yaw);
       if (s.pose === "lie") _qy.multiply(qLie);
       _root.compose(_v.set(x, y0 + bob, z), _qy, _rs.set(vs, vs, vs));

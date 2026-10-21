@@ -33,6 +33,8 @@ export const frame = {
   eggW: 0,                                      // lockup width, in Akdital-mark units (measured by JabbEgg)
   eggDX: 0, eggDY: 0,                           // top drop centre relative to the lockup centre, in mark units
   eggK: 0,                                      // px per mark unit this frame (set by the scene, 0 = egg off)
+  // walking character (walk mode): world metres, written by the walk controller, read by traffic so cars brake for it
+  player: { active: false, x: 0, y: 0, z: 0, heading: 0 },
 };
 
 /** Akdital mark (620 × 620): its top drop's round head, where the Earth hides. */

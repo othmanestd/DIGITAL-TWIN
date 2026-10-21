@@ -1,5 +1,5 @@
 // UI helpers: colours, units, trajectories, floor labels. Every figure is computed from lib/model.ts.
-import { DATA, FAM, META, YEARS, CASE, share, yearTotals, fr, agg, benchFor, type Year, type UseCase, type Benchmark } from "@/lib/model";
+import { DATA, FAM, META, YEARS, CASE, share, yearTotals, fr, agg, benchFor, V23, FINROW, FINAL_YEAR, type Year, type UseCase, type Benchmark } from "@/lib/model";
 import { DEPTS, FLOORS, floorKey, type Dept } from "@/lib/hospital";
 import { GLOSSARY } from "@/lib/glossary";
 
@@ -31,12 +31,12 @@ export function money(mdh: number, d = 1): { v: number; d: number; unit: "MDH" |
   return { v: mdh * 1000, d: 0, unit: "kMAD" };
 }
 
-/** Value of a metric along the 2026 → 2029 trajectory (group level). */
+/** Value of a metric along the dataset's trajectory, today → final year (group level). */
 export function groupSeries(key: "eco" | "cout" | "net" | "cumul" | "roi" | "etp"): number[] {
   return YEARS.map((y) => {
     const t = yearTotals(y);
     if (key === "roi") return t.cout ? t.eco / t.cout : 0;
-    if (key === "etp") return META.postes * share(y).eco;
+    if (key === "etp") return V23 ? FINROW.etp.values[String(y)] ?? 0 : META.postes * share(y).eco;
     return t[key];
   });
 }
@@ -90,7 +90,7 @@ export const deptsOfFloor = (key: string) => DEPTS.filter((d) => floorKey(d.buil
 export const famName = (code: string) => FAM[code]?.name ?? code;
 
 /** Plain verb for the year: "au plein régime" / "en 2028" / "aujourd'hui". */
-export const yearPhrase = (y: Year) => (y === 2029 ? "au plein régime (2029)" : y === 2026 ? "aujourd'hui" : `en ${y}`);
+export const yearPhrase = (y: Year) => (y === FINAL_YEAR ? (V23 ? "en 2031, horizon du business case" : "au plein régime (2029)") : y === 2026 ? "aujourd'hui" : `en ${y}`);
 
 export const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
 
@@ -98,8 +98,8 @@ export const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b
 export const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 // ---------------------------------------------------------------- v1.3: payroll scope and market evidence
-/** Is the case's value counted in the 302 MDH of payroll? */
-export const in302 = (c: UseCase) => c.in302 !== false && (c.fam ? ["A", "S", "P", "H"].includes(c.fam) : true);
+/** Is the case's value counted in the headline (v13: the 302 MDH of payroll; v23: the business case, every costed case)? */
+export const in302 = (c: UseCase) => c.in302 !== false && (V23 || (c.fam ? ["A", "S", "P", "H"].includes(c.fam) : true));
 /** Evidence level code from a label such as "A · Publication scientifique (indirecte)". */
 export const levelCode = (level?: string | null) => (level ? level.trim()[0] : "N");
 export const LEVEL_LABEL: Record<string, string> = { A: "Publication scientifique", B: "Publié par l'hôpital", C: "Éditeur avec client nommé", R: "Référence sectorielle", N: "Aucune preuve mesurée" };

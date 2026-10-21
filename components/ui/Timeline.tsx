@@ -1,17 +1,19 @@
 "use client";
-// Timeline (explorer, bottom of the stage): one slim glass row — Groupe / Hôpital type toggle, 2026 → 2029 slider snapping to years,
-// and the year's economy, agent cost, net and cumulative values (count-up).
+// Timeline (explorer, bottom of the stage): one slim glass row — Groupe / Hôpital type toggle, a slider snapping to the dataset's
+// years (v13: 2026 → 2029; v23: 2026 → 2031), and the year's value, cost, net and cumulative values (count-up).
 // It never enters the bottom-left AI dock zone (x < 392 px) nor the right edge of the stage (zoom slider).
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { useApp } from "@/lib/store";
-import { YEARS, CASES, agg, yearTotals, ETAB, type Year } from "@/lib/model";
+import { YEARS, CASES, agg, yearTotals, etabIn, V23, type Year } from "@/lib/model";
 import { Num, Segmented, Tip } from "./kit";
 import { money } from "@/lib/ui/fmt";
 import s from "./styles";
 
 const ALL = CASES.map((c) => c.id);
-const SUB: Record<Year, string> = { 2026: "Aujourd'hui", 2027: "Vagues V1 à V3", 2028: "Généralisation", 2029: "Plein régime" };
+const SUB: Record<Year, string> = V23
+  ? { 2026: "Aujourd'hui", 2027: "Vagues V1 et V2 : construction", 2028: "Vagues V3 et V4 lancées", 2029: "Montée en charge", 2030: "Presque tous les cas au plein effet", 2031: "Horizon du business case" }
+  : { 2026: "Aujourd'hui", 2027: "Vagues V1 à V3", 2028: "Généralisation", 2029: "Plein régime", 2030: "", 2031: "" };
 const DOCK = 392, RIGHT_FREE = 88, MAX_W = 760;
 
 function useYearValues(year: Year, perSite: boolean) {
@@ -31,6 +33,16 @@ export default function Timeline() {
   const setPerSite = useApp((st) => st.setPerSite);
   const track = useRef<HTMLDivElement | null>(null);
   const [drag, setDrag] = useState(false);
+  // six years (v23) on a narrow slider: short labels ('27 … '31) so they never collide
+  const [tw, setTw] = useState(0);
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setTw(e.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const short = tw > 0 && tw / (YEARS.length - 1) < 46;
   const v = useYearValues(year, perSite);
   const i = YEARS.indexOf(year);
   const pos = (k: number) => `${(k / (YEARS.length - 1)) * 100}%`;
@@ -42,12 +54,20 @@ export default function Timeline() {
     if (y !== useApp.getState().year) setYear(y);
   };
 
-  const vals = [
-    { k: "eco", label: "Économie", v: v.eco, color: "var(--green)", tip: "Masse salariale économisée sur l'année.", cls: "hidden @[400px]:block" },
-    { k: "cout", label: "Coût agents", v: v.cout, color: "var(--txt-2)", tip: "Coût de fonctionnement des agents IA sur l'année : licences, calcul, supervision.", cls: "hidden @[620px]:block" },
-    { k: "net", label: "Gain net", v: v.net, color: "#fff", tip: "Économie moins coût des agents, sur l'année.", cls: "" },
-    { k: "cumul", label: "Cumul net", v: v.cumul, color: "#9FB3FF", tip: "Somme des gains nets depuis 2027.", cls: "hidden @[700px]:block" },
-  ];
+  const sites = etabIn(year);
+  const vals = V23
+    ? [
+        { k: "eco", label: "Gains bruts", v: v.eco, color: "var(--green)", tip: "Économies réalisées (masse salariale et hors masse salariale : achats, énergie, maintenance…) plus la marge sur le CA additionnel, sur l'année.", cls: "hidden @[400px]:block" },
+        { k: "cout", label: perSite ? "Coût des agents" : "Coût programme", v: v.cout, color: "var(--txt-2)", tip: perSite ? "Coût des agents et des plateformes rattachés aux cas, sur l'année (les coûts transverses ne se répartissent pas par établissement)." : "Coût du programme sur l'année : agents et plateformes, coûts transverses (infrastructure, connecteurs, PMO, changement) et contingence.", cls: "hidden @[620px]:block" },
+        { k: "net", label: "Valeur nette", v: v.net, color: "#fff", tip: "Gains bruts moins coût, sur l'année.", cls: "" },
+        { k: "cumul", label: "Cumul net", v: v.cumul, color: "#9FB3FF", tip: "Somme des valeurs nettes depuis 2027.", cls: "hidden @[700px]:block" },
+      ]
+    : [
+        { k: "eco", label: "Économie", v: v.eco, color: "var(--green)", tip: "Masse salariale économisée sur l'année.", cls: "hidden @[400px]:block" },
+        { k: "cout", label: "Coût agents", v: v.cout, color: "var(--txt-2)", tip: "Coût de fonctionnement des agents IA sur l'année : licences, calcul, supervision.", cls: "hidden @[620px]:block" },
+        { k: "net", label: "Gain net", v: v.net, color: "#fff", tip: "Économie moins coût des agents, sur l'année.", cls: "" },
+        { k: "cumul", label: "Cumul net", v: v.cumul, color: "#9FB3FF", tip: "Somme des gains nets depuis 2027.", cls: "hidden @[700px]:block" },
+      ];
   const width = `min(${MAX_W}px, calc(100% - ${DOCK + RIGHT_FREE}px))`;
 
   return (
@@ -58,9 +78,9 @@ export default function Timeline() {
           {/* toggle */}
           <div className="hidden shrink-0 flex-col items-start gap-0.5 @[460px]:flex">
             <Segmented<"g" | "s"> size="sm" layoutId="atlas-persite-thumb" value={perSite ? "s" : "g"} onChange={(x) => setPerSite(x === "s")} className="!h-7 [&>button]:!h-[22px] [&>button]:!px-2 [&>button]:!text-[11px]"
-              options={[{ id: "g", label: "Groupe", title: "Tout le groupe Akdital" }, { id: "s", label: "Hôpital type", title: `Moyenne des ${ETAB} établissements (groupe ÷ ${ETAB}, hors siège)` }]} anchorPrefix="persite:" />
-            <Tip content={`Hôpital type : moyenne des ${ETAB} établissements (groupe ÷ ${ETAB}). Les cas du siège ne sont pas répartis par établissement.`}>
-              <span className="cursor-help pl-1 text-[9.5px] text-[var(--mut)]">{perSite ? `moyenne des ${ETAB} établissements` : "tout le groupe"}</span>
+              options={[{ id: "g", label: "Groupe", title: "Tout le groupe Akdital" }, { id: "s", label: "Hôpital type", title: `Moyenne des ${sites} établissements (groupe ÷ ${sites}, hors siège)` }]} anchorPrefix="persite:" />
+            <Tip content={`Hôpital type : moyenne des ${sites} établissements${V23 ? ` du groupe en ${year}` : ""} (groupe ÷ ${sites}). Les cas du siège ne sont pas répartis par établissement.`}>
+              <span className="cursor-help pl-1 text-[9.5px] text-[var(--mut)]">{perSite ? `moyenne des ${sites} établissements` : "tout le groupe"}</span>
             </Tip>
           </div>
 
@@ -90,9 +110,9 @@ export default function Timeline() {
             </div>
             <div className="relative mt-[3px] h-[14px]">
               {YEARS.map((y, k) => (
-                <Tip key={y} content={SUB[y]} side="top" className="absolute top-0" style={{ left: pos(k), transform: `translateX(${k === 0 ? "-12%" : k === YEARS.length - 1 ? "-88%" : "-50%"})` }}>
+                <Tip key={y} content={SUB[y] || String(y)} side="top" className="absolute top-0" style={{ left: pos(k), transform: `translateX(${k === 0 ? "-12%" : k === YEARS.length - 1 ? "-88%" : "-50%"})` }}>
                   <button type="button" onClick={() => setYear(y)} className={`num block whitespace-nowrap text-[11px] leading-none ${y === year ? "text-white" : "text-[var(--mut)] hover:text-[var(--txt-2)]"}`}>
-                    {y === 2026 ? "Auj." : y}
+                    {y === 2026 ? "Auj." : short ? `’${String(y).slice(2)}` : y}
                   </button>
                 </Tip>
               ))}

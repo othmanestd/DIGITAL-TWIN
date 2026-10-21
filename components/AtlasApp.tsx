@@ -10,6 +10,7 @@ import Assistant from "@/components/ai/Assistant";
 import ZoomSlider from "@/components/nav/ZoomSlider";
 import NavPad from "@/components/nav/NavPad";
 import Shortcuts from "@/components/nav/Shortcuts";
+import WalkHud from "@/components/scenes/walk/WalkHud";
 
 const SceneRoot = dynamic(() => import("@/components/scenes/SceneRoot"), { ssr: false });
 
@@ -17,6 +18,8 @@ const SceneRoot = dynamic(() => import("@/components/scenes/SceneRoot"), { ssr: 
 export default function AtlasApp() {
   const panelOpen = useApp((s) => s.panelOpen && s.section === "explorer" && !!s.sel && s.sel.kind !== "overview");
   const section = useApp((s) => s.section);
+  // walk mode ("À pied"): the world camera rail and the floor list would fight the visitor's camera
+  const walking = useApp((s) => s.walk.phase !== "off");
   return (
     <main
       className="relative h-dvh w-screen overflow-hidden"
@@ -29,14 +32,15 @@ export default function AtlasApp() {
       >
         <SceneRoot />
         {section === "explorer" && <Timeline />}
-        {section === "explorer" && (
+        {section === "explorer" && <WalkHud />}
+        {section === "explorer" && !walking && (
           <div className="pointer-events-none absolute bottom-[104px] right-4 top-[84px] z-20 flex flex-col items-center justify-center gap-3">
             <NavPad />
             <ZoomSlider />
           </div>
         )}
       </div>
-      {section === "explorer" && <Sidebar />}
+      {section === "explorer" && !walking && <Sidebar />}
       <SidePanel />
       {section !== "explorer" && <SectionView />}
       <TopBar />

@@ -12,6 +12,7 @@ import { PERSON_BY_ID, FLOOR_BY_KEY } from "./layout";
 import { deptCenter, fitPosition, floorCenter, focusOf, stageAspect, toLocal, toWorld } from "./nav";
 import { rt } from "./mats";
 import { XP_POS } from "./Experiences";
+import { walkBusy } from "../walk/state";
 
 export const FOV = 38;
 
@@ -82,6 +83,7 @@ export function FocusFlights() {
   const ready = useRef(false);
 
   const fly = () => {
+    if (walkBusy()) return; // walk mode owns the camera (E opens a department's panel without any flight)
     const shot = shotLocal(useApp.getState().sel, currentAspect(gl.domElement));
     if (shot) flyShot(shot);
   };
@@ -116,7 +118,7 @@ export function FocusFlights() {
     const onUp = () => { down = false; };
     const onWheel = () => { rt.userMoved = true; };
     const onClick = (e: MouseEvent) => {
-      if (e.target !== el) return;
+      if (e.target !== el || walkBusy()) return;
       if (rt.clickHandled) { rt.clickHandled = false; return; }
       if (Math.hypot(e.clientX - downX, e.clientY - downY) > 5) return;
       const s = useApp.getState();

@@ -1,14 +1,26 @@
 "use client";
 // Single source of truth for navigation. Scenes, panels, the AI assistant and the guided tour all read and drive this store.
 import { create } from "zustand";
-import type { Year } from "./model";
+import { FINAL_YEAR, type Year } from "./model";
 
 export type Level = "world" | "morocco" | "hospital";
-export type Section = "explorer" | "synthese" | "cas" | "preuves" | "gouvernance" | "emplois" | "deploiement" | "sources";
+export type Section = "explorer" | "synthese" | "finances" | "cas" | "preuves" | "gouvernance" | "emplois" | "deploiement" | "sources";
 export type SelKind = "overview" | "floor" | "dept" | "person" | "case" | "xp" | "city" | "site" | "country";
 /** id formats: floor "main:0" | dept "admissions" | person "admissions/admin/0" (dept/role/index) | case "A-02"
  *  xp "xp-guide" (front-desk AI experience, lib/hospital.ts EXPERIENCES) | city "casablanca" | site "<establishment slug>" | country "MA" */
 export type Sel = { kind: SelKind; id: string } | null;
+
+/** Walk mode ("À pied") as seen by the UI: phase, view, where the visitor is, the department E would open. */
+export type WalkUi = {
+  phase: "off" | "enter" | "on" | "exit";
+  view: "third" | "first";
+  where: "main" | "annex" | null;
+  floor: number;
+  tower: boolean;
+  near: string | null;
+  /** use case E would open (the visitor stands near / looks at its spot), else the department view */
+  nearCase: string | null;
+};
 
 export type CursorState = { x: number; y: number; visible: boolean; clicking: boolean; label?: string };
 
@@ -35,6 +47,7 @@ type State = {
   helpOpen: boolean;
   /** Camera altitude above the ground, metres (continuous world). */
   altitude: number;
+  walk: WalkUi;
 
   setLevel: (l: Level) => void;
   setSection: (s: Section) => void;
@@ -58,6 +71,8 @@ type State = {
   setHelpOpen: (v: boolean) => void;
   /** Level derived from the camera altitude (no navigation side effects). */
   syncLevel: (l: Level, altitude: number) => void;
+  /** Walk mode UI state (written by the walk controller only when something changes). */
+  setWalk: (w: Partial<WalkUi>) => void;
 };
 
 export const useApp = create<State>((set, get) => ({
@@ -65,7 +80,7 @@ export const useApp = create<State>((set, get) => ({
   section: "explorer",
   sel: { kind: "overview", id: "hospital" },
   caseId: null,
-  year: 2029,
+  year: FINAL_YEAR,
   perSite: false,
   focusNonce: 0,
   hover: null,
@@ -80,6 +95,7 @@ export const useApp = create<State>((set, get) => ({
   zoomCmd: null,
   helpOpen: false,
   altitude: 300,
+  walk: { phase: "off", view: "third", where: null, floor: 0, tower: false, near: null, nearCase: null },
 
   setLevel: (level) => set({ level, sel: { kind: "overview", id: level }, caseId: null, focusNonce: get().focusNonce + 1 }),
   setSection: (section) => set({ section }),
@@ -115,4 +131,8 @@ export const useApp = create<State>((set, get) => ({
     else if (Math.abs(Math.log(altitude / s.altitude)) > 0.02) set({ altitude });
   },
   setHelpOpen: (helpOpen) => set({ helpOpen }),
+  setWalk: (w) => {
+    const cur = get().walk;
+    for (const k of Object.keys(w) as (keyof WalkUi)[]) if (w[k] !== cur[k]) { set({ walk: { ...cur, ...w } }); return; }
+  },
 }));

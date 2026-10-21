@@ -4,11 +4,12 @@
 // components being finished.
 import { useApp, type Level, type Section, type SelKind } from "../store";
 import { CASE_DEPT, DEPT, XP } from "../hospital";
-import { CASE } from "../model";
+import { CASE, YEARS, V23 } from "../model";
 import type { Year } from "../model";
 import { SITES } from "../geo/network";
 import { cursorTo, cursorClick, cursorKeep, findAnchor } from "./cursor";
 import type { ToolCall } from "./tools";
+import { applyCue, type Cue } from "./story";
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 const S = () => useApp.getState();
@@ -23,7 +24,8 @@ export type Op =
   | { do: "view"; perSite: boolean; silent?: boolean }
   | { do: "point"; anchor: string; silent?: boolean }
   | { do: "zoom"; level?: Level; value?: number; delta?: number; g?: number; silent?: boolean }
-  | { do: "panel"; open: boolean; silent?: boolean };
+  | { do: "panel"; open: boolean; silent?: boolean }
+  | (Cue & { silent?: boolean; pre?: boolean });
 
 const LEVEL_OF: Partial<Record<SelKind, Level>> = { floor: "hospital", dept: "hospital", person: "hospital", case: "hospital", xp: "hospital", city: "morocco", site: "morocco", country: "world" };
 
@@ -127,6 +129,19 @@ export async function perform(op: Op): Promise<void> {
       S().setPanelOpen(op.open);
       await sleep(silent ? 30 : 400);
       return;
+    case "cue": {
+      // story cue (guided visit): a selection that frames a department WITHOUT opening the side panel, then the story layer
+      const { sel, silent: _s, pre: _p, ...rest } = op;
+      void _s; void _p;
+      if (sel) {
+        const st = S();
+        const level: Level = sel.kind === "overview" ? (sel.id as Level) : "hospital";
+        if (st.section !== "explorer") st.setSection("explorer");
+        useApp.setState({ sel: { kind: sel.kind, id: sel.id }, level, panelOpen: false, caseId: null, focusNonce: st.focusNonce + 1 });
+      }
+      if (Object.keys(rest).length > 1) applyCue(rest as Cue);
+      return;
+    }
     case "zoom": {
       await ensureExplorer(silent);
       const anchors = op.level ? [`zoom:level:${op.level}`, `nav:level:${op.level}`] : op.g !== undefined ? ["zoom:out"] : [(op.delta ?? 0) < 0 ? "zoom:in" : "zoom:out"];
@@ -151,8 +166,8 @@ export function opOf(call: ToolCall): Op | null {
       return { do: "select", kind: kind as Exclude<SelKind, "overview" | "case">, id };
     }
     case "open_case": return CASE[String(a.id || "").toUpperCase()] ? { do: "case", id: String(a.id).toUpperCase() } : null;
-    case "open_section": return ["explorer", "synthese", "cas", "preuves", "gouvernance", "emplois", "deploiement", "sources"].includes(String(a.section)) ? { do: "section", section: a.section as Section } : null;
-    case "set_year": return [2026, 2027, 2028, 2029].includes(Number(a.year)) ? { do: "year", year: Number(a.year) as Year } : null;
+    case "open_section": return ["explorer", "synthese", "finances", "cas", "preuves", "gouvernance", "emplois", "deploiement", "sources"].includes(String(a.section)) && (a.section !== "finances" || V23) ? { do: "section", section: a.section as Section } : null;
+    case "set_year": return (YEARS as readonly number[]).includes(Number(a.year)) ? { do: "year", year: Number(a.year) as Year } : null;
     case "set_view": return { do: "view", perSite: !!a.perSite };
   }
   return null;
@@ -165,12 +180,13 @@ export function opLabel(op: Op): string {
     case "home": return "Vue d'ensemble";
     case "select": return op.kind === "dept" ? DEPT[op.id]?.short ?? op.id : op.kind === "xp" ? XP[op.id]?.short ?? op.id : op.kind === "floor" ? `Étage ${op.id.replace("main:", "").replace("annex:", "siège ")}` : op.id;
     case "case": return `Cas ${op.id}`;
-    case "section": return ({ explorer: "Vue 3D", synthese: "Synthèse", cas: "Cas d'usage", preuves: "Preuves", gouvernance: "Gouvernance", emplois: "Emplois", deploiement: "Déploiement", sources: "Sources" } as const)[op.section];
+    case "section": return ({ explorer: "Vue 3D", synthese: "Synthèse", finances: "Finances", cas: "Cas d'usage", preuves: "Preuves", gouvernance: "Gouvernance", emplois: "Emplois", deploiement: "Déploiement", sources: "Sources" } as const)[op.section];
     case "year": return String(op.year);
     case "view": return op.perSite ? "Un établissement" : "Tout le groupe";
     case "point": return op.anchor;
     case "panel": return op.open ? "Panneau" : "Plein écran";
     case "zoom": return op.level === "world" ? "Vue monde" : op.level === "morocco" ? "Vue Maroc" : "Zoom";
+    case "cue": return "Visite";
   }
 }
 

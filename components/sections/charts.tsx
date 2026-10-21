@@ -2,27 +2,41 @@
 // Charts for the full-screen sections: waterfall, ramp, sensitivities, squarified "market map" treemap. Sized to their container.
 import { useMemo, useState, type ReactNode } from "react";
 import { motion } from "motion/react";
-import { DATA, META, fr, type UseCase } from "@/lib/model";
+import { DATA, META, HEAD, LBL, V23, YEARS, yearTotals, fr, type UseCase, type Year } from "@/lib/model";
 import { useSize } from "@/lib/ui/hooks";
 import { FAM_COLOR, BRIQUE_COLOR, famName } from "@/lib/ui/fmt";
 import s from "@/components/ui/styles";
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
-const C = { eco: "#4CC79A", cost: "#C9827A", net: "#E8ECF6", cumul: "#9FB3FF", grid: "rgba(255,255,255,.07)", mut: "#8D97B0" };
+const C = { eco: "#4CC79A", cost: "#C9827A", net: "#E8ECF6", cumul: "#9FB3FF", margin: "#5FB3A8", gross: "#B9E5D2", grid: "rgba(255,255,255,.07)", mut: "#8D97B0" };
+const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
 
-/* ---------------------------------------------------------------- waterfall 302 → −160 → 142 */
+/* ---------------------------------------------------------------- waterfall
+   v13: 302 → −160 → 142 (économie, coût des agents, gain net)
+   v23: ① économies + ② marge sur le CA additionnel = gains bruts, − ③ coût du programme = valeur nette (final year of the business case) */
+type Bar = { label: string; sub: string; v: number; from: number; to: number; color: string; down?: boolean; total?: boolean };
 export function Waterfall() {
   const [ref, { w, h }] = useSize<HTMLDivElement>();
-  const bars = [
-    { label: "Économie", sub: "masse salariale", v: META.eco, from: 0, to: META.eco, color: C.eco },
-    { label: "Coût des agents", sub: "licences, calcul, supervision", v: -META.budget, from: META.eco, to: META.eco - META.budget, color: C.cost },
-    { label: "Gain net", sub: "chaque année", v: META.net, from: 0, to: META.net, color: C.net },
-  ];
-  const top = 26, bottom = 46, max = META.eco;
+  const bars: Bar[] = V23
+    ? [
+      { label: "① Économies", sub: "masse salariale et autres", v: HEAD.eco, from: 0, to: HEAD.eco, color: C.eco },
+      { label: "② Marge", sub: "sur le CA additionnel", v: HEAD.marge, from: HEAD.eco, to: HEAD.gains, color: C.margin },
+      { label: "Gains bruts", sub: "① + ②", v: HEAD.gains, from: 0, to: HEAD.gains, color: C.gross, total: true },
+      { label: "③ Coût", sub: "agents, plateformes, transverse", v: -HEAD.cout, from: HEAD.gains, to: HEAD.gains - HEAD.cout, color: C.cost, down: true },
+      { label: "Valeur nette", sub: "chaque année", v: HEAD.net, from: 0, to: HEAD.net, color: C.net, total: true },
+    ]
+    : [
+      { label: "Économie", sub: "masse salariale", v: META.eco, from: 0, to: META.eco, color: C.eco },
+      { label: "Coût des agents", sub: "licences, calcul, supervision", v: -META.budget, from: META.eco, to: META.eco - META.budget, color: C.cost, down: true },
+      { label: "Gain net", sub: "chaque année", v: META.net, from: 0, to: META.net, color: C.net, total: true },
+    ];
+  const top = 26, bottom = 46, max = V23 ? HEAD.gains : META.eco;
   const ih = Math.max(10, h - top - bottom);
   const y = (v: number) => top + ih - (v / max) * ih;
-  const bw = Math.min(110, (w / bars.length) * 0.5);
-  const cx = (i: number) => (w / bars.length) * (i + 0.5);
+  const colW = w / bars.length;
+  const bw = Math.min(110, colW * 0.5);
+  const cx = (i: number) => colW * (i + 0.5);
+  const labelSize = colW < 100 ? 11.5 : 13;
   return (
     <div ref={ref} className="relative h-full w-full">
       {w > 0 && h > 0 && (
@@ -33,14 +47,14 @@ export function Waterfall() {
             return (
               <g key={b.label}>
                 {i < bars.length - 1 && <line x1={cx(i) + bw / 2} x2={cx(i + 1) - bw / 2} y1={y(b.to)} y2={y(b.to)} stroke="rgba(255,255,255,.28)" strokeDasharray="3 4" />}
-                <rect key={`${w}x${h}`} x={cx(i) - bw / 2} width={bw} rx={8} fill={b.color} fillOpacity={i === 1 ? 0.75 : 0.92}
-                  y={y1} height={Math.max(2, y2 - y1)} className={i === 1 ? "ag-grow-down" : "ag-grow"} style={{ animationDelay: `${0.15 + i * 0.25}s` }} />
-                <motion.text x={cx(i)} y={y1 - 9} textAnchor="middle" className="num" fontSize={Math.min(30, Math.max(18, w / 22))} fontWeight={800} fill={i === 2 ? "#fff" : b.color}
+                <rect key={`${w}x${h}`} x={cx(i) - bw / 2} width={bw} rx={8} fill={b.color} fillOpacity={b.down ? 0.75 : 0.92}
+                  y={y1} height={Math.max(2, y2 - y1)} className={b.down ? "ag-grow-down" : "ag-grow"} style={{ animationDelay: `${0.15 + i * 0.25}s` }} />
+                <motion.text x={cx(i)} y={y1 - 9} textAnchor="middle" className="num" fontSize={Math.min(30, Math.max(V23 ? 15 : 18, w / (V23 ? 26 : 22)))} fontWeight={800} fill={b.total ? "#fff" : b.color}
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 + i * 0.25 }}>
                   {b.v < 0 ? "−" : ""}{fr(Math.abs(b.v), 0)}
                 </motion.text>
-                <text x={cx(i)} y={h - 26} textAnchor="middle" fontSize={13} fontWeight={600} fill="#EDF0F7">{b.label}</text>
-                {w / bars.length > 150 && <text x={cx(i)} y={h - 9} textAnchor="middle" fontSize={11.5} fill={C.mut}>{b.sub}</text>}
+                <text x={cx(i)} y={h - 26} textAnchor="middle" fontSize={labelSize} fontWeight={600} fill="#EDF0F7">{b.label}</text>
+                {colW > (V23 ? 175 : 150) && <text x={cx(i)} y={h - 9} textAnchor="middle" fontSize={11.5} fill={C.mut}>{b.sub}</text>}
               </g>
             );
           })}
@@ -50,15 +64,17 @@ export function Waterfall() {
   );
 }
 
-/* ---------------------------------------------------------------- ramp 2027 → 2029 */
+/* ---------------------------------------------------------------- ramp (v13: 2027 → 2029; v23: 2027 → 2031, the net can be negative in the first year) */
 export function RampChart({ compact = false }: { compact?: boolean }) {
   const [ref, { w, h }] = useSize<HTMLDivElement>();
-  const years = ["2027", "2028", "2029"] as const;
-  const r = years.map((k) => DATA.ramp[k]);
+  const years = YEARS.filter((y) => y > 2026).map(String);
+  const r = years.map((k) => yearTotals(Number(k) as Year));
   const max = Math.max(...r.map((x) => Math.max(x.eco, x.cumul)));
-  const top = 22, bottom = 30, left = 4, right = 4;
+  const min = Math.min(0, ...r.map((x) => Math.min(x.net, x.cumul)));
+  const fs = (compact ? 10.5 : 11.5) - (years.length > 3 ? 1 : 0);
+  const top = 22, bottom = 30 + (min < 0 ? fs + 6 : 0), left = 4, right = 4;
   const ih = Math.max(10, h - top - bottom), iw = Math.max(10, w - left - right);
-  const y = (v: number) => top + ih - (v / max) * ih;
+  const y = (v: number) => top + ih - ((v - min) / (max - min || 1)) * ih;
   const gw = iw / years.length;
   const bw = Math.min(compact ? 20 : 28, gw / 6);
   const gx = (i: number) => left + gw * (i + 0.5);
@@ -79,11 +95,12 @@ export function RampChart({ compact = false }: { compact?: boolean }) {
               {series.map((sr, j) => {
                 const v = x[sr.k];
                 const bx = gx(i) + (j - 1.5) * (bw + 5) - bw / 2;
+                const y0 = y(0), yv = y(v), neg = v < 0;
                 return (
                   <g key={sr.k}>
                     <rect x={bx} width={bw} rx={5} fill={sr.color} fillOpacity={sr.op} stroke={sr.k === "cumul" ? sr.color : "none"} strokeDasharray={sr.k === "cumul" ? "4 3" : undefined} strokeWidth={1.4}
-                      y={y(v)} height={Math.max(1.5, y(0) - y(v))} className="ag-grow" style={{ animationDelay: `${0.1 + i * 0.15 + j * 0.06}s` }} />
-                    <text x={bx + bw / 2} y={y(v) - 6} textAnchor="middle" fontSize={compact ? 10.5 : 11.5} fontWeight={700} fill={sr.color} className="num">{fr(v, v < 10 ? 1 : 0)}</text>
+                      y={Math.min(y0, yv)} height={Math.max(1.5, Math.abs(y0 - yv))} className={neg ? "ag-grow-down" : "ag-grow"} style={{ animationDelay: `${0.1 + i * 0.15 + j * 0.06}s` }} />
+                    <text x={bx + bw / 2} y={neg ? yv + fs + 3 : yv - 6} textAnchor="middle" fontSize={fs} fontWeight={700} fill={sr.color} className="num">{fr(v, Math.abs(v) < 10 ? 1 : 0)}</text>
                   </g>
                 );
               })}
@@ -96,7 +113,7 @@ export function RampChart({ compact = false }: { compact?: boolean }) {
   );
 }
 export function RampLegend() {
-  const items = [["Économie", C.eco], ["Coût des agents", C.cost], ["Gain net", C.net], ["Cumul des gains nets depuis 2027", C.cumul]] as const;
+  const items = [[cap(LBL.gains), C.eco], [cap(LBL.cout), C.cost], [cap(LBL.net), C.net], [V23 ? "Valeur nette cumulée depuis 2027" : "Cumul des gains nets depuis 2027", C.cumul]] as const;
   return (
     <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[11.5px] text-[var(--mut)]">
       {items.map(([l, c], i) => (
@@ -109,8 +126,9 @@ export function RampLegend() {
   );
 }
 
-/* ---------------------------------------------------------------- sensitivities */
+/* ---------------------------------------------------------------- sensitivities (v13 only: the v23 business case has no such table; the Synthèse shows "du cas au programme" instead) */
 export function Sensitivities() {
+  if (V23) return null;
   const rows = Object.entries(DATA.sens).map(([k, v]) => {
     const b = k.match(/^budget (\d+)/);
     const e = k.match(/(\d+) %/);
@@ -193,7 +211,12 @@ export function MarketMap({ cases, colorBy, hover, setHover, onOpen }: { cases: 
     return { tiles, heads };
   }, [cases, colorBy, w, h]);
   const hc = layout.tiles.find((t) => t.c.id === hover)?.c;
-  const roiMin = 1.4, roiMax = 3.2;
+  // v13: fixed scale; v23: the ratio gains / coût varies much more from case to case, so the scale follows the 10th and 90th percentile
+  const [roiMin, roiMax] = useMemo(() => {
+    if (!V23) return [1.4, 3.2] as const;
+    const v = cases.filter((c) => c.mdh > 0 && c.roi > 0).map((c) => c.roi).sort((a, b) => a - b);
+    return v.length ? ([v[Math.floor(v.length * 0.1)], v[Math.min(v.length - 1, Math.floor(v.length * 0.9))]] as const) : ([1, 3] as const);
+  }, [cases]);
   return (
     <div ref={ref} className="relative h-full w-full" onMouseLeave={() => { setHover(null); setTip(null); }}>
       {layout.heads.map((g) => (
@@ -245,7 +268,7 @@ export function MarketMap({ cases, colorBy, hover, setHover, onOpen }: { cases: 
           <div className="flex items-center gap-2"><span className="num text-[13px] font-bold" style={{ color: FAM_COLOR[hc.id[0]] }}>{hc.id}</span><span className="text-[11.5px] text-[var(--mut)]">{hc.famille} · vague {hc.vague}</span></div>
           <div className="mt-1 text-[13.5px] font-semibold leading-snug text-white">{hc.titre}</div>
           <div className="mt-2 grid grid-cols-4 gap-2 border-t border-white/[0.08] pt-2">
-            <Kv k="MDH" v={fr(hc.mdh, 1)} />
+            <Kv k={V23 ? "Gains MDH" : "MDH"} v={fr(hc.mdh, 1)} />
             <Kv k="ETP-éq." v={fr(hc.etp, 0)} />
             <Kv k="Coût MDH" v={fr(hc.cout, 1)} />
             <Kv k="ROI" v={fr(hc.roi, 2)} />

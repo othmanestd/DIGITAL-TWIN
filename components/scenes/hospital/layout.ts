@@ -3,6 +3,7 @@
 // (origin = building centre, y = 0 at the floor surface). The 3D components only instance what is described here.
 import { DEPTS, FLOORS, MAIN, ANNEX, FLOOR_H, ROLE_COLOR, type Dept, type Role } from "@/lib/hospital";
 import { isShrinkRole } from "./staffing";
+import { EXTRA_DOORS } from "../walk/plan";
 
 export type G = "box" | "rbox" | "cyl" | "sph" | "torus";
 export type M =
@@ -252,6 +253,7 @@ class B {
   /** wall along a segment with an optional gap (door) centred at parameter g (0..1) of width gw */
   wall(u1: number, v1: number, u2: number, v2: number, gaps: [number, number][] = [], h = 1.0) {
     const L = Math.hypot(u2 - u1, v2 - v1);
+    gaps = [...gaps, ...this.extraGaps(u1, v1, u2, v2, L)];
     const cuts = gaps.map(([c, gw]) => [Math.max(0, c * L - gw / 2), Math.min(L, c * L + gw / 2)]).sort((a, b) => a[0] - b[0]);
     let t0 = 0;
     const seg = (a: number, b: number) => {
@@ -262,13 +264,27 @@ class B {
     for (const [a, b] of cuts) { seg(t0, a); t0 = b; }
     seg(t0, L);
   }
+  /** Door gaps added for walk-mode circulation (walk/plan.ts EXTRA_DOORS) that fall on this wall segment. */
+  private extraGaps(u1: number, v1: number, u2: number, v2: number, L: number): [number, number][] {
+    if (L < 0.5) return [];
+    const [x1, z1] = this.X(u1, v1), [x2, z2] = this.X(u2, v2);
+    const ex = (x2 - x1) / L, ez = (z2 - z1) / L;
+    const out: [number, number][] = [];
+    for (const d of EXTRA_DOORS) {
+      if (d.building !== this.dept.building || d.floor !== this.dept.floor) continue;
+      const along = (d.x - x1) * ex + (d.z - z1) * ez, off = Math.abs((d.x - x1) * ez - (d.z - z1) * ex);
+      if (off < 0.2 && along > d.w / 2 && along < L - d.w / 2) out.push([along / L, d.w]);
+    }
+    return out;
+  }
   room(gapsInner: [number, number][] = [[0.5, 2.2]], gapsOuter: [number, number][] = []) {
     const hw = this.w / 2, hd = this.d / 2;
     // hand-sanitiser station and a wayfinding totem at the door (department colour band on the totem)
     const du = -hw + this.w * gapsInner[0][0];
     const s1 = this.at(du + gapsInner[0][1] / 2 + 0.45, hd - 0.4, 0, 1);
     s1.add("box", "steel", 0, 0.55, 0, 0.05, 1.1, 0.05); s1.add("box", "white", 0, 1.12, 0.03, 0.16, 0.26, 0.12); s1.add("box", "coral", 0, 1.2, 0.1, 0.1, 0.05, 0.01);
-    const s2 = this.at(du - gapsInner[0][1] / 2 - 0.5, hd + 0.35, 0, 1);
+    // (inside the door, facing the room: the 1 m corridors stay clear for people walking through)
+    const s2 = this.at(du - gapsInner[0][1] / 2 - 0.5, hd - 0.35, 0, -1);
     s2.add("rbox", "white", 0, 0.85, 0, 0.5, 1.7, 0.12); s2.add("box", "screen", 0, 1.3, 0.065, 0.42, 0.5, 0.01); s2.add("box", "band", 0, 1.62, 0.065, 0.46, 0.08, 0.01);
     this.wall(-hw, hd, hw, hd, gapsInner);   // inner (corridor) side
     this.wall(-hw, -hd, hw, -hd, gapsOuter); // outer (façade) side

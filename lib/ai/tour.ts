@@ -8,8 +8,16 @@
 //     timing driven by the speech "end" events, captions synced per sentence.
 // Cursor actions sit on the narration's clock (at = fraction, atSec = seconds, atSentence = when sentence n starts).
 // Pause / resume / stop, previous / next chapter, chapter menu; durations from the manifest (audio) or estimated (live).
-import express from "./tour-script.json";
-import complete from "./tour-complete.json";
+// Dataset (lib/data/dataset.ts): v13 plays lib/ai/tour-script.json + tour-complete.json with public/audio/tour/; v23 plays
+// lib/ai/tour-v23-*.json (one story, cast + value ledger, lib/ai/story.ts) with public/audio/tour-v23/. Never mixed.
+// A beat may start with `lead` silent seconds (title card) after its `pre` actions; `story0` restores the story state
+// when the visit jumps to a beat (chapter menu, ← →).
+import express13 from "./tour-script.json";
+import complete13 from "./tour-complete.json";
+import express23 from "./tour-v23-express.json";
+import complete23 from "./tour-v23-complete.json";
+import { V23 } from "../data/dataset";
+import { storySync, storyOff, type Story0 } from "./story";
 import { useApp } from "../store";
 import { useAi, type TourMode } from "./ui";
 import { audio, duck, resetDuck } from "./audio";
@@ -20,7 +28,7 @@ import { swell } from "./sfx";
 import { frenchVoice, utter, CPS, voiceName } from "./voices";
 
 export type TourAction = Op & { at?: number; atSec?: number; atSentence?: number };
-export type Beat = { id: number | string; title: string; text: string; speech?: string; actions: TourAction[] };
+export type Beat = { id: number | string; title: string; text: string; speech?: string; actions: TourAction[]; lead?: number; story0?: Story0 };
 export type Chapter = { id: string; title: string; beats: Beat[] };
 type Script = { chapters?: Chapter[]; beats?: Beat[] };
 export type { TourMode };
@@ -32,7 +40,11 @@ const mk = (s: Script): Tour => {
   const chapters = s.chapters ?? [{ id: "tour", title: "Visite guidée", beats: s.beats ?? [] }];
   return { chapters, beats: chapters.flatMap((c, ci) => c.beats.map((b) => ({ ...b, chapter: ci }))), timeline: { total: 0, beats: [], chapters: [] }, plan: "live" };
 };
-export const TOURS: Record<TourMode, Tour> = { express: mk(express as unknown as Script), complete: mk(complete as unknown as Script) };
+export const TOURS: Record<TourMode, Tour> = V23
+  ? { express: mk(express23 as unknown as Script), complete: mk(complete23 as unknown as Script) }
+  : { express: mk(express13 as unknown as Script), complete: mk(complete13 as unknown as Script) };
+/** Narration folder of the dataset's visits. */
+const AUDIO = V23 ? "/audio/tour-v23" : "/audio/tour";
 export const MODE_LABEL: Record<TourMode, string> = { express: "Visite express", complete: "Visite complète" };
 
 const said = (b: Beat) => b.speech || b.text;
@@ -64,7 +76,7 @@ async function planFor(t: Tour): Promise<"audio" | "live"> {
 }
 export function loadManifest() {
   if (!ready) ready = (async () => {
-    try { manifest = await (await fetch("/audio/tour/manifest.json", { cache: "no-cache" })).json(); } catch { manifest = { beats: {} }; }
+    try { manifest = await (await fetch(`${AUDIO}/manifest.json`, { cache: "no-cache" })).json(); } catch { manifest = { beats: {} }; }
     for (const mode of Object.keys(TOURS) as TourMode[]) { TOURS[mode].plan = await planFor(TOURS[mode]).catch(() => "live" as const); computeTimeline(mode); }
   })();
   return ready;
@@ -77,7 +89,7 @@ function loadBeat(t: Tour, i: number): Promise<AudioBuffer | null> {
     buffers.set(key, (async () => {
       const e = manifest?.beats[key];
       if (!e?.file) return null;
-      try { return await audio().ctx.decodeAudioData(await (await fetch(`/audio/tour/${e.file}?v=${e.hash ?? ""}`)).arrayBuffer()); } catch { return null; }
+      try { return await audio().ctx.decodeAudioData(await (await fetch(`${AUDIO}/${e.file}?v=${e.hash ?? ""}`)).arrayBuffer()); } catch { return null; }
     })());
   }
   return buffers.get(key)!;
@@ -89,7 +101,7 @@ function computeTimeline(mode: TourMode) {
   const T = TOURS[mode];
   let t = 0;
   const beats = T.beats.map((b) => {
-    const dur = T.plan === "audio" ? manifest?.beats[String(b.id)]?.duration ?? estimate(b) : estimate(b);
+    const dur = (b.lead ?? 0) + (T.plan === "audio" ? manifest?.beats[String(b.id)]?.duration ?? estimate(b) : estimate(b));
     const r = { start: t, dur };
     t += dur + GAP;
     return r;
@@ -131,6 +143,9 @@ class TourPlayer {
   private sentIdx = 0;
   private sentStart = 0;
   private abortUtter: (() => void) | null = null;
+  private last = -1;          // index of the beat played just before (a jump restores the story state)
+  private leadOn = false;    // inside a beat's silent lead (title card)
+  private leadEl = 0;        // seconds of lead elapsed
   step = 0;
   mode: TourMode = "express";
   get T() { return TOURS[this.mode]; }
@@ -145,7 +160,10 @@ class TourPlayer {
   }
   position() {
     const b = this.T.timeline.beats[this.step];
-    return b ? b.start + Math.min(b.dur, Math.max(0, this.elapsed())) : 0;
+    if (!b) return 0;
+    const L = this.T.beats[this.step]?.lead ?? 0;
+    if (this.leadOn) return b.start + Math.min(L, this.leadEl);
+    return b.start + L + Math.min(b.dur - L, Math.max(0, this.dur ? this.elapsed() : 0));
   }
   progress() {
     const total = this.T.timeline.total;
@@ -162,6 +180,7 @@ class TourPlayer {
     useApp.getState().setChatOpen(false);
     useAi.getState().set({ tourStatus: "playing", tourMode: mode });
     useApp.getState().setTour({ playing: true, step: from, caption: "" });
+    this.last = -1;
     duck(true);
     await Promise.all([loadManifest(), frenchVoice()]);
     if (my !== this.gen) return;
@@ -195,14 +214,34 @@ class TourPlayer {
     const T = this.T;
     const beat = T.beats[i];
     const newChapter = i === 0 || T.beats[i - 1]?.chapter !== beat.chapter || this.step !== i - 1;
+    const jumped = this.last !== i - 1;
+    this.last = i;
     this.step = i;
+    this.dur = 0;
+    this.buf = null;
     useApp.getState().setTour({ step: i, playing: true });
+    // a jump (chapter menu, ← →, start in the middle) restores the story state this beat starts from
+    if (jumped && beat.story0) storySync(beat.story0);
     useAi.getState().set({ tourTitle: beat.title, tourChapter: beat.chapter });
     loadBeat(T, i + 1);
     const buf = T.plan === "audio" ? await loadBeat(T, i) : null;
     if (my !== this.gen) return;
     await this.gate(my);
     if (newChapter) swell();
+    // pre actions (opening: letterbox, title card, camera from the sky), then the silent lead, then the voice
+    const pre = beat.actions.filter((a) => (a as { pre?: boolean }).pre);
+    for (const a of pre) {
+      if (my !== this.gen) return;
+      const { at, atSec, atSentence, ...op } = a;
+      void at; void atSec; void atSentence;
+      await perform({ ...op, silent: true } as Op).catch(() => {});
+    }
+    if (beat.lead) {
+      this.leadOn = true; this.leadEl = 0;
+      await this.wait(beat.lead, my, (d) => { this.leadEl += d; });
+      this.leadOn = false;
+      if (my !== this.gen) return;
+    }
 
     const caps = sentences(beat.text);
     const spoken = sentences(said(beat));
@@ -255,6 +294,7 @@ class TourPlayer {
     const run = (async () => {
       cursorKeep();
       for (const a of beat.actions) {
+        if ((a as { pre?: boolean }).pre) continue;
         if (my !== this.gen) return;
         if (a.at) await this.until(a.at * this.dur, my);
         if (a.atSec) await this.until(a.atSec, my);
@@ -306,14 +346,14 @@ class TourPlayer {
       tick();
     });
   }
-  private wait(sec: number, my: number) {
+  private wait(sec: number, my: number, onTick?: (dSec: number) => void) {
     return new Promise<void>((resolve) => {
       let left = sec * 1000;
       let last = performance.now();
       const tick = () => {
         if (my !== this.gen) return resolve();
         const now = performance.now();
-        if (!this.paused) left -= now - last;
+        if (!this.paused) { left -= now - last; onTick?.((now - last) / 1000); }
         last = now;
         if (left <= 0) return resolve();
         window.setTimeout(tick, 50);
@@ -368,9 +408,11 @@ class TourPlayer {
     const w = this.resumeWaiters.splice(0);
     w.forEach((f) => f());
     this.dur = 0;
+    this.leadOn = false;
     if (!quiet || wasActive) {
       if (!quiet) {
         this.step = 0;
+        storyOff();
         useAi.getState().set({ tourStatus: "idle", tourTitle: "", tourChapter: 0 });
         useApp.getState().setTour({ playing: false, step: 0, caption: "" });
         cursorHide();

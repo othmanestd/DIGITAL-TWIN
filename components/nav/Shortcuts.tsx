@@ -3,9 +3,10 @@
 import { useEffect } from "react";
 import { useApp, type Section } from "@/lib/store";
 import { DEPTS, DEPT, FLOORS, CASE_DEPT, floorKey } from "@/lib/hospital";
-import { YEARS, type Year } from "@/lib/model";
+import { YEARS, V23, type Year } from "@/lib/model";
+import { walkRequest } from "@/components/scenes/walk/state";
 
-const SECTIONS: Section[] = ["explorer", "synthese", "cas", "preuves", "gouvernance", "emplois", "deploiement", "sources"];
+const SECTIONS: Section[] = V23 ? ["explorer", "synthese", "finances", "cas", "preuves", "gouvernance", "emplois", "deploiement", "sources"] : ["explorer", "synthese", "cas", "preuves", "gouvernance", "emplois", "deploiement", "sources"];
 const orbit = (detail: { az?: number; pol?: number; panX?: number; panY?: number }) => window.dispatchEvent(new CustomEvent("atlas:orbit", { detail }));
 
 /** Current floor key from the selection (floor, dept, person or case). */
@@ -49,6 +50,22 @@ export default function Shortcuts() {
 
       if (k === "?" || (k === "/" && e.shiftKey)) { e.preventDefault(); s.setHelpOpen(!s.helpOpen); return; }
       if (s.helpOpen) { if (k === "Escape") { e.preventDefault(); s.setHelpOpen(false); } return; }
+
+      // walk mode ("À pied"): the camera / navigation shortcuts would fight the visitor's controls (walk/WalkWorld.tsx).
+      // Kept: "?" (above), Ctrl+Space voice (Assistant), Échap — closes the department panel first, then leaves —, B.
+      if (s.walk.phase !== "off") {
+        if (e.altKey) return;
+        if (k === "b" || k === "B") { e.preventDefault(); walkRequest("toggle"); return; }
+        if (k === "Escape") {
+          if (s.chatOpen || s.tour.playing || s.voice !== "idle" || s.searchOpen) return;
+          e.preventDefault();
+          if (s.section !== "explorer") s.setSection("explorer");
+          else if (s.sel && s.sel.kind !== "overview") s.select({ kind: "overview", id: "hospital" }, { focus: false });
+          else walkRequest("exit");
+        }
+        return;
+      }
+      if ((k === "b" || k === "B") && !e.altKey) { e.preventDefault(); walkRequest("enter"); return; }
 
       // sections: Alt+1…7
       if (e.altKey && /^[1-8]$/.test(k)) { e.preventDefault(); s.setSection(SECTIONS[Number(k) - 1]); return; }
@@ -140,6 +157,17 @@ export const ROWS: [string, [string, string][]][] = [
     ["P", "Afficher / masquer le panneau"],
     ["Alt + 1 … 8", "Sections : Explorer … Sources"],
   ]],
+  ["À pied", [
+    ["B", "Se promener à pied · revenir à la vue d'ensemble"],
+    ["Z Q S D · W A S D · flèches", "Marcher"],
+    ["Maj", "Courir"],
+    ["Espace", "Petit saut"],
+    ["Souris · clic pour la capturer", "Regarder autour"],
+    ["Molette", "Rapprocher / éloigner la caméra"],
+    ["V", "Vue à la 1re / 3e personne"],
+    ["E", "Ouvrir les cas d'usage devant le personnage · refermer"],
+    ["Échap", "Libérer la souris · fermer · quitter"],
+  ]],
   ["Assistant", [
     ["Ctrl + K  ou  /", "Rechercher"],
     ["Ctrl + Espace", "Poser une question à la voix"],
@@ -155,7 +183,7 @@ function HelpOverlay() {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[60] grid place-items-center bg-black/40 backdrop-blur-sm" onClick={() => setOpen(false)}>
-      <div className="glass-read w-[min(1040px,94vw)] max-h-[88dvh] overflow-hidden rounded-[22px] p-[clamp(18px,2.4vw,32px)]" onClick={(e) => e.stopPropagation()}>
+      <div className="glass-read w-[min(1320px,95vw)] max-h-[90dvh] overflow-y-auto rounded-[22px] p-[clamp(18px,2.4vw,32px)]" onClick={(e) => e.stopPropagation()}>
         <div className="mb-5 flex items-end justify-between">
           <div>
             <div className="eyebrow">Raccourcis</div>
@@ -163,7 +191,7 @@ function HelpOverlay() {
           </div>
           <button className="rounded-full px-3 py-1.5 text-sm text-[var(--mut)] hover:bg-white/10 hover:text-white" onClick={() => setOpen(false)}>Fermer · Échap</button>
         </div>
-        <div className="grid gap-x-8 gap-y-2 md:grid-cols-3">
+        <div className="grid gap-x-8 gap-y-2 md:grid-cols-2 xl:grid-cols-4">
           {ROWS.map(([title, rows]) => (
             <div key={title}>
               <div className="eyebrow mb-2 text-[var(--blue)]">{title}</div>

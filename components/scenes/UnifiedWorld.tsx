@@ -12,9 +12,14 @@ import { rig, EARTH_R, GLOBE_DROP, EARTH_CENTER } from "@/lib/rig";
 import { MAX_ALT, altToG, gToAlt, bandAlt, levelForAlt, fadeIn, frame, EGG_DROP, EGG_IN, EGG_FULL } from "@/lib/world";
 import { HospitalContent, HOSPITAL_BOX, HOSPITAL_TIME } from "./hospital/HospitalContent";
 import { CityContent } from "./city/CityContent";
+import { CitySky } from "./city/Sky";
+import { CityLandmarks } from "./city/landmarks";
+import { CityPedestrians } from "./city/Pedestrians";
 import { MoroccoContent, MAP_UNITS_PER_KM, MOROCCO_CENTER_LONLAT, mapProject } from "./geo/MoroccoContent";
 import { GlobeContent, GLOBE_RADIUS, GLOBE_VIEW_LONLAT, globePoint } from "./geo/GlobeContent";
 import { CASA_LONLAT } from "@/lib/geo/projection";
+import WalkWorld from "./walk/WalkWorld";
+import { walkBusy, WALK_API } from "./walk/state";
 
 const MAP_SCALE_M = 1000 / MAP_UNITS_PER_KM;          // metres per map unit (≈ 7 580)
 const GLOBE_SCALE_M = EARTH_R / GLOBE_RADIUS;          // metres per globe unit (63 710)
@@ -92,7 +97,7 @@ export default function UnifiedWorld() {
   useEffect(() => {
     if (first.current) { first.current = false; return; }
     const sel = useApp.getState().sel;
-    if (sel?.kind === "overview") { st.current.intro = false; go(sel.id as "hospital" | "morocco" | "world"); }
+    if (sel?.kind === "overview") { if (walkBusy()) WALK_API.stop(); st.current.intro = false; go(sel.id as "hospital" | "morocco" | "world"); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusNonce]);
 
@@ -111,6 +116,7 @@ export default function UnifiedWorld() {
   useEffect(() => {
     const el = gl.domElement;
     const onWheel = (e: WheelEvent) => {
+      if (walkBusy()) return; // walk mode: the wheel sets the third-person camera distance (walk/WalkWorld.tsx)
       const c = controls.current as unknown as (CameraControls & { _sphericalEnd: { radius: number }; _dollyInternal: (d: number, x: number, y: number) => void }) | null;
       if (!c) return;
       e.preventDefault();
@@ -134,7 +140,7 @@ export default function UnifiedWorld() {
   // keyboard / nav-pad camera moves: orbit, tilt, pan (orbit the globe when the pivot is the Earth's centre), and "north up"
   useEffect(() => {
     const onOrbit = (e: Event) => {
-      const c = controls.current; if (!c) return;
+      const c = controls.current; if (!c || walkBusy()) return;
       rig.cancel(); st.current.intro = false;
       const d = (e as CustomEvent<{ az?: number; pol?: number; panX?: number; panY?: number }>).detail || {};
       const centre = c.getTarget(tmp.t).distanceTo(EARTH_CENTER) < 2e5;
@@ -146,7 +152,7 @@ export default function UnifiedWorld() {
       }
     };
     const onNorth = () => {
-      const c = controls.current; if (!c) return;
+      const c = controls.current; if (!c || walkBusy()) return;
       rig.cancel();
       const centre = c.getTarget(tmp.t).distanceTo(EARTH_CENTER) < 2e5;
       // ground: look north (camera south of the target) with a comfortable tilt; globe: north is already up, so bring Morocco back to the centre
@@ -165,6 +171,7 @@ export default function UnifiedWorld() {
       const cmd = s.zoomCmd, c = controls.current;
       if (!cmd || !c || cmd.nonce === last) return;
       last = cmd.nonce; st.current.intro = false;
+      if (walkBusy()) WALK_API.stop();
       const alt = frame.alt;
       let want = alt;
       let fast = false;
@@ -201,7 +208,7 @@ export default function UnifiedWorld() {
     // pivot hand-over: ground ⇄ Earth centre (the view direction passes through both, so nothing swings)
     const tgt = c.getTarget(tmp.t);
     const centre = tgt.distanceTo(EARTH_CENTER) < 2e5;
-    if (!flying && !s.dragging) {
+    if (!flying && !s.dragging && !walkBusy()) {
       if (!centre && alt > PIVOT_IN) {
         void c.setTarget(EARTH_CENTER.x, EARTH_CENTER.y, EARTH_CENTER.z, false);
         camera.up.copy(POLE); c.updateCameraUp();
@@ -215,7 +222,9 @@ export default function UnifiedWorld() {
     }
     // limits per pivot mode; at high altitude the ground view straightens up so the map flattens into the globe
     const centreNow = c.getTarget(tmp.t).distanceTo(EARTH_CENTER) < 2e5;
-    if (centreNow) {
+    if (walkBusy()) {
+      // walk mode drives the camera itself; limits are restored on the next frame after it hands back
+    } else if (centreNow) {
       c.minDistance = R_TOP + 1.8e6; c.maxDistance = R_TOP + MAX_ALT;
       c.minPolarAngle = 0; c.maxPolarAngle = Math.PI;
     } else {
@@ -269,16 +278,20 @@ export default function UnifiedWorld() {
   return (
     <>
       <CameraControls ref={controls} makeDefault />
+      <WalkWorld />
       <Lights />
       <Environment resolution={128} frames={1} environmentIntensity={0.3}>
         <Lightformer form="rect" intensity={2.2} color="#FFFFFF" position={[0, 12, 0]} rotation-x={Math.PI / 2} scale={[24, 24, 1]} />
         <Lightformer form="rect" intensity={1.1} color="#DCE6FF" position={[-14, 4, 6]} rotation-y={Math.PI / 2} scale={[20, 6, 1]} />
         <Lightformer form="rect" intensity={0.9} color="#FFF3E6" position={[14, 4, -6]} rotation-y={-Math.PI / 2} scale={[20, 6, 1]} />
       </Environment>
+      <CitySky />
       <Stars />
       <group ref={hosp}>
         <HospitalContent />
         <CityContent />
+        <CityLandmarks />
+        <CityPedestrians />
       </group>
       {/* the map lies under the campus base (basement pit to −5.9 m) so the plaza never flickers against it */}
       <group position={[0, -6.5, 0]} scale={MAP_SCALE_M}>

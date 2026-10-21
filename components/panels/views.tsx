@@ -1,17 +1,19 @@
 "use client";
-// Side panel contents, one per selection kind. Verdict first, every unit explained, no scrolling.
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+// Side panel contents, one per selection kind. Verdict first, every unit explained. Departments, people and places fit the panel;
+// a use case opens as a scrollable dossier (dossier.tsx).
+import type { ReactNode } from "react";
 import { useApp } from "@/lib/store";
-import { agg, fr, verdict, peopleOutOf10, MODE_LABEL, CASE, CASES, DATA, FAM, ETAB, META, YEAR_LABEL, share, yearTotals, type UseCase } from "@/lib/model";
+import { agg, fr, verdict, MODE_LABEL, CASE, CASES, DATA, FAM, META, YEAR_LABEL, YEARS, FINAL_YEAR, HEAD, V23, etabIn, share, yearTotals, type UseCase } from "@/lib/model";
 import { DEPT, DEPTS, CASE_DEPT, ROLE_LABEL, ROLE_COLOR, KIND_COLOR, EXPERIENCES, XP, type Dept, type Role } from "@/lib/hospital";
 import { SITES, CITIES, INTERNATIONAL, GROUP } from "@/lib/geo/network";
 import { DeptIcon, I } from "@/components/ui/icons";
 import { AkditalMark } from "@/components/ui/AkditalLogo";
-import { MiniBar, Tip, Dot, MarketTile, Pictogram, Segmented } from "@/components/ui/kit";
+import { MiniBar, Tip, Dot, MarketTile } from "@/components/ui/kit";
 import { visibleStaff } from "@/components/scenes/hospital/staffing";
 import { FAM_COLOR, famOfDept, famName, floorShort, deptsOfFloor, floorName, floorTitle, money, norm, yearPhrase, groupSeries, in302, benchOf } from "@/lib/ui/fmt";
 import { useViewport } from "@/lib/ui/hooks";
-import { KpiStrip, PeopleBlock, CaseRows, CaseListSplit, ProofBlock, ValueOutCard, Chain, ChainLegend, Fact, SectionTitle, useCompact, useTight } from "./parts";
+import { KpiStrip, PeopleBlock, CaseRows, CaseListSplit, SectionTitle, useCompact, useTight } from "./parts";
+import { CaseDossier } from "./dossier";
 import s from "@/components/ui/styles";
 
 const KIND_LABEL: Record<Dept["kind"], string> = { admin: "Service administratif", care: "Service de soins", support: "Hôtellerie et logistique", hq: "Siège" };
@@ -61,7 +63,8 @@ function Team({ d }: { d: Dept }) {
 
 function familyPeople(fam: string, year: ReturnType<typeof useApp.getState>["year"]) {
   const f = FAM[fam];
-  const v = f.part * 10 * share(year).eco;
+  // v13: the family share assumed by the top-down estimate; v23: the FTE freed that year by the family's cases, over its workforce
+  const v = V23 ? (f.etp ? (agg(CASES.filter((c) => c.fam === fam).map((c) => c.id), year).etp / f.etp) * 10 : 0) : f.part * 10 * share(year).eco;
   const n = fr(v, v % 1 ? 1 : 0);
   const verb = year === 2026 ? "ne sont pas encore repris (le programme démarre fin 2026)" : `${Number(n.replace(",", ".")) <= 1 ? "est repris" : "sont repris"} par les agents ${yearPhrase(year)}`;
   return { v, text: <>Sur 10 temps pleins de la famille <b className="font-semibold text-white">{f.name.toLowerCase()}</b>, {year === 2026 ? "aucun" : n} {verb}. Sans licenciement : départs non remplacés et mobilités.</> };
@@ -75,8 +78,8 @@ function BeyondCard({ cases }: { cases: UseCase[] }) {
   const proofs = benchOf(cases.map((c) => c.id)).length;
   return (
     <div className="rounded-[16px] px-4 py-3" style={{ background: "linear-gradient(90deg, rgba(91,124,255,.13), rgba(91,124,255,.03))", boxShadow: "inset 3px 0 0 #9FB3FF" }}>
-      <div className="flex items-center gap-2"><span className="eyebrow !text-[9.5px] !text-[#AFC0FF]">Verdict · au-delà de la masse salariale</span><span className="ml-auto rounded-full bg-white/[0.07] px-2 py-[2px] text-[10.5px] text-[var(--txt-2)]">indicatif, non additif aux {fr(META.eco, 0)} MDH</span></div>
-      <p className="mt-1 text-[clamp(15px,1.05vw,18px)] font-semibold leading-snug text-white">{cases.length} cas créent une valeur d&apos;un autre type que la masse salariale{proofs ? `, dont des résultats déjà mesurés ailleurs (${proofs})` : ""}.</p>
+      <div className="flex items-center gap-2"><span className="eyebrow !text-[9.5px] !text-[#AFC0FF]">{V23 ? "Verdict · fusionné dans un autre cas" : "Verdict · au-delà de la masse salariale"}</span>{!V23 && <span className="ml-auto rounded-full bg-white/[0.07] px-2 py-[2px] text-[10.5px] text-[var(--txt-2)]">indicatif, non additif aux {fr(META.eco, 0)} MDH</span>}</div>
+      <p className="mt-1 text-[clamp(15px,1.05vw,18px)] font-semibold leading-snug text-white">{V23 ? `${cases.length} cas sans chiffrage propre : leur valeur est comptée dans ${[...new Set(cases.map((c) => c.merged_into).filter(Boolean))].join(", ") || "un autre cas"}.` : `${cases.length} cas créent une valeur d'un autre type que la masse salariale${proofs ? `, dont des résultats déjà mesurés ailleurs (${proofs})` : ""}.`}</p>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         {types.slice(0, 8).map((x) => <span key={x} className="rounded-full bg-white/[0.06] px-2 py-[2px] text-[11px] text-[var(--txt-2)]">{x}</span>)}
         {sols.length > 0 && <span className="ml-1 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-[var(--mut)]">Solutions</span>}
@@ -106,17 +109,18 @@ export function DeptView({ id }: { id: string }) {
       <Title eyebrow={<>{where} · {KIND_LABEL[d.kind]}</>} title={d.name} sub={tight && d.cases.length ? undefined : desc} icon={<DeptIcon k={d.icon} size={22} />} color={KIND_COLOR[d.kind]} />
       {inIds.length > 0 && top && top.mdh > 0 && (
         <Verdict>
-          {year === 2026 ? <>Aujourd&apos;hui, rien n&apos;est encore engagé. Au plein régime : {fr(agg(d.cases, 2029, perSite).mdh, 1)} MDH économisés par an{perSite ? " par établissement" : ""}.</>
+          {year === 2026 ? <>Aujourd&apos;hui, rien n&apos;est encore engagé. {V23 ? `En ${FINAL_YEAR}` : "Au plein régime"} : {fr(agg(d.cases, FINAL_YEAR, perSite).mdh, 1)} MDH {V23 ? "de gains bruts" : "économisés"} par an{perSite ? " par établissement" : ""}.</>
+            : V23 ? <>{fr(money(a.mdh).v, money(a.mdh).d)} {money(a.mdh).unit} de gains bruts {yearPhrase(year)}{perSite ? " par établissement" : ""}, pour {fr(money(a.cout).v, money(a.cout).d)} {money(a.cout).unit} de coût : {fr(a.roi, 1)} dirhams de gains pour 1 dirham dépensé.</>
             : <>{fr(money(a.mdh).v, money(a.mdh).d)} {money(a.mdh).unit} économisés {yearPhrase(year)}{perSite ? " par établissement" : ""}, pour {fr(money(a.cout).v, money(a.cout).d)} {money(a.cout).unit} d&apos;agents : {fr(a.roi, 2)} dirhams rendus pour 1 dirham dépensé.</>}
         </Verdict>
       )}
       {d.cases.length > 0 ? (
         <>
           {inIds.length > 0 ? <KpiStrip ids={d.cases} year={year} perSite={perSite} note={perSite && d.kind === "hq" ? "Le siège n'est pas réparti par établissement : basculez sur « Groupe » pour voir ses chiffres." : undefined} /> : <BeyondCard cases={outCases} />}
-          {fam && FAM[fam]?.part > 0 && (() => { const p = familyPeople(fam, year); return <PeopleBlock value={p.v} color={FAM_COLOR[fam]} title={`famille ${famName(fam).toLowerCase()}`} text={p.text} />; })()}
-          {(() => { const v = visibleStaff(d.id, year); const v29 = visibleStaff(d.id, 2029); if (!v.shrinks) return null; return (
+          {fam && FAM[fam]?.etp > 0 && (V23 || FAM[fam]?.part > 0) && (() => { const p = familyPeople(fam, year); return <PeopleBlock value={p.v} color={FAM_COLOR[fam]} title={`famille ${famName(fam).toLowerCase()}`} text={p.text} />; })()}
+          {(() => { const v = visibleStaff(d.id, year); const v29 = visibleStaff(d.id, FINAL_YEAR); if (!v.shrinks) return null; return (
             <Tip content={<>Dans l&apos;hôpital représenté (figures illustratives) : départs non remplacés et mobilités vers les ouvertures, zéro licenciement.</>}>
-              <span className="-mt-1 inline-flex w-fit cursor-help items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-[12.5px] leading-none text-[var(--txt-2)]" data-anchor={`staff:${d.id}`}><b className="num text-white">{v.n2026}</b> personnes en 2026 → <b className="num text-white">{year === 2026 ? v29.n : v.n}</b> pilote{(year === 2026 ? v29.n : v.n) > 1 ? "s" : ""} {year === 2026 ? "en 2029" : `en ${year}`} · zéro licenciement</span>
+              <span className="-mt-1 inline-flex w-fit cursor-help items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-[12.5px] leading-none text-[var(--txt-2)]" data-anchor={`staff:${d.id}`}><b className="num text-white">{v.n2026}</b> personnes en 2026 → <b className="num text-white">{year === 2026 ? v29.n : v.n}</b> pilote{(year === 2026 ? v29.n : v.n) > 1 ? "s" : ""} {year === 2026 ? `en ${FINAL_YEAR}` : `en ${year}`} · zéro licenciement</span>
             </Tip>); })()}
           <CaseListSplit key={d.id} layoutId={`dept-split-${d.id}`} ids={d.cases} year={year} perSite={perSite} onOpen={(cid) => openCase(cid)} max={tight ? 4 : compact ? 5 : 6} />
           <XpStrip deptId={d.id} />
@@ -165,85 +169,9 @@ function RelatedCases({ note }: { note?: string }) {
   );
 }
 
-/* ================================================================ use case */
+/* ================================================================ use case: the full, scrollable dossier lives in dossier.tsx */
 export function CaseView({ id }: { id: string }) {
-  const c = CASE[id];
-  const year = useApp((st) => st.year);
-  const perSite = useApp((st) => st.perSite);
-  const sel = useApp((st) => st.sel);
-  const select = useApp((st) => st.select);
-  const openCase = useApp((st) => st.openCase);
-  const compact = useCompact();
-  const tight = useTight();
-  const vp = useViewport();
-  const root = useRef<HTMLDivElement | null>(null);
-  const [tabbed, setTabbed] = useState(false);
-  const [tab, setTab] = useState<"main" | "chain">("main");
-  // when everything does not fit, split into two tabs instead of scrolling
-  useEffect(() => { setTabbed(false); setTab("main"); }, [id, vp.w, vp.h]);
-  useLayoutEffect(() => {
-    const el = root.current;
-    if (!tabbed && el && el.scrollHeight > el.clientHeight + 2) setTabbed(true);
-  });
-  if (!c) return <Missing what="Cas d'usage" id={id} />;
-  const dep = DEPT[CASE_DEPT[c.id]];
-  const back = () => {
-    if (sel?.kind === "case") { if (dep) select({ kind: "dept", id: dep.id }); else openCase(null); }
-    else openCase(null);
-  };
-  const backLabel = sel?.kind === "person" ? "Retour à la personne" : dep ? `Retour · ${dep.short}` : "Retour";
-  const p = peopleOutOf10(c);
-  const wave = DATA.waves.find((w) => w.k === c.vague);
-  const fam = c.fam || c.id[0];
-  const inside = in302(c) && c.mdh > 0;
-  const showMain = !tabbed || tab === "main", showChain = !tabbed || tab === "chain";
-  const chips = (
-    <div className="flex flex-wrap items-center gap-1.5 text-[11.5px]">
-      <Tip content={c.validation_humaine}><span className="flex cursor-help items-center gap-1 rounded-full bg-white/[0.06] px-2.5 py-1 text-[var(--txt-2)]"><I.check size={12} />Validation humaine</span></Tip>
-      <Tip content={c.garde_fous}><span className="flex cursor-help items-center gap-1 rounded-full bg-white/[0.06] px-2.5 py-1 text-[var(--txt-2)]"><I.shieldCheck size={12} />Garde-fous</span></Tip>
-      <Tip content={<>{MODE_LABEL[modeCode(c)] ?? c.mode}.{wave ? ` ${wave.what}, ${wave.when}.` : ""}</>}><span className="flex cursor-help items-center gap-1 rounded-full bg-white/[0.06] px-2.5 py-1 text-[var(--txt-2)]"><I.layers size={12} />Vague {c.vague} · {MODE_LABEL[modeCode(c)]?.split(" — ")[0] ?? c.mode}</span></Tip>
-      {inside && c.etp > 0 && (
-        <Tip content={<>Au plein régime, ce cas reprend le temps de {fr(p, 1)} personne sur 10 de la famille {famName(fam).toLowerCase()} ({c.metier_libere}). Sans licenciement.</>}>
-          <span className="flex cursor-help items-center gap-2 rounded-full bg-white/[0.06] py-1 pl-2 pr-2.5 text-[var(--txt-2)]"><Pictogram value={p} color={FAM_COLOR[fam]} size={14} gap={1.5} /><span className="num font-semibold text-white">{fr(p, 1)}</span> sur 10</span>
-        </Tip>
-      )}
-    </div>
-  );
-  return (
-    <div ref={root} className={`flex h-full flex-col overflow-hidden [&>*]:shrink-0 ${tight ? "gap-2" : compact ? "gap-3" : "gap-3.5"}`}>
-      <div className="flex items-center gap-2">
-        <button type="button" onClick={back} data-anchor="panel:back"
-          className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-white/[0.06] pl-2 pr-3 text-[12.5px] font-medium text-[var(--txt-2)] ring-1 ring-white/[0.08] transition-colors hover:bg-white/[0.12] hover:text-white">
-          <I.back size={15} />{backLabel}
-        </button>
-        <span className="ml-auto flex min-w-0 items-center gap-2 text-[11.5px] text-[var(--mut)]">
-          <span className="shrink-0 rounded-full px-2 py-[3px] font-semibold" style={{ background: `color-mix(in srgb, ${FAM_COLOR[fam]} 18%, transparent)`, color: FAM_COLOR[fam] }}>{c.id}</span>
-          <span className="truncate">{c.famille} · {c.domaine.replace(/^[^—]+— /, "")}</span>
-        </span>
-      </div>
-      <h2 className={`h-display shrink-0 text-white ${tight ? "text-[19px]" : "text-[clamp(20px,1.5vw,27px)]"}`}>{c.titre}</h2>
-      {inside ? <Verdict>{verdict(c)}</Verdict> : <ValueOutCard c={c} />}
-      {tabbed && (
-        <Segmented<"main" | "chain"> size="sm" layoutId="case-tabs" value={tab} onChange={setTab} className="self-start" anchorPrefix="case-tab:"
-          options={[{ id: "main", label: "Chiffres et preuve" }, { id: "chain", label: "Où intervient l'IA" }]} />
-      )}
-      {showMain && inside && <KpiStrip ids={[c.id]} year={year} perSite={perSite} note={year !== 2029 ? `Valeurs ${year === 2026 ? "d'aujourd'hui" : "de " + year} ; le verdict est donné au plein régime (2029).` : undefined} />}
-      {showMain && <ProofBlock c={c} compact={tight} />}
-      {showChain && (
-        <div className="shrink-0">
-          <SectionTitle right={tight ? <ChainLegend /> : <Tip content="Chaque étape de la tâche, avant et après. En bleu : là où l'agent intervient. En vert d'eau : ce que l'humain valide."><span className="cursor-help text-[11.5px] text-[var(--mut)]">où intervient l&apos;IA</span></Tip>}>Avant · après</SectionTitle>
-          <Chain c={c} legend={!tight} />
-        </div>
-      )}
-      {showChain && (((tabbed && tab === "chain") || (!inside && !compact)) && !tight ? (
-        <div className="grid grid-cols-3 gap-2">
-          <Fact icon={<I.check size={14} />} label="Validation humaine" clamp={3}>{c.validation_humaine}</Fact>
-          <Fact icon={<I.shieldCheck size={14} />} label="Garde-fous" clamp={3}>{c.garde_fous}</Fact>
-          <Fact icon={<I.layers size={14} />} label={`Vague ${c.vague} · mode ${modeCode(c)}`} clamp={3}>{MODE_LABEL[modeCode(c)] ?? c.mode}.{wave ? ` ${wave.what}, ${wave.when}.` : ""}</Fact>
-        </div>
-      ) : <div className="mt-auto">{chips}</div>)}
-    </div>
-  );
+  return <CaseDossier id={id} />;
 }
 
 /* ================================================================ person */
@@ -285,7 +213,7 @@ export function PersonView({ id }: { id: string }) {
             <span className="rounded-full bg-[rgba(76,199,154,.14)] px-2.5 py-1 font-semibold text-[#7FD9B5]">0 licenciement</span>
             {d.cases.length > 0 && <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[var(--txt-2)]">formée à l&apos;académie des pilotes (T-04)</span>}
             {d.cases.length > 0 && <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[var(--txt-2)]">mobilité possible vers les ouvertures (T-05)</span>}
-            {roleRow && <Tip content="Équivalents temps plein libérés pour ce métier dans tout le groupe, au plein régime."><span className="cursor-help rounded-full bg-white/[0.06] px-2.5 py-1 text-[var(--txt-2)]">{fr(roleRow.etp, 0)} ETP-éq. libérés dans le groupe</span></Tip>}
+            {roleRow && <Tip content={`Équivalents temps plein libérés pour ce métier dans tout le groupe, ${V23 ? `en ${FINAL_YEAR}` : "au plein régime"}.`}><span className="cursor-help rounded-full bg-white/[0.06] px-2.5 py-1 text-[var(--txt-2)]">{fr(roleRow.etp, 0)} ETP-éq. libérés dans le groupe</span></Tip>}
           </div>
         )}
       </div>
@@ -303,7 +231,7 @@ export function PersonView({ id }: { id: string }) {
 /* ================================================================ floor */
 function floorCounts(ids: string[]) {
   const n302 = ids.filter((x) => CASE[x] && in302(CASE[x])).length, nOut = ids.length - n302, proofs = benchOf(ids).length;
-  return [n302 ? `${n302} masse salariale` : null, nOut ? `${nOut} au-delà` : null, proofs ? `${proofs} preuve${proofs > 1 ? "s" : ""}` : null].filter(Boolean).join(" · ");
+  return [n302 ? `${n302} ${V23 ? "chiffrés" : "masse salariale"}` : null, nOut ? `${nOut} ${V23 ? "fusionné" + (nOut > 1 ? "s" : "") : "au-delà"}` : null, proofs ? `${proofs} preuve${proofs > 1 ? "s" : ""}` : null].filter(Boolean).join(" · ");
 }
 export function FloorView({ id }: { id: string }) {
   const year = useApp((st) => st.year);
@@ -337,7 +265,7 @@ export function FloorView({ id }: { id: string }) {
             );
           })}
         </div>
-        <p className="mt-2 px-3 text-[11.5px] text-[var(--mut)]">Économie annuelle {yearPhrase(year)}, en {perSite ? "MDH (millions de dirhams) ou kMAD (milliers de dirhams) par établissement" : "MDH (millions de dirhams)"}.</p>
+        <p className="mt-2 px-3 text-[11.5px] text-[var(--mut)]">{V23 ? "Gains bruts annuels" : "Économie annuelle"} {yearPhrase(year)}, en {perSite ? "MDH (millions de dirhams) ou kMAD (milliers de dirhams) par établissement" : "MDH (millions de dirhams)"}.</p>
       </div>
     </div>
   );
@@ -411,22 +339,22 @@ export function PlaceView({ kind, id }: { kind: "city" | "site" | "country"; id:
             ))}
           </div>
           <div className="rounded-[16px] px-4 py-3.5" style={{ background: "linear-gradient(135deg, rgba(91,124,255,.14), rgba(91,124,255,.03))", boxShadow: "inset 0 0 0 1px rgba(91,124,255,.22)" }}>
-            <p className="text-[13.5px] leading-snug text-[var(--txt)]">Le programme de <b className="text-white">{fr(META_ECO, 0)} MDH</b> (millions de dirhams) porte sur le Maroc. Le même modèle d&apos;agents peut être répliqué ici une fois le réseau marocain au plein régime ; aucun chiffre n&apos;est estimé pour ce pays.</p>
+            <p className="text-[13.5px] leading-snug text-[var(--txt)]">Le programme de <b className="text-white">{fr(META_ECO, 0)} MDH</b> (millions de dirhams){V23 ? " de gains bruts par an" : ""} porte sur le Maroc. Le même modèle d&apos;agents peut être répliqué ici une fois le réseau marocain {V23 ? `déployé (horizon ${FINAL_YEAR})` : "au plein régime"} ; aucun chiffre n&apos;est estimé pour ce pays.</p>
           </div>
         </>
       )}
       {showKpi && (
         <div>
-          <SectionTitle>{site ? `Hôpital type · moyenne des ${ETAB} établissements` : city ? `Ordre de grandeur · ${nOps} × hôpital type` : "Groupe Akdital au Maroc"} · {YEAR_LABEL[year].toLowerCase()}</SectionTitle>
+          <SectionTitle>{site ? `Hôpital type · moyenne des ${etabIn(year)} établissements` : city ? `Ordre de grandeur · ${nOps} × hôpital type` : "Groupe Akdital au Maroc"} · {YEAR_LABEL[year].toLowerCase()}</SectionTitle>
           <div className="grid grid-cols-3 gap-2">
             {(site ? [typ.mdh, typ.cout, typ.net] : city ? [typ.mdh * nOps, typ.cout * nOps, typ.net * nOps] : [t.eco, t.cout, t.net]).map((v, k) => {
               const m = money(v);
-              return <MarketTile key={k} size="md" label={["Économie", "Coût des agents", "Gain net"][k]} value={m.v} d={m.d} unit={m.unit}
+              return <MarketTile key={k} size="md" label={(V23 ? ["Gains bruts", "Coût des cas", "Valeur nette"] : ["Économie", "Coût des agents", "Gain net"])[k]} value={m.v} d={m.d} unit={m.unit}
                 explain={<>{m.unit === "MDH" ? "MDH (millions de dirhams)" : "kMAD (milliers de dirhams)"} par an</>}
-                series={site || city ? undefined : groupSeries((["eco", "cout", "net"] as const)[k])} active={[2026, 2027, 2028, 2029].indexOf(year)} color={["var(--green)", "#B9C1D6", "#E6EAF5"][k]} tone={k === 1 ? "neutral" : "pos"} />;
+                series={site || city ? undefined : groupSeries((["eco", "cout", "net"] as const)[k])} active={YEARS.indexOf(year)} color={["var(--green)", "#B9C1D6", "#E6EAF5"][k]} tone={k === 1 ? "neutral" : "pos"} />;
             })}
           </div>
-          {(site || city) && <p className="mt-2 text-[11.5px] text-[var(--mut)]">Estimation : l&apos;hôpital type vaut le groupe divisé par {ETAB} établissements, hors siège. Pas de chiffre propre à {site ? "cet établissement" : "cette ville"}.</p>}
+          {(site || city) && <p className="mt-2 text-[11.5px] text-[var(--mut)]">Estimation : l&apos;hôpital type vaut le groupe divisé par {etabIn(year)} établissements{V23 ? " (le réseau grandit chaque année)" : ""}, hors siège. Pas de chiffre propre à {site ? "cet établissement" : "cette ville"}.</p>}
         </div>
       )}
       {site && site.status !== "opérationnel" && <p className="text-[12.5px] text-[var(--txt-2)]">Établissement pas encore en service : il entrera dans le programme avec la vague V4 (« ouvertures comprises »), sans chiffre propre ici.</p>}
@@ -442,7 +370,7 @@ export function PlaceView({ kind, id }: { kind: "city" | "site" | "country"; id:
   );
 }
 const compactList = (n: number) => Math.min(n, 9);
-const META_ECO = DATA.meta.eco;
+const META_ECO = V23 ? HEAD.gains : DATA.meta.eco;
 
 /* ================================================================ front-desk AI experience ("Expériences IA") */
 const listFr = (a: string[]) => (a.length <= 1 ? a.join("") : `${a.slice(0, -1).join(", ")} et ${a[a.length - 1]}`);

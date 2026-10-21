@@ -1,10 +1,11 @@
-// Illustrative staffing of each department along the timeline (2026 → 2029): the administrative workforce shrinks in
+// Illustrative staffing of each department along the timeline (v13 2026 → 2029, v23 2026 → 2031): the workforce shrinks in
 // proportion to the model — departures not replaced and internal mobility, zero layoffs. Care staff and patients stay.
-//   visible(year) = max(1 pilot, round(n2026 × (1 − part_family × share(year).eco)))
-// part_family = FAM[code].part of the department's dominant payroll family (A 0.6, S 0.6, P 0.1, H 0.05; others 0).
+//   visible(year) = max(1 pilot, round(n2026 × (1 − part_family × yearProgress(year))))
+// part_family: v13 = FAM[code].part of the department's dominant payroll family (A 0.6, S 0.6, P 0.1, H 0.05; others 0);
+//              v23 = FTE-equivalents the family frees in 2031 ÷ its workforce (the case-by-case business case).
 // Departments whose cases are all outside the 302 MDH, or care-only departments, do not shrink.
 import { DEPT, type Role } from "@/lib/hospital";
-import { CASE, FAM, share, type Year } from "@/lib/model";
+import { CASE, FAM, V23, yearProgress, type Year } from "@/lib/model";
 
 /** Roles whose work the family's agents take over (doctors and care acts are never removed). */
 const SHRINK_ROLES: Record<string, Role[]> = {
@@ -31,7 +32,8 @@ function plan(id: string): Plan {
   if (cache[id]) return cache[id];
   const d = DEPT[id];
   const family = deptFamily(id);
-  const part = family ? FAM[family]?.part ?? 0 : 0;
+  const f = family ? FAM[family] : undefined;
+  const part = !f ? 0 : V23 ? (f.etp ? Math.min(1, f.postes / f.etp) : 0) : f.part ?? 0;
   const roles = family && part > 0 ? SHRINK_ROLES[family] ?? [] : [];
   let total = 0, shrinkable = 0;
   for (const s of d?.staff ?? []) {
@@ -46,13 +48,13 @@ function plan(id: string): Plan {
 export function keptShrinkable(id: string, year: Year) {
   const p = plan(id);
   if (!p.shrinkable) return 0;
-  return Math.max(1, Math.round(p.shrinkable * (1 - p.part * share(year).eco)));
+  return Math.max(1, Math.round(p.shrinkable * (1 - p.part * yearProgress(year))));
 }
 
 /** Is this role of this department one that shrinks along the timeline? */
 export function isShrinkRole(id: string, role: Role) { return plan(id).roles.includes(role); }
 
-/** For panels: "4 personnes en 2026 → 2 pilotes en 2029 (illustratif)". */
+/** For panels: "4 personnes en 2026 → 2 pilotes en 2029 (illustratif)" (final year of the dataset). */
 export function visibleStaff(id: string, year: Year) {
   const p = plan(id);
   const kept = keptShrinkable(id, year);

@@ -17,6 +17,7 @@ import Dock from "./Dock";
 import ChatPanel from "./ChatPanel";
 import VoiceOverlay from "./VoiceOverlay";
 import TourCaptions from "./TourCaptions";
+import StoryOverlay from "./story/StoryOverlay";
 
 const typing = (t: EventTarget | null) => {
   const el = t as HTMLElement | null;
@@ -95,6 +96,7 @@ export default function Assistant() {
   return (
     <>
       <style>{AI_CSS}</style>
+      <StoryOverlay />
       <TourCaptions />
       <ChatPanel />
       <Dock />

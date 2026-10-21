@@ -8,6 +8,8 @@ import { musicStart, musicStop, setMusicUserOff, musicUserOff } from "@/lib/ai/m
 import { sfxEnabled, initSfx } from "@/lib/ai/sfx";
 import { audio } from "@/lib/ai/audio";
 import { JMark, PlayIcon, PauseIcon, MusicIcon, EqBars } from "./icons";
+import { WalkButton } from "@/components/scenes/walk/WalkHud";
+import { V23 } from "@/lib/data/dataset";
 
 export default function Dock() {
   const status = useAi((s) => s.tourStatus);
@@ -38,7 +40,7 @@ export default function Dock() {
           {(["express", "complete"] as TourMode[]).map((m) => (
             <button key={m} role="menuitem" onClick={() => go(m)} data-anchor={`ai:tour:${m}`}>
               <span className="ico blue"><PlayIcon size={12} /></span>
-              <span className="t"><b>{MODE_LABEL[m]}</b><small>{m === "express" ? "L'histoire et les cas les plus forts, résultats mesurés à l'appui" : "Les 89 cas, étage par étage, puis le Maroc et le monde"}</small></span>
+              <span className="t"><b>{MODE_LABEL[m]}</b><small>{V23 ? (m === "express" ? "Le même mardi, en 2026 puis en 2031 : six personnages, la valeur nette pas à pas" : "Toute l'histoire, scène par scène : patient, soin, actifs, revenu, temps rendu, le compte, le monde") : m === "express" ? "L'histoire et les cas les plus forts, résultats mesurés à l'appui" : "Les 89 cas, étage par étage, puis le Maroc et le monde"}</small></span>
               <span className="d">{totals[m] ? fmtDur(totals[m]) : ""}</span>
             </button>
           ))}
@@ -54,6 +56,7 @@ export default function Dock() {
         <span className="lbl">Jabby</span>
         <span className="jb-kbd">J</span>
       </button>
+      <WalkButton />
       <button className="jb-btn glass round" data-anchor="ai:music" data-active={musicOn} onClick={toggleMusic} aria-label={musicOn ? "Couper le son" : "Musique d'ambiance et son"} title={musicOn ? "Couper le son (musique et effets)" : "Musique d'ambiance et son"} style={{ color: musicOn ? "#B9C7FF" : "var(--txt-2)" }}>
         {musicOn ? <EqBars on /> : <MusicIcon size={18} on={!soundOff} />}
       </button>
