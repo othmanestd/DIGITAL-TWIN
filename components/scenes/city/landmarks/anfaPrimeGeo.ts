@@ -19,7 +19,7 @@ export const AP_VOLUMES = [
   { x: 18, z: -3, w: 24, d: 32 },
 ];
 export const AP_ENTRANCE = { x0: -7, x1: 6, z0: -24, z1: 12 };
-export const AP_SIGN_Y = 9.45, AP_SIGN_Z = 22.82;
+export const AP_SIGN_Y = 9.3, AP_SIGN_Z = 22.72;
 
 // ---------------------------------------------------------------- textures (painted once)
 /** Pebble lattice: white = solid lattice, black = hole; seamless; 16 × 8 cells (one tile = 26 × 13 m on the façade). */
@@ -35,7 +35,7 @@ export function latticeTexture() {
       const d = Math.hypot(x - (pts[k] + (gx + di - ci) * C), y - (pts[k + 1] + (gy + dj - cj) * C));
       if (d < f1) { f2 = f1; f1 = d; } else if (d < f2) f2 = d;
     }
-    mask[y * W + x] = f2 - f1 > 9 ? 0 : 1;   // a thick white web (about 40 % of the surface), as on the photographs
+    mask[y * W + x] = f2 - f1 > 7 ? 0 : 1;   // white web around pebble-shaped openings (openings ≈ 55 % of the surface, as on the photographs)
   }
   // a box blur then a threshold rounds the holes into pebbles
   const R = 3, n = 2 * R + 1, tmp = new Float32Array(W * H);
@@ -112,11 +112,11 @@ function stadiumShape(w: number, d: number) {
 /** Vertical band along the outline between yb(p) and yt(p); `bandUV` = v from 0 (foot) to 1 (top), else v in metres / 13. */
 function band(st: ReturnType<typeof stadium>, yb: (p: Pt) => number, yt: (p: Pt) => number, inset: number, bandUV: boolean, dx: number, dz: number): G {
   const pos: number[] = [], nor: number[] = [], uv: number[] = [], idx: number[] = [];
-  const uS = Math.max(1, Math.round(st.P / 26)) / st.P;
+  const uS = Math.max(1, Math.round(st.P / 20)) / st.P;   // one lattice tile = 20 × 10 m (pebbles of about 1.2 m)
   for (const p of st.pts) {
     const x = p.x - p.nx * inset + dx, z = p.z - p.nz * inset + dz, b = yb(p), t = yt(p);
     pos.push(x, b, z, x, t, z); nor.push(p.nx, 0, p.nz, p.nx, 0, p.nz);
-    if (bandUV) uv.push(p.s * uS, 0, p.s * uS, 1); else uv.push(p.s * uS, b / 13, p.s * uS, t / 13);
+    if (bandUV) uv.push(p.s * uS, 0, p.s * uS, 1); else uv.push(p.s * uS, b / 10, p.s * uS, t / 10);
   }
   for (let i = 0; i < st.pts.length - 1; i++) { const a = 2 * i; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
   const g = new THREE.BufferGeometry();
@@ -158,7 +158,7 @@ export function buildAnfaPrime() {
     add("glass", band(st, () => 0.2, (p) => Math.max(0.4, yb(p) - 0.3), 1.15, true, v.x, v.z));
     add("roof", ni(new THREE.ShapeGeometry(stadiumShape(v.w - 1, v.d - 1), 20).rotateX(-Math.PI / 2).translate(v.x, 13.05, v.z)));
     // tall ornamental grasses on the roof
-    const cone = new THREE.ConeGeometry(0.16, 1, 4), n = Math.round(v.w * v.d * 0.26), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
+    const cone = new THREE.ConeGeometry(0.06, 1, 3), n = Math.round(v.w * v.d * 0.45), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
     for (let i = 0, tries = 0; i < n && tries < n * 4; tries++) {
       const x = (r() - 0.5) * v.w, z = (r() - 0.5) * v.d, rr = st.r - 1.4;
       if (Math.abs(x) > rr || (Math.abs(z) > st.a && x * x + (z - Math.sign(z) * st.a) ** 2 > rr * rr)) continue;
@@ -170,12 +170,14 @@ export function buildAnfaPrime() {
   }
   // glazed entrance between the volumes, dark connector behind it, pebble band over the entrance (seen through the canopy slot)
   add("glass", box(13, 7.5, 10, -0.5, 0, 7));
-  add("core", box(13, 12, 26, -0.5, 0, -11));
-  { const g = ni(new THREE.PlaneGeometry(13, 4.4).translate(-0.5, 9.8, 2.12)); const uv = g.attributes.uv as THREE.BufferAttribute; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 0.5, uv.getY(i) * (4.4 / 13)); add("skin", g); }
+  add("core", box(13, 9.2, 26, -0.5, 0, -11));
+  add("roof", box(13.4, 0.4, 26.4, -0.5, 9.2, -11));
+  { const g = ni(new THREE.PlaneGeometry(13, 4.4).translate(-0.5, 9.8, 2.12)); const uv = g.attributes.uv as THREE.BufferAttribute; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 0.65, uv.getY(i) * 0.44); add("skin", g); }
   add("glow", ni(new THREE.PlaneGeometry(13, 4.4).translate(-0.5, 9.8, 2.03)));
   // stadium canopy with its open slot, cantilevered towards the boulevard
-  const cs = stadiumShape(9, 46); cs.holes.push(stadiumShape(3.4, 28));
-  add("canopy", ni(new THREE.ExtrudeGeometry(cs, { depth: 1.7, bevelEnabled: true, bevelSize: 0.25, bevelThickness: 0.25, bevelSegments: 2, curveSegments: 28 }).rotateZ(Math.PI / 2).rotateX(-Math.PI / 2).translate(4, 8.6, 18)));
+  // a slender band (about 1.3 m) as on the photographs, the slot wide open
+  const cs = stadiumShape(7.4, 46); cs.holes.push(stadiumShape(3.6, 34));
+  add("canopy", ni(new THREE.ExtrudeGeometry(cs, { depth: 1.1, bevelEnabled: true, bevelSize: 0.15, bevelThickness: 0.15, bevelSegments: 2, curveSegments: 28 }).rotateZ(Math.PI / 2).rotateX(-Math.PI / 2).translate(4, 8.75, 18.8)));
   // one big V from a single footing, a column behind it, a slimmer brace on the right
   add("white", rod(new V(2.5, 0, 19.5), new V(-7.5, 8.7, 16.5), 0.58, 0.5));
   add("white", rod(new V(2.5, 0, 19.5), new V(12, 8.7, 16.5), 0.58, 0.5));

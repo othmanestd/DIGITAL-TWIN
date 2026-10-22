@@ -39,14 +39,14 @@ function build() {
   const std = (o: THREE.MeshStandardMaterialParameters) => new THREE.MeshStandardMaterial({ roughness: 0.8, ...o });
   const flat = { polygonOffset: true, polygonOffsetFactor: -3 };
   const M: Record<ApKey, THREE.MeshStandardMaterial | THREE.MeshBasicMaterial> = {
-    skin: std({ color: "#F2EFE7", roughness: 0.78, alphaMap: lattice, alphaTest: 0.5, side: THREE.DoubleSide, emissive: "#FFB45C", emissiveIntensity: 0 }),
+    skin: std({ color: "#FFFFFF", roughness: 0.6, alphaMap: lattice, alphaTest: 0.5, side: THREE.DoubleSide, emissive: "#FFFFFF", emissiveIntensity: 0.14 }),
     glow: new THREE.MeshBasicMaterial({ map: glow, side: THREE.DoubleSide, transparent: true, opacity: 0, depthWrite: false }),
-    core: std({ color: "#23272F", roughness: 0.55, metalness: 0.25 }),
+    core: std({ color: "#5A616B", roughness: 0.5, metalness: 0.2 }),
     joint: std({ color: "#15181D", roughness: 0.7, side: THREE.DoubleSide }),
-    roof: std({ color: "#3B3F46", roughness: 1 }),
-    grass: std({ color: "#8A8F55", roughness: 1 }),
+    roof: std({ color: "#7A7458", roughness: 1 }),     // planted roof: soil and dry grass
+    grass: std({ color: "#A3A25E", roughness: 1 }),
     glass: std({ color: "#1C2A38", roughness: 0.15, metalness: 0.5, emissive: "#FFC27A", emissiveIntensity: 0 }),
-    canopy: std({ color: "#24282F", roughness: 0.35, metalness: 0.65 }),
+    canopy: std({ color: "#3A3F47", roughness: 0.35, metalness: 0.6 }),
     white: std({ color: "#E9ECEF", roughness: 0.35, metalness: 0.3, emissive: "#C9CED6", emissiveIntensity: 0 }),
     fence: std({ color: "#2B2F36", roughness: 0.6 }),
     plaza: std({ color: "#CFC8BA", roughness: 0.95, ...flat }),
@@ -162,7 +162,10 @@ export function AnfaPrime() {
     if (!g.visible) return;
     setFade(res.fades, op, fade.current);
     const n = ENV.night;
-    (res.M.skin as THREE.MeshStandardMaterial).emissiveIntensity = n * 0.2;
+    // white lattice by day (a little self-light so it stays white in the shade), lit gold from behind at night
+    const skin = res.M.skin as THREE.MeshStandardMaterial;
+    skin.emissive.setRGB(1, 1 - n * 0.3, 1 - n * 0.64);
+    skin.emissiveIntensity = 0.14 + n * 0.08;
     (res.M.glass as THREE.MeshStandardMaterial).emissiveIntensity = n * 0.55;
     (res.M.white as THREE.MeshStandardMaterial).emissiveIntensity = n * 0.25;
     res.M.glow.opacity = n * op;
@@ -176,8 +179,8 @@ export function AnfaPrime() {
   return (
     <group ref={root} position={[O.x, 0, O.z]} rotation={[0, O.yaw, 0]}>
       {res.parts.map((p) => <mesh key={p.key} geometry={p.geo} material={res.M[p.key]} raycast={() => null} />)}
-      <mesh position={[-1.5, AP_SIGN_Y, AP_SIGN_Z]} material={res.P.akdital} raycast={() => null}><planeGeometry args={[8, 2]} /></mesh>
-      <mesh position={[15.8, AP_SIGN_Y, AP_SIGN_Z]} material={res.P.name} raycast={() => null}><planeGeometry args={[13, 1.62]} /></mesh>
+      <mesh position={[-1.5, AP_SIGN_Y, AP_SIGN_Z]} material={res.P.akdital} raycast={() => null}><planeGeometry args={[5.6, 1.4]} /></mesh>
+      <mesh position={[15.8, AP_SIGN_Y, AP_SIGN_Z]} material={res.P.name} raycast={() => null}><planeGeometry args={[10, 1.25]} /></mesh>
       <group position={[6.8, AP_SIGN_Y, AP_SIGN_Z + 0.13]}>
         <mesh rotation={[Math.PI / 2, 0, 0]} material={res.disc} raycast={() => null}><cylinderGeometry args={[1.3, 1.3, 0.3, 48]} /></mesh>
         <mesh position={[0, 0, 0.16]} material={res.P.medal} raycast={() => null}><circleGeometry args={[1.15, 48]} /></mesh>
