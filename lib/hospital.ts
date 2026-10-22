@@ -5,11 +5,18 @@
 export type Role = "patient" | "medecin" | "infirmier" | "aide" | "admin" | "technique" | "cadre" | "direction";
 export type DeptKind = "admin" | "care" | "support" | "hq";
 
+/** Building ids: the hôpital type ("main", "annex") and the real facilities drawn in the city ("ap.w", "ap.e" = Anfa Prime). */
+export type BId = "main" | "annex" | "ap.w" | "ap.e";
+
 export type Dept = {
   id: string;
   name: string;              // full name shown in panels
   short: string;             // label in 3D and sidebar tooltip
-  building: "main" | "annex";
+  building: BId;
+  /** real facility the department belongs to (lib/facilities.ts slug); absent = the hôpital type */
+  fac?: string;
+  /** hôpital-type department whose furniture builder (and use cases, as an estimate) this one reuses */
+  tpl?: string;
   floor: number;             // -1 basement … 3 (main), 0 … 3 (annex)
   kind: DeptKind;
   icon: IconKey;
@@ -151,13 +158,63 @@ export const DEPTS: Dept[] = [
 ];
 void acell;
 
-export const DEPT: Record<string, Dept> = Object.fromEntries(DEPTS.map((d) => [d.id, d]));
+// ---------------------------------------------------------------- Anfa Prime Hospital (a real clinic, lib/facilities.ts)
+// No plans are published: the real services (lib/data/network.json) are laid out on plausible floors and marked
+// illustrative. Each department reuses the furniture of its hôpital-type equivalent (`tpl`) and, where one exists, its use
+// cases, shown as an estimate (the hôpital type = the group ÷ its establishments). Plates sit inside the two pill-shaped
+// volumes of city/landmarks/anfaPrimeGeo.ts; frame = the clinic's own (origin = ANFA_PRIME in city/geography.ts).
+export const AP_FAC = "anfa-prime-hospital";
+export const AP_W = { w: 22.8, d: 26, x: -20, z: -8 } as const;  // west volume plate (two rows of departments)
+export const AP_E = { w: 16.5, d: 21.8, x: 18, z: -3 } as const; // east volume plate
+export const AP_FLOORS: { building: BId; floor: number; name: string }[] = [
+  { building: "ap.w", floor: 0, name: "Rez-de-chaussée · accueil, admissions, urgences" },
+  { building: "ap.w", floor: 1, name: "1er étage · blocs opératoires, réanimation" },
+  { building: "ap.w", floor: 2, name: "2e étage · maternité et PMA, hospitalisation" },
+  { building: "ap.e", floor: 0, name: "Rez-de-chaussée · imagerie, laboratoire" },
+  { building: "ap.e", floor: 1, name: "1er étage · Cardio Prime, soins intensifs" },
+  { building: "ap.e", floor: 2, name: "2e étage · Onco Prime" },
+];
+const T = (id: string) => DEPTS.find((d) => d.id === id)!;
+const ILL = "Répartition illustrative (plans non publiés).";
+const wRow = (side: -1 | 1): [number, number, number, number] => [0, side * 6.5, AP_W.w - 0.2, 12.4];
+const eRow = (side: -1 | 1): [number, number, number, number] => [0, side * 5.45, AP_E.w - 0.2, 10.3];
+const ap = (tpl: string, o: Partial<Dept> & Pick<Dept, "id" | "building" | "floor" | "rect">): Dept =>
+  ({ ...T(tpl), tpl, fac: AP_FAC, ...o, note: o.note ? `${ILL} ${o.note}` : ILL });
+export const AP_DEPTS: Dept[] = [
+  ap("admissions", { id: "ap.admissions", name: "Accueil et admissions", short: "Accueil · Admissions", building: "ap.w", floor: 0, rect: wRow(-1),
+    cases: ["A-01", "A-02", "A-03", "A-05", "X-04"] }),
+  ap("urgences", { id: "ap.urgences", name: "Urgences 24h/24, 7j/7", building: "ap.w", floor: 0, rect: wRow(1) }),
+  ap("bloc", { id: "ap.bloc", name: "Blocs opératoires (14 salles dont 1 robotique)", short: "Blocs opératoires", building: "ap.w", floor: 1, rect: wRow(-1) }),
+  ap("reanimation", { id: "ap.reanimation", name: "Réanimation (21 boxes dont 7 néonatalogie)", building: "ap.w", floor: 1, rect: wRow(1) }),
+  ap("maternite", { id: "ap.maternite", name: "Maternité et PMA (Anfa Prime Fertility)", short: "Maternité · PMA", building: "ap.w", floor: 2, rect: wRow(-1) }),
+  ap("hospitalisation", { id: "ap.hospitalisation", name: "Chambres d'hospitalisation", short: "Hospitalisation", building: "ap.w", floor: 2, rect: wRow(1), tpl: "ap-rooms",
+    staff: [{ role: "infirmier", label: "Infirmier(ère)", n: 2 }, { role: "aide", label: "Aide-soignant(e)", n: 1 }, { role: "patient", label: "Patient(e) hospitalisé(e)", n: 3 }], beds: 3 }),
+  ap("imagerie", { id: "ap.imagerie", name: "Imagerie (IRM 3 Tesla, scanner, radiologie interventionnelle)", short: "Imagerie", building: "ap.e", floor: 0, rect: eRow(-1) }),
+  ap("laboratoire", { id: "ap.laboratoire", name: "Laboratoire", building: "ap.e", floor: 0, rect: eRow(1) }),
+  ap("imagerie", { id: "ap.cardio", name: "Cardio Prime · cardiologie interventionnelle, rythmologie (2 salles de cathétérisme)", short: "Cardio Prime", icon: "heartbeat",
+    building: "ap.e", floor: 1, rect: eRow(-1), cases: [],
+    staff: [{ role: "medecin", label: "Cardiologue interventionnel(le)", n: 1 }, { role: "infirmier", label: "Infirmier(ère) de cathétérisme", n: 2 }, { role: "patient", label: "Patient(e)", n: 1 }],
+    note: "Pôle Cardio Prime : pas d'équivalent dans l'hôpital type, donc pas de cas d'usage chiffré." }),
+  ap("urgences", { id: "ap.soins-intensifs", name: "Soins intensifs (54 lits)", short: "Soins intensifs", icon: "heartbeat", kind: "care", building: "ap.e", floor: 1, rect: eRow(1), cases: [],
+    staff: [{ role: "medecin", label: "Médecin intensiviste", n: 1 }, { role: "infirmier", label: "Infirmier(ère)", n: 2 }, { role: "patient", label: "Patient(e)", n: 2 }],
+    note: "Le soin critique reste humain ; pas de cas d'usage propre dans l'hôpital type." }),
+  ap("imagerie", { id: "ap.onco", name: "Onco Prime · radiothérapie et chimiothérapie ambulatoire (15 fauteuils)", short: "Onco Prime", icon: "heartbeat",
+    building: "ap.e", floor: 2, rect: [0, 0, AP_E.w - 0.2, AP_E.d - 0.8], tpl: "ap-chemo", cases: [],
+    staff: [{ role: "medecin", label: "Oncologue", n: 1 }, { role: "infirmier", label: "Infirmier(ère) d'hôpital de jour", n: 2 }, { role: "patient", label: "Patient(e) en séance", n: 4 }],
+    note: "Pôle Onco Prime : pas d'équivalent dans l'hôpital type, donc pas de cas d'usage chiffré." }),
+];
+/** Every department of every facility (DEPTS stays the hôpital type's list: rail, search, AI knowledge). */
+export const ALL_DEPTS: Dept[] = [...DEPTS, ...AP_DEPTS];
 
-/** Department that hosts a use case. */
+export const DEPT: Record<string, Dept> = Object.fromEntries(ALL_DEPTS.map((d) => [d.id, d]));
+
+/** Department that hosts a use case (in the hôpital type: a case belongs to one of its departments). */
 export const CASE_DEPT: Record<string, string> = Object.fromEntries(DEPTS.flatMap((d) => d.cases.map((c) => [c, d.id])));
 
-/** Floor key used by scenes and the store: "main:0", "annex:2". */
-export const floorKey = (building: "main" | "annex", floor: number) => `${building}:${floor}`;
+/** Floor key used by scenes and the store: "main:0", "annex:2", "ap.w:1". */
+export const floorKey = (building: BId, floor: number) => `${building}:${floor}`;
+/** Plate (footprint centre and size) of a building, in its facility's frame. */
+export const PLATE: Record<BId, { w: number; d: number; x: number; z: number }> = { main: MAIN, annex: ANNEX, "ap.w": AP_W, "ap.e": AP_E };
 
 export const ROLE_LABEL: Record<Role, string> = {
   patient: "Patients et accompagnants", medecin: "Médecins", infirmier: "Infirmiers et sages-femmes", aide: "Aides-soignants",

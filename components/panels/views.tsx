@@ -4,7 +4,7 @@
 import type { ReactNode } from "react";
 import { useApp } from "@/lib/store";
 import { agg, fr, verdict, MODE_LABEL, CASE, CASES, DATA, FAM, META, YEAR_LABEL, YEARS, FINAL_YEAR, HEAD, V23, etabIn, share, yearTotals, type UseCase } from "@/lib/model";
-import { DEPT, DEPTS, CASE_DEPT, ROLE_LABEL, ROLE_COLOR, KIND_COLOR, EXPERIENCES, XP, type Dept, type Role } from "@/lib/hospital";
+import { DEPT, DEPTS, ALL_DEPTS, AP_FAC, AP_FLOORS, CASE_DEPT, ROLE_LABEL, ROLE_COLOR, KIND_COLOR, EXPERIENCES, XP, type Dept, type Role } from "@/lib/hospital";
 import { SITES, CITIES, INTERNATIONAL, GROUP } from "@/lib/geo/network";
 import { facilityBySlug, facilitySites } from "@/lib/facilities";
 import { DeptIcon, I } from "@/components/ui/icons";
@@ -93,11 +93,13 @@ function BeyondCard({ cases }: { cases: UseCase[] }) {
 export function DeptView({ id }: { id: string }) {
   const d = DEPT[id];
   const year = useApp((st) => st.year);
-  const perSite = useApp((st) => st.perSite);
+  const perSiteStore = useApp((st) => st.perSite);
   const openCase = useApp((st) => st.openCase);
   const compact = useCompact();
   const tight = useTight();
   if (!d) return <Missing what="Service" id={id} />;
+  // a real facility's department shows the hôpital type's figures (one establishment = the group ÷ its establishments)
+  const perSite = d.fac ? true : perSiteStore;
   const fam = famOfDept(d);
   const top = d.cases.map((c) => CASE[c]).filter(Boolean).sort((a, b) => b.mdh - a.mdh)[0];
   const desc = top ? firstSentence(top.aujourdhui) : d.note;
@@ -107,7 +109,12 @@ export function DeptView({ id }: { id: string }) {
   const outCases = d.cases.map((x) => CASE[x]).filter((x) => x && !in302(x));
   return (
     <div className={`flex h-full flex-col ${compact ? "gap-3.5" : "gap-5"}`}>
-      <Title eyebrow={<>{where} · {KIND_LABEL[d.kind]}</>} title={d.name} sub={tight && d.cases.length ? undefined : desc} icon={<DeptIcon k={d.icon} size={22} />} color={KIND_COLOR[d.kind]} />
+      <Title eyebrow={<>{d.fac ? `${facilitySites(d.fac).main?.name ?? "Établissement"} · ` : ""}{where} · {KIND_LABEL[d.kind]}</>} title={d.name} sub={tight && d.cases.length ? undefined : desc} icon={<DeptIcon k={d.icon} size={22} />} color={KIND_COLOR[d.kind]} />
+      {d.fac && (
+        <div className="rounded-[12px] px-3.5 py-2.5 text-[12px] leading-snug text-[var(--txt-2)]" style={{ background: "rgba(29,180,234,.08)", boxShadow: "inset 0 0 0 1px rgba(29,180,234,.22)" }} data-anchor={`estimate:${d.id}`}>
+          <b className="text-white">Estimation · hôpital type.</b> {d.cases.length ? <>Les cas d&apos;usage et les chiffres sont ceux du service équivalent de l&apos;hôpital type, pour un établissement (groupe ÷ {etabIn(year)}). </> : null}Pas de chiffre propre à cet établissement ; répartition des services illustrative (plans non publiés).
+        </div>
+      )}
       {inIds.length > 0 && top && top.mdh > 0 && (
         <Verdict>
           {year === 2026 ? <>Aujourd&apos;hui, rien n&apos;est encore engagé. {V23 ? `En ${FINAL_YEAR}` : "Au plein régime"} : {fr(agg(d.cases, FINAL_YEAR, perSite).mdh, 1)} MDH {V23 ? "de gains bruts" : "économisés"} par an{perSite ? " par établissement" : ""}.</>
@@ -236,16 +243,18 @@ function floorCounts(ids: string[]) {
 }
 export function FloorView({ id }: { id: string }) {
   const year = useApp((st) => st.year);
-  const perSite = useApp((st) => st.perSite);
+  const perSiteStore = useApp((st) => st.perSite);
   const select = useApp((st) => st.select);
   const annex = id.startsWith("annex");
+  const real = id.startsWith("ap."); // a floor of Anfa Prime: one establishment, the hôpital type's figures
+  const perSite = real ? true : perSiteStore;
   const depts = annex ? DEPTS.filter((d) => d.building === "annex").sort((a, b) => a.floor - b.floor) : deptsOfFloor(id);
   const ids = depts.flatMap((d) => d.cases);
   const rows = depts.map((d) => ({ d, a: agg(d.cases, year, perSite) })).sort((x, y) => y.a.mdh - x.a.mdh);
   const top = Math.max(...rows.map((r) => r.a.mdh), 1e-9);
   return (
     <div className="flex h-full flex-col gap-5">
-      <Title eyebrow={annex ? "Siège · annexe administrative" : "Hôpital type · étage"} title={annex ? "Siège du groupe" : floorTitle(id)} sub={annex ? "Achats, juridique, informatique, finance, ressources humaines et pilotage : quatre plateaux." : floorName(id).split(" · ").slice(1).join(" · ")} icon={<I.layers size={22} />} color="#9FB3FF" />
+      <Title eyebrow={annex ? "Siège · annexe administrative" : real ? "Anfa Prime Hospital · étage (illustratif)" : "Hôpital type · étage"} title={annex ? "Siège du groupe" : floorTitle(id)} sub={annex ? "Achats, juridique, informatique, finance, ressources humaines et pilotage : quatre plateaux." : floorName(id).split(" · ").slice(1).join(" · ")} icon={<I.layers size={22} />} color="#9FB3FF" />
       {ids.length > 0 && <KpiStrip ids={ids} year={year} perSite={perSite} note={perSite && annex ? "Le siège n'est pas réparti par établissement : basculez sur « Groupe »." : undefined} />}
       <div>
         <SectionTitle>Services de l&apos;étage · {depts.length}</SectionTitle>
@@ -380,6 +389,7 @@ export function PlaceView({ kind, id }: { kind: "city" | "site" | "country"; id:
 export function FacilityView({ id }: { id: string }) {
   const select = useApp((st) => st.select);
   const { main, poles } = facilitySites(id);
+  const floors = AP_FLOORS.map((f) => ({ ...f, key: `${f.building}:${f.floor}`, depts: ALL_DEPTS.filter((d) => d.fac === id && d.building === f.building && d.floor === f.floor) })).filter((f) => f.depts.length);
   if (!main) return <div className={`${s.card} rounded-[14px] px-4 py-3 text-[13px] text-[var(--txt-2)]`}>Cet établissement n&apos;est pas dans les données du réseau.</div>;
   return (
     <div className="flex h-full flex-col gap-5">
@@ -389,6 +399,27 @@ export function FacilityView({ id }: { id: string }) {
         <span className="flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-[12px] font-medium text-[var(--txt)]"><Dot color={ST_COLOR(main.status)} size={7} />{ST_LABEL(main.status)}</span>
         {main.premium && <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[12px] text-[var(--txt-2)]">premium</span>}
       </div>
+      {floors.length > 0 && (
+        <div>
+          <SectionTitle>Étages · cliquez sur un service pour y entrer</SectionTitle>
+          <div className="flex flex-col gap-1.5">
+            {floors.map((f) => (
+              <div key={f.key} className={`${s.card} rounded-[12px] px-3 py-2`}>
+                <button type="button" onClick={() => select({ kind: "floor", id: f.key })} data-anchor={`floor:${f.key}`} className="text-left text-[11.5px] font-medium uppercase tracking-[0.06em] text-[var(--mut)] hover:text-white">{floorShort(f.building, f.floor)}</button>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {f.depts.map((d) => (
+                    <button key={d.id} type="button" onClick={() => select({ kind: "dept", id: d.id })} data-anchor={`dept-row:${d.id}`}
+                      className="flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-[12px] text-[var(--txt)] ring-1 ring-white/[0.08] hover:bg-[#1DB4EA] hover:text-[#04121c]">
+                      <DeptIcon k={d.icon} size={13} />{d.short}{d.cases.length ? <span className="num text-[11px] opacity-70">{d.cases.length}</span> : null}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-1.5 text-[11.5px] text-[var(--mut)]">Répartition illustrative : les plans de l&apos;établissement ne sont pas publiés.</p>
+        </div>
+      )}
       {main.specialties.length > 0 && (
         <div>
           <SectionTitle>Services · {main.specialties.length}</SectionTitle>
@@ -508,8 +539,12 @@ function Missing({ what, id }: { what: string; id: string }) {
 /* ---------------------------------------------------------------- breadcrumb */
 export function crumbs(kind: string, id: string, caseId: string | null): { label: string; go?: () => void }[] {
   const st = useApp.getState();
-  const hosp = { label: "Hôpital type", go: () => st.home() };
-  const floorOf = (d: Dept) => ({ label: d.building === "annex" ? "Siège" : floorShort(d.building, d.floor), go: () => st.select({ kind: "floor", id: d.building === "annex" ? `annex:${d.floor}` : `main:${d.floor}` }) });
+  // inside a real facility (Anfa Prime) the root is that facility, not the hôpital type
+  const facOf = kind === "dept" || kind === "person" ? DEPT[kind === "dept" ? id : id.split("/")[0]]?.fac : kind === "floor" && id.startsWith("ap.") ? AP_FAC : undefined;
+  const hosp = facOf
+    ? { label: facilitySites(facOf).main?.name ?? "Établissement", go: () => st.select({ kind: "facility", id: facOf }) }
+    : { label: "Hôpital type", go: () => st.home() };
+  const floorOf = (d: Dept) => ({ label: d.building === "annex" ? "Siège" : floorShort(d.building, d.floor), go: () => st.select({ kind: "floor", id: d.building === "annex" ? `annex:${d.floor}` : `${d.building}:${d.floor}` }) });
   const deptC = (d: Dept) => ({ label: d.short, go: () => st.select({ kind: "dept", id: d.id }) });
   let out: { label: string; go?: () => void }[] = [];
   if (kind === "dept" && DEPT[id]) out = [hosp, floorOf(DEPT[id]), { label: DEPT[id].short }];

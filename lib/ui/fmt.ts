@@ -1,6 +1,6 @@
 // UI helpers: colours, units, trajectories, floor labels. Every figure is computed from lib/model.ts.
 import { DATA, FAM, META, YEARS, CASE, share, yearTotals, fr, agg, benchFor, V23, FINROW, FINAL_YEAR, type Year, type UseCase, type Benchmark } from "@/lib/model";
-import { DEPTS, FLOORS, floorKey, type Dept } from "@/lib/hospital";
+import { ALL_DEPTS, AP_FLOORS, FLOORS, floorKey, type BId, type Dept } from "@/lib/hospital";
 import { GLOSSARY } from "@/lib/glossary";
 
 /** Family colours, aligned with the department kinds drawn in 3D (KIND_COLOR). */
@@ -67,26 +67,27 @@ export function famOfDept(d: Dept): string | null {
   return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
 }
 
-/** "Sous-sol", "Rez-de-chaussée", "1er étage", "Siège · finance". */
-export function floorShort(building: "main" | "annex", floor: number): string {
+/** "Sous-sol", "Rez-de-chaussée", "1er étage", "Siège"; Anfa Prime: "Aile ouest · 1er étage". */
+export function floorShort(building: BId, floor: number): string {
   if (building === "annex") return "Siège";
-  if (floor === -1) return "Sous-sol";
-  if (floor === 0) return "Rez-de-chaussée";
-  if (floor === 1) return "1er étage";
-  return `${floor}e étage`;
+  const lvl = floor === -1 ? "Sous-sol" : floor === 0 ? "Rez-de-chaussée" : floor === 1 ? "1er étage" : `${floor}e étage`;
+  if (building === "ap.w") return `Aile ouest · ${lvl}`;
+  if (building === "ap.e") return `Aile est · ${lvl}`;
+  return lvl;
 }
+const ANY_FLOORS = [...FLOORS, ...AP_FLOORS];
 export function floorName(key: string): string {
   const [b, f] = key.split(":");
-  const fl = FLOORS.find((x) => x.building === b && String(x.floor) === f);
+  const fl = ANY_FLOORS.find((x) => x.building === b && String(x.floor) === f);
   return fl ? fl.name : key;
 }
 export function floorTitle(key: string): string {
   const [b, f] = key.split(":");
-  const fl = FLOORS.find((x) => x.building === b && String(x.floor) === f);
+  const fl = ANY_FLOORS.find((x) => x.building === b && String(x.floor) === f);
   if (!fl) return key;
   return fl.name.split(" · ")[0] === "Siège" ? fl.name : floorShort(fl.building, fl.floor);
 }
-export const deptsOfFloor = (key: string) => DEPTS.filter((d) => floorKey(d.building, d.floor) === key);
+export const deptsOfFloor = (key: string) => ALL_DEPTS.filter((d) => floorKey(d.building, d.floor) === key);
 export const famName = (code: string) => FAM[code]?.name ?? code;
 
 /** Plain verb for the year: "au plein régime" / "en 2028" / "aujourd'hui". */

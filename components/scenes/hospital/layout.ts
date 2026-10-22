@@ -1,7 +1,7 @@
 // Pure layout of the "typical Akdital hospital": furniture parts, partition walls and people for every department.
 // Everything is computed once from lib/hospital (DEPTS) and expressed in floor-local coordinates
 // (origin = building centre, y = 0 at the floor surface). The 3D components only instance what is described here.
-import { DEPTS, FLOORS, MAIN, ANNEX, FLOOR_H, ROLE_COLOR, type Dept, type Role } from "@/lib/hospital";
+import { DEPTS, FLOORS, MAIN, ANNEX, FLOOR_H, ROLE_COLOR, AP_DEPTS, AP_FLOORS, PLATE, type BId, type Dept, type Role } from "@/lib/hospital";
 import { isShrinkRole } from "./staffing";
 import { BRIDGE, EXTRA_DOORS } from "../walk/plan";
 
@@ -30,8 +30,9 @@ export type Person = {
 };
 let DESK_ID = 0;
 
-export type FloorLayout = {
-  key: string; building: "main" | "annex"; floor: number;
+/** A floor's layout. The hôpital type's floors are `FloorLayout` (main / annex); a real facility's are `FloorLayout<BId>`. */
+export type FloorLayout<Bk extends BId = "main" | "annex"> = {
+  key: string; building: Bk; floor: number;
   w: number; d: number; ox: number; oz: number; // plate size and building centre (world)
   depts: Dept[]; parts: Part[]; people: Person[];
 };
@@ -503,8 +504,8 @@ const L: Record<string, Fn> = {
   },
   laboratoire: (b) => {
     b.room();
-    // the skybridge lobby takes the north-east corner (walk/plan.ts BRIDGE): close it off from the lab
-    {
+    // the skybridge lobby takes the north-east corner (walk/plan.ts BRIDGE): close it off from the lab (hôpital type only)
+    if (b.dept.building === "main") {
       const L0 = BRIDGE.lobby, u0 = L0.x0 - MAIN.x - b.cx, v0 = (L0.z0 - MAIN.z - b.cz) * b.s; // campus → department
       b.wall(u0, v0, b.w / 2, v0);
       b.wall(u0, v0, u0, b.d / 2);
@@ -731,6 +732,44 @@ const L: Record<string, Fn> = {
     b.staff.push(b.stand(-2.2, -5.2, 0.5, 1), b.stand(1.4, -5.4, -0.4, 1), seats[1], seats[4]);
     b.plant(-9.6, 7.6, 1.0); b.plant(9.6, 7.6, 1.0);
   },
+
+  // ===== Anfa Prime Hospital (lib/hospital.ts AP_DEPTS): departments without a hôpital-type equivalent
+  /** three patient rooms on the façade side (bed, armchair, TV), a nurse station on the corridor */
+  "ap-rooms": (b) => {
+    b.room([[0.5, 2.2]]);
+    const rw = b.w / 3;
+    for (let k = 0; k < 3; k++) {
+      const u = -b.w / 2 + rw * (k + 0.5);
+      b.bed(u - 1.4, -3.2, 0, 1, true, { monitor: k === 1 });
+      b.armchair(u + 1.9, -2.4, -1, 0.5);
+      if (k < 2) b.wall(u + rw / 2, -b.d / 2, u + rw / 2, 0.4);
+      const a = b.at(u - 1.4, -b.d / 2 + 0.25, 0, 1); a.add("box", "dark", 0, 1.9, 0, 0.9, 0.52, 0.05);
+    }
+    b.counter(2.5, 3.6, 0, -1, 4.5);
+    b.staff.push(b.desk(2.5, 4.4, 0, -1, { screens: 1, chair: true }), b.stand(-4.4, -1.4, -1, -0.4), b.path(-9.5, 1.6, 9.5, 1.6));
+    b.cart(-6.8, 3.6, 0, -1, "light", true);
+    b.plant(-9.6, 4.6, 0.9);
+  },
+  /** Onco Prime day hospital: rows of chemotherapy armchairs with IV pumps, a nurse station, a radiotherapy bunker */
+  "ap-chemo": (b) => {
+    b.room([[0.5, 2.2]]);
+    for (const [v, fv] of [[-7.6, 1], [-3.4, -1]] as const) for (let k = 0; k < 4; k++) {
+      const u = -5.4 + k * 2.9;
+      b.armchair(u, v, 0, fv);
+      b.ivPole(u + 0.9, v - fv * 0.2);
+      if (b.pats.length < 4 && (k + (fv > 0 ? 0 : 1)) % 2 === 0) b.pats.push(b.at(u, v, 0, fv).slot(0, 0.05, "sit"));
+    }
+    b.counter(-1.5, 0.8, 0, 1, 5);
+    b.staff.push(b.desk(-1.5, 1.6, 0, 1, { screens: 2, chair: true }), b.stand(1.6, -5.4, -1, 0), b.path(-6.5, -5.5, 5.5, -5.5));
+    // radiotherapy bunker (accelerator gantry, couch) behind a thick wall
+    b.wall(-b.w / 2, 3.2, b.w / 2, 3.2, [[0.82, 1.6]]);
+    { const a = b.at(-1.0, 6.6, 0, -1);
+      a.add("rbox", "white", 0, 1.3, 0.6, 2.2, 2.6, 1.2); a.add("rbox", "white", 0, 2.1, -0.4, 1.4, 0.7, 1.2); a.add("cyl", "dark", 0, 1.55, -0.4, 0.7, 0.3, 0.7);
+      a.add("rbox", "mattress", 0, 0.78, -1.6, 0.6, 0.12, 2.2); a.add("box", "steel", 0, 0.38, -1.6, 0.4, 0.76, 1.2); }
+    b.pats.push(b.at(-1.0, 4.9, 0, -1).slot(0, 0, "lie", { y: 0.96 }));
+    b.staff.push(b.desk(5.2, 6.2, -1, 0, { screens: 2 }));
+    b.plant(-7.0, -0.8, 1.0); b.plant(6.8, -0.8, 1.0);
+  },
 };
 
 // ---------------------------------------------------------------- assembly
@@ -747,17 +786,18 @@ export const TOP_FLOOR: Record<"main" | "annex", number> = {
   annex: Math.max(...FLOORS.filter((f) => f.building === "annex").map((f) => f.floor)),
 };
 
-function build(): FloorLayout[] {
-  const out: FloorLayout[] = [];
+/** Floor layouts of one facility (the hôpital type first, so its desk ids and agent thresholds never change). */
+function build(keys: { building: BId; floor: number }[] = FLOOR_KEYS, depts: Dept[] = DEPTS): FloorLayout<BId>[] {
+  const out: FloorLayout<BId>[] = [];
   const eligible: Person[] = [];
-  for (const fk of FLOOR_KEYS) {
-    const B0 = fk.building === "main" ? MAIN : ANNEX;
-    const fl: FloorLayout = { key: `${fk.building}:${fk.floor}`, building: fk.building, floor: fk.floor, w: B0.w, d: B0.d, ox: B0.x, oz: B0.z, depts: [], parts: [], people: [] };
-    for (const d of DEPTS) {
+  for (const fk of keys) {
+    const B0 = PLATE[fk.building] ?? (fk.building === "main" ? MAIN : ANNEX);
+    const fl: FloorLayout<BId> = { key: `${fk.building}:${fk.floor}`, building: fk.building, floor: fk.floor, w: B0.w, d: B0.d, ox: B0.x, oz: B0.z, depts: [], parts: [], people: [] };
+    for (const d of depts) {
       if (d.building !== fk.building || d.floor !== fk.floor) continue;
       fl.depts.push(d);
       const b = deptFrame(d);
-      (L[d.id] ?? ((x: B) => x.room()))(b);
+      (L[d.tpl ?? d.id] ?? L[d.id] ?? ((x: B) => x.room()))(b);
       fl.parts.push(...b.parts);
       // assign people
       const roleIdx: Record<string, number> = {};
@@ -794,8 +834,12 @@ function build(): FloorLayout[] {
   return out;
 }
 
-export const FLOOR_LAYOUTS: FloorLayout[] = build();
-export const FLOOR_BY_KEY: Record<string, FloorLayout> = Object.fromEntries(FLOOR_LAYOUTS.map((f) => [f.key, f]));
+/** The hôpital type's floors (buildings main / annex only). */
+export const FLOOR_LAYOUTS = build() as FloorLayout[];
+/** Anfa Prime Hospital's floors (frame = the clinic's own; drawn by city/landmarks/AnfaPrimeFloors). */
+export const AP_LAYOUTS: FloorLayout<BId>[] = build(AP_FLOORS.map((f) => ({ building: f.building, floor: f.floor })), AP_DEPTS);
+/** By key, every facility. The hôpital-type consumers only ever look up hôpital-type keys. */
+export const FLOOR_BY_KEY: Record<string, FloorLayout> = Object.fromEntries([...FLOOR_LAYOUTS, ...(AP_LAYOUTS as FloorLayout[])].map((f) => [f.key, f]));
 export const PERSON_BY_ID: Record<string, { floor: FloorLayout; i: number; p: Person }> = Object.fromEntries(
-  FLOOR_LAYOUTS.flatMap((f) => f.people.map((p, i) => [p.id, { floor: f, i, p }])),
+  [...FLOOR_LAYOUTS, ...(AP_LAYOUTS as FloorLayout[])].flatMap((f) => f.people.map((p, i) => [p.id, { floor: f, i, p }])),
 );

@@ -19,11 +19,13 @@ import type { Solid } from "../collide";
 import { rt } from "../../hospital/mats";
 import { ENV } from "./env";
 import { aabbSolid, lmOpacity, setFade } from "./shared";
+import { AnfaPrimeFloors, AP_VIEW } from "./AnfaPrimeFloors";
 import { AP_ENTRANCE, AP_SIGN_Y, AP_SIGN_Z, AP_VOLUMES, buildAnfaPrime, glowTexture, latticeTexture, letterTexture, medalTexture, panelTexture, type ApKey } from "./anfaPrimeGeo";
 
 export const ANFA_PRIME_ID = "anfa-prime-hospital";
 const O = ANFA_PRIME;
 const LABEL_ALT = 3000, PEOPLE_ALT = 2000;
+const NO_RAY = () => {};
 
 /** Walk-mode solids (world metres): the two volumes, the entrance block, the fence (the gate stays open). */
 export function anfaPrimeSolids(): Solid[] {
@@ -65,8 +67,11 @@ function build() {
   };
   const disc = std({ color: "#0b1830", roughness: 0.4, metalness: 0.5 });
   const hit = new THREE.MeshBasicMaterial({ visible: false });
-  const fades = [...(Object.keys(M) as ApKey[]).filter((k) => k !== "glow").map((k) => M[k]), disc];
-  return { parts, M, P, disc, hit, fades, tex: [lattice, glow] };
+  // the shell (volumes) fades when a floor of the clinic is open; the site (canopy, garden, fence) stays
+  const SHELL: ApKey[] = ["skin", "core", "joint", "roof", "grass", "glass"];
+  const shell = SHELL.map((k) => M[k]);
+  const fades = [...(Object.keys(M) as ApKey[]).filter((k) => k !== "glow" && !SHELL.includes(k)).map((k) => M[k]), disc];
+  return { parts, M, P, disc, hit, fades, shell, tex: [lattice, glow] };
 }
 
 // people coming and going at the entrance (local polylines, ping-pong), plus two waiting at the gate
@@ -130,7 +135,8 @@ export function AnfaPrime() {
   const res = useMemo(build, []);
   const root = useRef<THREE.Group>(null);
   const label = useRef<HTMLButtonElement>(null);
-  const fade = useRef({ v: -1 });
+  const hitMesh = useRef<THREE.Mesh>(null);
+  const fade = useRef({ v: -1 }), fadeShell = useRef({ v: -1 });
   const select = useApp((s) => s.select);
   const nonce = useApp((s) => s.focusNonce);
   const site = siteBySlug(ANFA_PRIME_ID);
@@ -145,7 +151,11 @@ export function AnfaPrime() {
   useEffect(() => {
     const sel = useApp.getState().sel;
     if (sel?.kind !== "facility" || sel.id !== ANFA_PRIME_ID) return;
-    rig.flyTo(new THREE.Vector3(O.x + 2, 6, O.z + 4), 140, { azimuth: 0.55, polar: 1.12 });
+    // in front of the entrance, seen from the boulevard; from high up (the Morocco map), go down in stages like the zoom
+    // rail does (UnifiedWorld `travel`): first over Casablanca, then onto the clinic
+    const land = () => rig.flyTo(new THREE.Vector3(O.x + 2, 7, O.z + 14), 120, { azimuth: 0.12, polar: 1.16, duration: 2.0 });
+    if (frame.alt > 2500) rig.flyTo(new THREE.Vector3(O.x, 8, O.z), 2.4e4, { polar: 0.78, azimuth: 0.45, duration: 2.0, done: land });
+    else land();
     rt.userMoved = false;
   }, [nonce]);
 
@@ -161,6 +171,11 @@ export function AnfaPrime() {
     }
     if (!g.visible) return;
     setFade(res.fades, op, fade.current);
+    const shellOp = op * (1 - AP_VIEW.fade);
+    setFade(res.shell, shellOp, fadeShell.current);
+    for (const m of res.shell) m.visible = shellOp > 0.01;
+    // the building's click box gives way to the floors' own zones once they are shown
+    if (hitMesh.current) hitMesh.current.raycast = AP_VIEW.fade < 0.5 ? THREE.Mesh.prototype.raycast : NO_RAY;
     const n = ENV.night;
     // white lattice by day (a little self-light so it stays white in the shade), lit gold from behind at night
     const skin = res.M.skin as THREE.MeshStandardMaterial;
@@ -168,7 +183,7 @@ export function AnfaPrime() {
     skin.emissiveIntensity = 0.14 + n * 0.08;
     (res.M.glass as THREE.MeshStandardMaterial).emissiveIntensity = n * 0.55;
     (res.M.white as THREE.MeshStandardMaterial).emissiveIntensity = n * 0.25;
-    res.M.glow.opacity = n * op;
+    res.M.glow.opacity = n * shellOp;
     res.M.glow.visible = n > 0.02;
     for (const m of Object.values(res.P)) m.opacity = op;
   });
@@ -188,7 +203,7 @@ export function AnfaPrime() {
       </group>
       <mesh position={[9.6, 2.3, 8.05]} rotation={[0, -0.876, 0]} material={res.P.panel} raycast={() => null}><planeGeometry args={[2.2, 1.375]} /></mesh>
       {/* click target: the whole building */}
-      <mesh position={[-1.5, 8.5, -4]} material={res.hit} onClick={onClick}
+      <mesh ref={hitMesh} position={[-1.5, 8.5, -4]} material={res.hit} onClick={onClick}
         onPointerOver={() => { document.body.style.cursor = "pointer"; }} onPointerOut={() => { document.body.style.cursor = ""; }}>
         <boxGeometry args={[66, 17, 56]} />
       </mesh>
@@ -200,6 +215,7 @@ export function AnfaPrime() {
         </button>
       </GeoHtml>
       <EntrancePeople />
+      <AnfaPrimeFloors />
     </group>
   );
 }

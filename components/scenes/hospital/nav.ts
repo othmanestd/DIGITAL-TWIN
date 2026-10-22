@@ -1,6 +1,6 @@
 // Selection → what the 3D scene shows: which floor is open, which department and person are in focus.
 import * as THREE from "three";
-import { CASE_DEPT, DEPT, FLOOR_H, MAIN, ANNEX, XP } from "@/lib/hospital";
+import { CASE_DEPT, DEPT, FLOOR_H, MAIN, ANNEX, PLATE, XP, type BId } from "@/lib/hospital";
 import type { Sel } from "@/lib/store";
 import { rt } from "./mats";
 
@@ -27,12 +27,12 @@ export function isHidden(key: string, open: string | null) {
   return b === ob && Number(f) > Number(of);
 }
 
-export const bld = (b: "main" | "annex") => (b === "main" ? MAIN : ANNEX);
+export const bld = (b: BId) => PLATE[b] ?? (b === "main" ? MAIN : ANNEX);
 
-/** World-space centre of a floor plate (surface level). */
+/** Centre of a floor plate (surface level), in its facility's frame (hôpital type: the campus frame). */
 export function floorCenter(key: string, out = new THREE.Vector3()) {
   const [b, f] = key.split(":");
-  const B = bld(b as "main" | "annex");
+  const B = bld(b as BId);
   return out.set(B.x, Number(f) * FLOOR_H, B.z);
 }
 

@@ -5,7 +5,7 @@
 import { useEffect, useRef } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { DEPT, FLOOR_H } from "@/lib/hospital";
+import { AP_FAC, DEPT, FLOOR_H } from "@/lib/hospital";
 import { useApp, type Sel } from "@/lib/store";
 import { rig } from "@/lib/rig";
 import { PERSON_BY_ID, FLOOR_BY_KEY } from "./layout";
@@ -19,6 +19,8 @@ export const FOV = 38;
 /** Camera position + look target in building-frame coordinates (lib/hospital), or null for the overview. */
 export function shotLocal(sel: Sel, aspect: number): { pos: THREE.Vector3; look: THREE.Vector3 } | null {
   const f = focusOf(sel);
+  // a real facility's floors, departments and people fly themselves (city/landmarks/AnfaPrimeFloors)
+  if ((f.dept && DEPT[f.dept]?.fac) || (sel?.kind === "floor" && sel.id.startsWith("ap."))) return null;
   if (sel?.kind === "xp" && XP_POS[sel.id]) {
     const p = XP_POS[sel.id];
     const look = new THREE.Vector3(p.x, 1.3, p.z);
@@ -124,7 +126,7 @@ export function FocusFlights() {
       const s = useApp.getState();
       if (s.level !== "hospital") return;
       const f = focusOf(s.sel);
-      if (s.sel?.kind === "floor") s.select({ kind: "overview", id: "hospital" });
+      if (s.sel?.kind === "floor") s.select(s.sel.id.startsWith("ap.") ? { kind: "facility", id: AP_FAC } : { kind: "overview", id: "hospital" });
       else if (f.floor && s.sel && s.sel.kind !== "overview") s.select({ kind: "floor", id: f.floor });
     };
     el.addEventListener("pointerdown", onDown);
