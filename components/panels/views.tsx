@@ -6,6 +6,7 @@ import { useApp } from "@/lib/store";
 import { agg, fr, verdict, MODE_LABEL, CASE, CASES, DATA, FAM, META, YEAR_LABEL, YEARS, FINAL_YEAR, HEAD, V23, etabIn, share, yearTotals, type UseCase } from "@/lib/model";
 import { DEPT, DEPTS, CASE_DEPT, ROLE_LABEL, ROLE_COLOR, KIND_COLOR, EXPERIENCES, XP, type Dept, type Role } from "@/lib/hospital";
 import { SITES, CITIES, INTERNATIONAL, GROUP } from "@/lib/geo/network";
+import { facilityBySlug, facilitySites } from "@/lib/facilities";
 import { DeptIcon, I } from "@/components/ui/icons";
 import { AkditalMark } from "@/components/ui/AkditalLogo";
 import { MiniBar, Tip, Dot, MarketTile } from "@/components/ui/kit";
@@ -313,6 +314,12 @@ export function PlaceView({ kind, id }: { kind: "city" | "site" | "country"; id:
         </div>
       )}
       {site?.notes && <p className="text-[12.5px] leading-snug text-[var(--txt-2)]" style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{site.notes}</p>}
+      {site && facilityBySlug(site.slug) && (
+        <button type="button" onClick={() => select({ kind: "facility", id: site.slug })} data-anchor={`panel:facility:${site.slug}`}
+          className={`${s.card} flex items-center gap-2 self-start rounded-full px-4 py-2 text-[13px] font-semibold text-white ring-1 ring-[#1DB4EA]/50 hover:bg-white/[0.08]`}>
+          <I.hospital size={16} /> Voir le bâtiment dans Casablanca <I.arrowRight size={14} />
+        </button>
+      )}
       {city && city.sites.length > 0 && (
         <div>
           <SectionTitle>Établissements · {city.sites.length}</SectionTitle>
@@ -369,6 +376,58 @@ export function PlaceView({ kind, id }: { kind: "city" | "site" | "country"; id:
     </div>
   );
 }
+/** A real establishment drawn in the city (lib/facilities.ts): its services and poles, all from the network data. */
+export function FacilityView({ id }: { id: string }) {
+  const select = useApp((st) => st.select);
+  const { main, poles } = facilitySites(id);
+  if (!main) return <div className={`${s.card} rounded-[14px] px-4 py-3 text-[13px] text-[var(--txt-2)]`}>Cet établissement n&apos;est pas dans les données du réseau.</div>;
+  return (
+    <div className="flex h-full flex-col gap-5">
+      <Title eyebrow={<>{main.city} · {main.brand} · réseau Akdital</>} title={main.name} icon={<AkditalMark size={26} />} color="#1DB4EA"
+        sub={<>{main.type}{main.beds ? ` · ${fr(main.beds, 0)} lits` : " · lits non publiés"}{main.opening_year ? ` · ouverture ${main.opening_year}` : ""}</>} />
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-[12px] font-medium text-[var(--txt)]"><Dot color={ST_COLOR(main.status)} size={7} />{ST_LABEL(main.status)}</span>
+        {main.premium && <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[12px] text-[var(--txt-2)]">premium</span>}
+      </div>
+      {main.specialties.length > 0 && (
+        <div>
+          <SectionTitle>Services · {main.specialties.length}</SectionTitle>
+          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+            {main.specialties.map((x) => (
+              <div key={x} data-anchor={`facility-service:${id}:${norm(x)}`} className={`${s.card} flex items-start gap-2 rounded-[12px] px-3 py-2`}>
+                <Dot color="#1DB4EA" size={7} /><span className="min-w-0 flex-1 text-[12.5px] leading-snug text-[var(--txt)]">{x}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {poles.length > 0 && (
+        <div>
+          <SectionTitle>Pôles du complexe · {poles.length}</SectionTitle>
+          <div className="flex flex-col gap-1.5">
+            {poles.map((p) => (
+              <div key={p.slug} className={`${s.card} rounded-[14px] px-4 py-3`}>
+                <div className="flex items-center gap-2"><Dot color={ST_COLOR(p.status)} size={8} /><span className="text-[13.5px] font-semibold text-white">{p.name}</span>
+                  <span className="ml-auto truncate text-[11px] text-[var(--mut)]">{p.type}</span></div>
+                <div className="mt-1.5 flex flex-wrap gap-1">{p.specialties.map((x) => <span key={x} className="rounded-full bg-white/[0.04] px-2 py-[3px] text-[11.5px] text-[var(--txt-2)] ring-1 ring-white/[0.06]">{x}</span>)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {main.notes && <p className="text-[12.5px] leading-snug text-[var(--txt-2)]" style={{ display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{main.notes}</p>}
+      <div className={`${s.card} rounded-[14px] px-4 py-3 text-[12px] leading-snug text-[var(--mut)]`}>
+        Bâtiment modélisé d&apos;après les photos publiées par l&apos;architecte (ATP Architectes) ; plans intérieurs non publiés. La ville 3D n&apos;étant pas géoréférencée, la clinique y est placée par rapport à l&apos;hippodrome d&apos;Anfa, comme dans la réalité. Le programme ne publie pas de chiffre propre à cet établissement.
+      </div>
+      <button type="button" onClick={() => select({ kind: "site", id })} data-anchor="panel:facility-network"
+        className="mt-auto flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-white text-[14px] font-semibold text-[#0B1020] shadow-[0_10px_30px_-10px_rgba(255,255,255,.4)] transition-transform hover:scale-[1.01]">
+        <I.globe size={18} /> Voir sur la carte du réseau <I.arrowRight size={16} />
+      </button>
+      {main.source && <p className="flex items-center gap-1.5 text-[11px] text-[var(--mut)]"><I.link size={12} />Source : {domain(main.source) ?? main.source.slice(0, 80)}</p>}
+    </div>
+  );
+}
+
 const compactList = (n: number) => Math.min(n, 9);
 const META_ECO = V23 ? HEAD.gains : DATA.meta.eco;
 
@@ -461,6 +520,7 @@ export function crumbs(kind: string, id: string, caseId: string | null): { label
   else if (kind === "city") out = [{ label: "Maroc", go: () => st.setLevel("morocco") }, { label: CITIES.find((x) => x.slug === id)?.name ?? id }];
   else if (kind === "site") { const x = SITES.find((y) => y.slug === id); out = [{ label: "Maroc", go: () => st.setLevel("morocco") }, ...(x ? [{ label: x.city, go: () => st.select({ kind: "city", id: x.citySlug }) }] : []), { label: x?.name ?? id }]; }
   else if (kind === "country") out = [{ label: "Monde", go: () => st.setLevel("world") }, { label: id === "MA" ? "Maroc" : INTERNATIONAL.find((x) => x.iso === id)?.country ?? id }];
+  else if (kind === "facility") { const x = SITES.find((y) => y.slug === id); out = [{ label: x?.city ?? "Casablanca", go: () => st.select({ kind: "city", id: x?.citySlug ?? "casablanca" }) }, { label: x?.name ?? id }]; }
   if (caseId && kind !== "case") {
     const d = DEPT[CASE_DEPT[caseId]];
     if (kind === "dept" || kind === "person") { const last = out[out.length - 1]; if (kind === "dept" && d) out[out.length - 1] = { ...last, go: () => st.openCase(null) }; if (kind === "person") out[out.length - 1] = { ...last, go: () => st.openCase(null) }; }

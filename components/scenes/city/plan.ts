@@ -18,7 +18,7 @@ import {
 } from "./district";
 import {
   N, T, COAST, wiggle, sea, AVENUES, DOWNTOWN, TWIN, CFC, rng, hash2, distToLine, density, zoneAt, inMedina, Z, type Zone,
-  coastT, atCoast, LEAGUE, RACE, HANK, distRail, CORNICHE, beachWidth, RADIALS, RINGS, RC, distBoulevard,
+  coastT, atCoast, LEAGUE, RACE, HANK, distRail, CORNICHE, beachWidth, RADIALS, RINGS, RC, distBoulevard, inAnfaPrime,
 } from "./geography";
 export type { Bx, Seg, Quad };
 export { N, T, COAST, wiggle, sea, AVENUES, DOWNTOWN, TWIN, CFC, rng };
@@ -114,7 +114,7 @@ function makePlan(): Plan {
   rbs.push([line(5), line(-7)], [line(-12), line(5)]);
 
   const nearRb = (x: number, z: number, m: number) => rbs.some(([rx, rz]) => Math.hypot(x - rx, z - rz) < m);
-  const blocked = (x: number, z: number) => inLeague(x, z, 4) || inRace(x, z, 26) || inEsplanade(x, z) || Math.hypot(x - LIGHTHOUSE.x, z - LIGHTHOUSE.z) < 95;
+  const blocked = (x: number, z: number) => inLeague(x, z, 4) || inRace(x, z, 26) || inEsplanade(x, z) || Math.hypot(x - LIGHTHOUSE.x, z - LIGHTHOUSE.z) < 95 || inAnfaPrime(x, z, 4);
   /** a grid street exists between two nodes: on land, dense enough (boulevards reach further out), not through the medina / parks */
   const streetOn = (x0: number, z0: number, x1: number, z1: number, w: number) => {
     if (!land(x0, z0, 110) || !land(x1, z1, 110)) return false;
@@ -575,6 +575,9 @@ function makePlan(): Plan {
       if (lots.some((l) => Math.abs(x - l.x) < l.w / 2 - 7 && Math.abs(z - l.z) < l.d / 2 - 7)) trees.splice(k, 1);
     }
   }
+  // the Anfa Prime lot (see landmarks/AnfaPrime): its own garden, nothing of the plan inside
+  const dropLot = (list: number[][]) => { for (let k = list.length - 1; k >= 0; k--) if (inAnfaPrime(list[k][0], list[k][1], -1)) list.splice(k, 1); };
+  dropLot(trees); dropLot(palms); dropLot(streetTrees);
   return { segs, grid, boxes, near, signs, cfc, cfcSigns, parks, trees, palms, roundabouts: rbs, decals, roofs, parked, tram, poles, streetTrees, net, kerbs, medians, pools, hips, minarets, plazas };
 }
 

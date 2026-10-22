@@ -5,9 +5,10 @@ import { FINAL_YEAR, type Year } from "./model";
 
 export type Level = "world" | "morocco" | "hospital";
 export type Section = "explorer" | "synthese" | "finances" | "cas" | "preuves" | "gouvernance" | "emplois" | "deploiement" | "sources";
-export type SelKind = "overview" | "floor" | "dept" | "person" | "case" | "xp" | "city" | "site" | "country";
+export type SelKind = "overview" | "floor" | "dept" | "person" | "case" | "xp" | "city" | "site" | "country" | "facility";
 /** id formats: floor "main:0" | dept "admissions" | person "admissions/admin/0" (dept/role/index) | case "A-02"
- *  xp "xp-guide" (front-desk AI experience, lib/hospital.ts EXPERIENCES) | city "casablanca" | site "<establishment slug>" | country "MA" */
+ *  xp "xp-guide" (front-desk AI experience, lib/hospital.ts EXPERIENCES) | city "casablanca" | site "<establishment slug>" | country "MA"
+ *  facility "<establishment slug>": a real establishment drawn in the city (lib/facilities.ts), seen at street level */
 export type Sel = { kind: SelKind; id: string } | null;
 
 /** Walk mode ("À pied") as seen by the UI: phase, view, where the visitor is, the department E would open. */
@@ -104,7 +105,7 @@ export const useApp = create<State>((set, get) => ({
   select: (sel, opts) => {
     // selecting something inside another level switches level first
     let level = get().level;
-    if (sel && (sel.kind === "floor" || sel.kind === "dept" || sel.kind === "person" || sel.kind === "case" || sel.kind === "xp")) level = "hospital";
+    if (sel && (sel.kind === "floor" || sel.kind === "dept" || sel.kind === "person" || sel.kind === "case" || sel.kind === "xp" || sel.kind === "facility")) level = "hospital";
     if (sel && (sel.kind === "city" || sel.kind === "site")) level = "morocco";
     if (sel && sel.kind === "country") level = "world";
     set({ sel, level, section: "explorer", panelOpen: true, caseId: sel?.kind === "case" ? sel.id : null, focusNonce: opts?.focus === false ? get().focusNonce : get().focusNonce + 1 });

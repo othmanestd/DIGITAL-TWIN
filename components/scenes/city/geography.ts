@@ -84,6 +84,18 @@ export const CORNICHE = { t0: -7200, t1: -1650 };
 /** Parc de la Ligue Arabe (axis-aligned rectangle, world metres) and the Anfa racetrack (oval, world metres, yaw) */
 export const LEAGUE = (() => { const [x, z] = atLine(950, COAST - 1330); return { x: Math.round(x / 10) * 10, z: Math.round(z / 10) * 10, w: 300, d: 760 }; })();
 export const RACE = (() => { const [x, z] = atLine(-2650, COAST - 1250); return { x, z, a: 330, b: 170, yaw: -Math.PI / 4 }; })();
+/** Anfa Prime Hospital (Akdital, boulevard Ghandi). The generated city is not georeferenced (its real lat/lon would fall in
+ *  the sea), so the clinic is anchored on the generated racetrack: about 780 m north and 90 m west of it, as the real clinic
+ *  stands from the real Anfa racetrack, then snapped to the grid block that holds that point. That block (grid lines
+ *  x = −3060 / −2940, z = −60 / 60) fronts the 30 m boulevard at z = 60, the stand-in for boulevard Ghandi.
+ *  `lot` = the block inside its streets (world metres); `x, z` = origin of the clinic model (front, +z, towards the boulevard). */
+export const ANFA_PRIME = (() => {
+  const lot = { x0: -3051, x1: -2949, z0: -51, z1: 42 };
+  return { x: (lot.x0 + lot.x1) / 2, z: 11, yaw: 0, lot, anchor: { dx: RACE.x - 90, dz: RACE.z - 780 } };
+})();
+/** inside the Anfa Prime lot (+ margin) */
+export const inAnfaPrime = (x: number, z: number, m = 0) =>
+  x > ANFA_PRIME.lot.x0 - m && x < ANFA_PRIME.lot.x1 + m && z > ANFA_PRIME.lot.z0 - m && z < ANFA_PRIME.lot.z1 + m;
 /** Rail: Casa-Port → east along the port → inland towards Casa-Voyageurs and the south-east (polyline, coast frame) */
 export const RAIL_TN: [number, number][] = [[900, 260], [1600, 330], [2400, 380], [3200, 470], [3900, 760], [4500, 1300], [5100, 1900], [5900, 2500], [7000, 3200], [8600, 4100], [10500, 5200], [13000, 6600]];
 export const RAIL: [number, number][] = RAIL_TN.map(([t, n]) => atLine(t, COAST - n));
