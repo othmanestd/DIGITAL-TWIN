@@ -15,7 +15,7 @@ import { GEO, makeFloorMats, rt, setFloorOpacity } from "../../hospital/mats";
 import People from "../../hospital/People";
 import { focusOf, isHidden } from "../../hospital/nav";
 import { GeoHtml } from "../../geo/GeoHtml";
-import { ANFA_PRIME } from "../geography";
+import { ANFA_PRIME, apWorld } from "../geography";
 
 /** Open floor of the clinic (null = none) and how far its interiors are shown (0 … 1, eased); written every frame. */
 export const AP_VIEW = { open: null as string | null, fade: 0 };
@@ -149,8 +149,8 @@ export function AnfaPrimeFloors() {
     const fl = AP_LAYOUTS.find((f) => f.key === key);
     if (!fl) return;
     const d = s.kind === "dept" ? DEPT[s.id] : s.kind === "person" ? DEPT[s.id.split("/")[0]] : undefined;
-    const x = ANFA_PRIME.x + fl.ox + (d ? d.rect[0] : 0), z = ANFA_PRIME.z + fl.oz + (d ? d.rect[1] : 0);
-    rig.flyTo(new THREE.Vector3(x, fl.floor * FLOOR_H + 1, z), d ? 30 : 46, { azimuth: 0.35, polar: 0.92 });
+    const [x, z] = apWorld(fl.ox + (d ? d.rect[0] : 0), fl.oz + (d ? d.rect[1] : 0)); // the model is rotated (ANFA_PRIME.yaw)
+    rig.flyTo(new THREE.Vector3(x, fl.floor * FLOOR_H + 1, z), d ? 30 : 46, { azimuth: 0.35 + ANFA_PRIME.yaw, polar: 0.92 });
     rt.userMoved = false;
   }, [nonce]);
 

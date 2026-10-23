@@ -100,13 +100,29 @@ export const LEAGUE = (() => { const [x, z] = atLine(950, COAST - 1330); return 
 export const RACE = (() => { const [x, z] = atLine(-2650, COAST - 1250); return { x, z, a: 330, b: 170, yaw: -Math.PI / 4 }; })();
 /** Anfa Prime Hospital (Akdital, boulevard Ghandi). The generated city is not georeferenced (its real lat/lon would fall in
  *  the sea), so the clinic is anchored on the generated racetrack: about 780 m north and 90 m west of it, as the real clinic
- *  stands from the real Anfa racetrack, then snapped to the grid block that holds that point. That block (grid lines
+ *  stands from the real Anfa racetrack (approximate; the real hippodrome is closer, ~400 m north-east), then snapped to the
+ *  grid block that holds that point. That block (grid lines
  *  x = −3060 / −2940, z = −60 / 60) fronts the 30 m boulevard at z = 60, the stand-in for boulevard Ghandi.
  *  `lot` = the block inside its streets (world metres); `x, z` = origin of the clinic model (front, +z, towards the boulevard). */
 export const ANFA_PRIME = (() => {
   const lot = { x0: -3051, x1: -2949, z0: -51, z1: 42 };
-  return { x: (lot.x0 + lot.x1) / 2, z: 11, yaw: 0, lot, anchor: { dx: RACE.x - 90, dz: RACE.z - 780 } };
+  // yaw: the model's front (+z) faces boulevard Ghandi as in reality. OSM way 338743767 (Bd Ghandi) runs on a bearing of
+  // 121.7° past the clinic's parcel (OSM way 1432538704, landuse=construction, 4,974 m²), so the front looks south-west:
+  // rotation −0.5535 rad (−31.7°). The position stays anchored (the city is not georeferenced), see ANFA_DISTRICT.
+  return { x: (lot.x0 + lot.x1) / 2, z: 11, yaw: -0.5535, lot, anchor: { dx: RACE.x - 90, dz: RACE.z - 780 } };
 })();
+/** local (model) → world offset of the Anfa Prime model, rotated by its yaw */
+export const apWorld = (lx: number, lz: number): [number, number] => {
+  const c = Math.cos(ANFA_PRIME.yaw), s = Math.sin(ANFA_PRIME.yaw);
+  return [ANFA_PRIME.x + lx * c + lz * s, ANFA_PRIME.z - lx * s + lz * c];
+};
+/** The Anfa Prime surroundings (landmarks/AnfaPrimeDistrict, from OpenStreetMap: boulevard Ghandi, boulevard Abdelkrim El
+ *  Khattabi and its roundabout, the Anfa villas). Zone origin = the centroid of the clinic's OSM parcel; the model sits at
+ *  (5.5, 15) m from it, its buildings within the parcel (99 % of their footprint). Box on the grid lines (x −3300 / −2580,
+ *  z −180 / 420): clear of the generated coast and of the generated racetrack. */
+export const ANFA_DISTRICT = { ox: -3000 - 5.5, oz: 11 - 15, x0: -3300, x1: -2580, z0: -180, z1: 420 };
+export const inAnfaZone = (x: number, z: number, m = 0) =>
+  x > ANFA_DISTRICT.x0 - m && x < ANFA_DISTRICT.x1 + m && z > ANFA_DISTRICT.z0 - m && z < ANFA_DISTRICT.z1 + m;
 /** inside the Anfa Prime lot (+ margin) */
 export const inAnfaPrime = (x: number, z: number, m = 0) =>
   x > ANFA_PRIME.lot.x0 - m && x < ANFA_PRIME.lot.x1 + m && z > ANFA_PRIME.lot.z0 - m && z < ANFA_PRIME.lot.z1 + m;

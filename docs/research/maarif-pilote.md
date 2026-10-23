@@ -75,7 +75,7 @@ Chaque typologie existe en blanc ou en crème. Le rez-de-chaussée a un soubasse
 - **Écart corrigé** : le premier modèle espaçait les tours de 67 m entre centres. OSM donne environ 46 m, soit environ 18 m entre les façades.
 - **Orientation** : les deux tours sont légèrement tournées l'une par rapport à l'autre (−6° et +8° par rapport au nord).
 - **Podium** : l'ancien podium rectangulaire de 150 × 46 m, l'escalier et le mât n'avaient pas de source. Ils sont remplacés par les 3 ailes commerciales d'OSM, avec une hauteur d'étage estimée à 4,4 m.
-- **Couronne « inwi »** : elle reste sur la tour est. Cette attribution n'est pas vérifiée.
+- **Couronne « inwi »** : **retirée** le 23/10 (règle : aucune publicité dans la ville 3D). Les deux tours portent la même couronne en pierre neutre ; c'est un traitement simplifié.
 
 ## 6. Compromis : le boulevard du tram de la scène
 
@@ -117,8 +117,9 @@ Les triangles incluent la passe d'ombre. Les mêmes points de vue ont été mesu
   - `geography.ts` (`MAARIF_DISTRICT`, `inMaarif`) ;
   - `plan.ts`.
 - **Rendu** :
-  - `landmarks/maarifGeo.ts` ;
-  - `landmarks/MaarifDistrict.tsx` ;
+  - `landmarks/zoneGeo.ts` (générateur générique de zone) ;
+  - `landmarks/OsmZoneDistrict.tsx` (composant générique) ;
+  - `landmarks/MaarifDistrict.tsx` (configuration du Maârif) ;
   - `landmarks/TwinCenter.tsx` et `twinCenterGeo.ts` (placement OSM) ;
   - `landmarks/OsmCredit.tsx`.
 - **Partagés avec le CFC** :

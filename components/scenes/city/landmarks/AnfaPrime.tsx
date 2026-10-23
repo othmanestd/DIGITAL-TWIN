@@ -14,29 +14,57 @@ import { rig } from "@/lib/rig";
 import { siteBySlug } from "@/lib/geo/network";
 import { dress, newPose, poseIdle, poseWalk, type Garb } from "../../people/human";
 import { useHumanCrowd } from "../../people/useHumans";
-import { ANFA_PRIME } from "../geography";
+import { ANFA_DISTRICT, ANFA_PRIME, apWorld } from "../geography";
+import { ANFA_PRIME_ZONE } from "./zones/anfaPrimeData";
 import type { Solid } from "../collide";
 import { rt } from "../../hospital/mats";
 import { ENV } from "./env";
-import { aabbSolid, lmOpacity, setFade } from "./shared";
+import { lmOpacity, setFade, yawedSolids } from "./shared";
 import { AnfaPrimeFloors, AP_VIEW } from "./AnfaPrimeFloors";
-import { AP_ENTRANCE, AP_SIGN_Y, AP_SIGN_Z, AP_VOLUMES, buildAnfaPrime, glowTexture, latticeTexture, letterTexture, medalTexture, panelTexture, type ApKey } from "./anfaPrimeGeo";
+import { AP_ENTRANCE, AP_SIGN_Y, AP_SIGN_Z, AP_VOLUMES, buildAnfaPrime, fenceRuns, glowTexture, latticeTexture, letterTexture, medalTexture, panelTexture, type ApKey } from "./anfaPrimeGeo";
 
 export const ANFA_PRIME_ID = "anfa-prime-hospital";
 const O = ANFA_PRIME;
 const LABEL_ALT = 3000, PEOPLE_ALT = 2000;
 const NO_RAY = () => {};
 
-/** Walk-mode solids (world metres): the two volumes, the entrance block, the fence (the gate stays open). */
+/** The real parcel (OSM way 1432538704, the building site of the clinic in OSM) in the model's local frame: the front
+ *  garden, the fence and the planting are trimmed to it (+ 1.5 m). */
+const PARCEL = (() => {
+  const a = ANFA_PRIME_ZONE.areas.find((q) => q.k === "site" && q.p.length >= 6);
+  return a ? a.p : null;
+})();
+export const inParcel = (lx: number, lz: number) => {
+  if (!PARCEL) return true;
+  const c = Math.cos(O.yaw), s = Math.sin(O.yaw);
+  const x = O.x - ANFA_DISTRICT.ox + lx * c + lz * s, z = O.z - ANFA_DISTRICT.oz - lx * s + lz * c;
+  let k = false;
+  for (let i = 0, j = PARCEL.length - 2; i < PARCEL.length; j = i, i += 2) {
+    const xi = PARCEL[i], zi = PARCEL[i + 1], xj = PARCEL[j], zj = PARCEL[j + 1];
+    if (zi > z !== zj > z && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) k = !k;
+  }
+  if (k) return true;
+  for (let i = 0, j = PARCEL.length - 2; i < PARCEL.length; j = i, i += 2) {
+    const ax = PARCEL[j], az = PARCEL[j + 1], dx = PARCEL[i] - ax, dz = PARCEL[i + 1] - az, L2 = dx * dx + dz * dz || 1;
+    const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / L2));
+    if (Math.hypot(x - ax - dx * t, z - az - dz * t) < 1.5) return true;
+  }
+  return false;
+};
+
+/** Walk-mode solids (world metres): the two volumes, the entrance block, the fence runs (the gate stays open), rotated
+ *  with the model. */
 export function anfaPrimeSolids(): Solid[] {
-  const out = AP_VOLUMES.map((v) => aabbSolid(O.x + v.x, O.z + v.z, v.w, v.d, 16));
-  out.push({ x0: O.x + AP_ENTRANCE.x0, x1: O.x + AP_ENTRANCE.x1, z0: O.z + AP_ENTRANCE.z0, z1: O.z + AP_ENTRANCE.z1, h: 12 });
-  out.push({ x0: O.x - 48, x1: O.x - 6, z0: O.z + 28.8, z1: O.z + 29.2, h: 2 }, { x0: O.x + 9, x1: O.x + 48, z0: O.z + 28.8, z1: O.z + 29.2, h: 2 });
+  const at = (cx: number, cz: number, w: number, d: number, h: number) => { const [x, z] = apWorld(cx, cz); return yawedSolids(x, z, O.yaw, -w / 2, w / 2, -d / 2, d / 2, h, 8); };
+  const out = AP_VOLUMES.flatMap((v) => at(v.x, v.z, v.w, v.d, 16));
+  const E = AP_ENTRANCE;
+  out.push(...at((E.x0 + E.x1) / 2, (E.z0 + E.z1) / 2, E.x1 - E.x0, E.z1 - E.z0, 12));
+  for (const [x0, x1] of fenceRuns(inParcel)) out.push(...at((x0 + x1) / 2, 29, x1 - x0 + 0.4, 0.4, 2));
   return out;
 }
 
 function build() {
-  const parts = buildAnfaPrime();
+  const parts = buildAnfaPrime(inParcel);
   const lattice = latticeTexture(), glow = glowTexture();
   const std = (o: THREE.MeshStandardMaterialParameters) => new THREE.MeshStandardMaterial({ roughness: 0.8, ...o });
   const flat = { polygonOffset: true, polygonOffsetFactor: -3 };
@@ -153,7 +181,8 @@ export function AnfaPrime() {
     if (sel?.kind !== "facility" || sel.id !== ANFA_PRIME_ID) return;
     // in front of the entrance, seen from the boulevard; from high up (the Morocco map), go down in stages like the zoom
     // rail does (UnifiedWorld `travel`): first over Casablanca, then onto the clinic
-    const land = () => rig.flyTo(new THREE.Vector3(O.x + 2, 7, O.z + 14), 120, { azimuth: 0.12, polar: 1.16, duration: 2.0 });
+    const [fx, fz] = apWorld(2, 14);
+    const land = () => rig.flyTo(new THREE.Vector3(fx, 7, fz), 120, { azimuth: 0.12 + O.yaw, polar: 1.16, duration: 2.0 });
     if (frame.alt > 2500) rig.flyTo(new THREE.Vector3(O.x, 8, O.z), 2.4e4, { polar: 0.78, azimuth: 0.45, duration: 2.0, done: land });
     else land();
     rt.userMoved = false;

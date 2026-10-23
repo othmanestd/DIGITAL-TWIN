@@ -1,7 +1,8 @@
-// Geometry of the Maârif pilot district around the Twin Center (zone-local metres, x east, z south, origin = the OSM node
-// "Twin Center"), from zones/maarifData (OpenStreetMap) and the illustrative fillers of osmZonePlan. Three levels of
-// fidelity (docs/research/maarif-pilote.md):
-//   A  documented: the Twin Center towers (drawn by TwinCenter.tsx on their OSM footprints) and their real podium wings;
+// Geometry of an OpenStreetMap district (zone-local metres, x east, z south, origin = the zone's origin), from its zone data
+// (zones/*Data.ts) and the illustrative fillers of osmZonePlan; the district-specific parts (buildings drawn elsewhere, hero
+// buildings, ground overrides, extra labels) come from its ZoneSpec (MaarifDistrict, AnfaPrimeDistrict). Fidelity levels
+// (docs/research/maarif-pilote.md, anfa-prime-pilote.md):
+//   A  documented: hero buildings of the spec (e.g. the Twin Center podium);
 //   B  footprint + storeys from OSM: every mapped building on its outline, its height from `height` or `building:levels`;
 //      façades are typologies of the district (not surveyed per building), shopfronts where OSM has a shop inside;
 //   C  footprint only, or no footprint at all: storeys estimated (mapped) or illustrative frontage volumes (fillers),
@@ -10,30 +11,42 @@
 // kerbs, zebra crossings, bus shelters, signals), the detail set being hidden from afar. Street lamps are instances.
 import type { PlacedZone, Filler } from "../osmZonePlan";
 import { onOtherRoad, zoneFillers } from "../osmZonePlan";
-import type { ZoneBuilding } from "./zones/types";
+import type { OsmZone, ZoneArea, ZoneBuilding } from "./zones/types";
 import {
   Buckets, at, box, cap, ccw, contactRing, hash, inPoly, inset, lvH, pts, roofOf, site, strip, walls, type CfcKey, type Footprint, type Pt,
 } from "./zoneKit";
-import { TWIN_TOWER_IDS } from "./TwinCenter";
 
-export type MaarifLabel = { name: string; sub: string; x: number; y: number; z: number; hero?: boolean };
-export type MaarifStats = { osm: number; levels: number; height: number; estimated: number; fillers: number; shops: number; skipped: number };
+export type ZoneLabel = { name: string; sub: string; x: number; y: number; z: number; hero?: boolean };
+export type ZoneStats = { osm: number; levels: number; height: number; estimated: number; fillers: number; shops: number; skipped: number; replaced: number };
+/** what a district adds to the generic build */
+export type ZoneSpec = {
+  /** buildings drawn by another component (e.g. the Twin Center towers) */
+  elsewhere?: ReadonlySet<number>;
+  /** buildings replaced by a model standing there (counted as `replaced`) */
+  replaced?: (b: ZoneBuilding) => boolean;
+  /** a hero building: draw it and return its height, or return undefined to let the generic build do it */
+  hero?: (b: ZoneBuilding, P: Pt[], kit: { core: Buckets; detail: Buckets }) => number | undefined;
+  /** ground material of an open space (null = not drawn), undefined = the default */
+  ground?: (a: ZoneArea, i: number) => CfcKey | null | undefined;
+  /** labels of the district (local) */
+  labels?: (Z: OsmZone) => ZoneLabel[];
+  /** extra text under the label of a named place */
+  poiSub?: (name: string) => string | undefined;
+  /** district rule for a building whose storeys OSM does not give: estimated storeys and typology (undefined = default) */
+  estimate?: (b: ZoneBuilding) => { lv: number; villa: boolean } | undefined;
+};
 
-/** the Twin Center podium wings (OSM retail, 4 levels, white) */
-const TWIN_PODIUM = new Set([416499076, 416499077, 416499078]);
-/** illustrative storey height of the mall levels */
-const MALL_FL = 4.4;
 
 const segDist = (ax: number, az: number, bx: number, bz: number, x: number, z: number) => {
   const dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz || 1, t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / L2));
   return Math.hypot(x - ax - dx * t, z - az - dz * t);
 };
 
-export function buildMaarif(Pz: PlacedZone) {
-  const Z = Pz.zone, core = new Buckets(), detail = new Buckets(), labels: MaarifLabel[] = [];
+export function buildZone(Pz: PlacedZone, spec: ZoneSpec = {}) {
+  const Z = Pz.zone, core = new Buckets(), detail = new Buckets(), labels: ZoneLabel[] = [];
   const solids: { o: Footprint["o"]; h: number }[] = [];
   const lamps: [number, number, number][] = [];
-  const stats: MaarifStats = { osm: 0, levels: 0, height: 0, estimated: 0, fillers: 0, shops: 0, skipped: 0 };
+  const stats: ZoneStats = { osm: 0, levels: 0, height: 0, estimated: 0, fillers: 0, shops: 0, skipped: 0, replaced: 0 };
   const inCorr = (z: number, m = 0) => Pz.corridors.some((c) => z > c.z0 - m && z < c.z1 + m);
   const main = Z.roads.filter((r) => ["primary", "secondary", "trunk"].includes(r.k));
   const nearMain = (x: number, z: number, m: number) => main.some((r) => { for (let i = 0; i + 3 < r.p.length; i += 2) if (segDist(r.p[i], r.p[i + 1], r.p[i + 2], r.p[i + 3], x, z) < r.w / 2 + m) return true; return false; });
@@ -85,21 +98,15 @@ export function buildMaarif(Pz: PlacedZone) {
   };
 
   for (const b of Z.buildings) {
-    if ((TWIN_TOWER_IDS as readonly number[]).includes(b.id)) continue;                 // TwinCenter.tsx
+    if (spec.elsewhere?.has(b.id)) continue;
+    if (spec.replaced?.(b)) { stats.replaced++; continue; }
     const P = ccw(pts(b.p)), holes = b.holes.map((h) => ccw(pts(h)).reverse());
     if (P.some(([, z]) => inCorr(z, 1))) { stats.skipped++; continue; }                 // under the plan's tram boulevard
     stats.osm++;
     if (b.lv != null) stats.levels++;
     if (b.h != null) stats.height++;
-    if (TWIN_PODIUM.has(b.id)) {
-      const h = (b.lv ?? 4) * MALL_FL;
-      walls(core, P, 0, MALL_FL, "shop");
-      walls(core, P, MALL_FL, h, "panel");
-      roofOf(core, P, h, "parapet", 1.2);
-      contactRing(detail, P, 2.2);
-      solids.push({ o: b.o, h });
-      continue;
-    }
+    const hh = spec.hero?.(b, P, { core, detail });
+    if (hh !== undefined) { contactRing(detail, P, 2.2); solids.push({ o: b.o, h: hh }); continue; }
     const t = b.type;
     if (t === "construction") { site(core, P); continue; }
     if (t === "roof") {                                                                     // a shelter roof on posts
@@ -113,9 +120,10 @@ export function buildMaarif(Pz: PlacedZone) {
       if (v.type === "school" || v.type === "garage" || v.type === "retail" || v.type === "commercial") return 2;
       return 6;                                                                             // apartments, hotels, offices: the mode of the mapped storeys
     };
-    const lv = b.lv ?? estLv(b);
+    const est = b.lv == null ? spec.estimate?.(b) : undefined;
+    const lv = b.lv ?? est?.lv ?? estLv(b);
     if (b.lv == null && b.h == null) stats.estimated++;
-    const kind = t === "house" ? "villa" : (t === "retail" || t === "commercial" || t === "garage") && lv <= 3 ? "low" : t === "office" || t === "commercial" || t === "university" ? "office" : "res";
+    const kind = t === "house" || est?.villa ? "villa" : (t === "retail" || t === "commercial" || t === "garage") && lv <= 3 ? "low" : t === "office" || t === "commercial" || t === "university" ? "office" : "res";
     const h = b.h ?? (kind === "villa" ? lvH(lv) - 1 : lvH(lv));
     const y0 = b.minLv ? lvH(b.minLv) : 0;
     const shopFront = kind !== "villa" && lv >= 3 && (b.shop === 1 || (nearMain(b.o[0], b.o[1], b.o[4] / 2 + 10) && hash(b.id, 13) < 0.55));
@@ -132,13 +140,14 @@ export function buildMaarif(Pz: PlacedZone) {
 
   // ------------------------------------------------------------ ground: open spaces, footpaths, kerbs, zebras
   const Y: Record<string, number> = { park: 0.03, garden: 0.034, grass: 0.034, scrub: 0.036, site: 0.04, sport: 0.036, parking: 0.04, plaza: 0.042, pitch: 0.046, play: 0.048, water: 0.05, pool: 0.052 };
-  for (const a of Z.areas) {
-    const P = ccw(pts(a.p));
-    const key: CfcKey = a.k === "park" || a.k === "garden" || a.k === "grass" || a.k === "sport" ? "lawn" : a.k === "scrub" ? "scrub"
-      : a.k === "pitch" ? "turf" : a.k === "play" ? "rubber" : a.k === "water" || a.k === "pool" ? "water" : a.k === "site" ? "sand" : a.k === "parking" ? "asphalt" : "plaza";
+  Z.areas.forEach((a, ai) => {
+    const P = ccw(pts(a.p)), over = spec.ground?.(a, ai);
+    if (over === null) return;
+    const key: CfcKey = over ?? (a.k === "park" || a.k === "garden" || a.k === "grass" || a.k === "sport" ? "lawn" : a.k === "scrub" ? "scrub"
+      : a.k === "pitch" ? "turf" : a.k === "play" ? "rubber" : a.k === "water" || a.k === "pool" ? "water" : a.k === "site" ? "sand" : a.k === "parking" ? "asphalt" : "plaza");
     try { cap(core, key, P, Y[a.k] ?? 0.04); } catch { /* degenerate outline */ }
     if (a.k === "water" || a.k === "pool") { walls(core, inset(P, -0.35), 0, 0.4, "parapet"); cap(core, "parapet", inset(P, -0.35), 0.4, [P]); }
-  }
+  });
   for (const p of Z.paths) strip(core, "path", p.p, p.w, 0.055, 0.4);
   // kerbs along every carriageway edge, cut where they would cross another street
   const others = (x: number, z: number, self: number) => onOtherRoad(Z, x, z, self, 0.6);
@@ -219,17 +228,26 @@ export function buildMaarif(Pz: PlacedZone) {
     }
   }
 
-  // ------------------------------------------------------------ labels
-  labels.push({ name: "Twin Center", sub: "115 m · 28 niveaux · Bd Zerktouni × Bd Al Massira", x: -3.5, y: 132, z: 0, hero: true });
-  const zk = Z.buildings.find((b) => b.id === 1373134013);
-  if (zk) labels.push({ name: "Résidence Zerktouni", sub: "17 niveaux", x: zk.o[0], y: lvH(17) + 6, z: zk.o[1] });
-  const lxr = Z.buildings.find((b) => b.id === 1327654567);
-  if (lxr) labels.push({ name: "LXR by Hilton", sub: "chantier · 17 niveaux", x: lxr.o[0], y: lvH(17) + 6, z: lxr.o[1] });
+  // ------------------------------------------------------------ labels: the district's own, its named places, its boulevards
+  labels.push(...(spec.labels?.(Z) ?? []));
   const seen = new Set<string>();
   for (const p of Z.pois) {
     if (p.kind === "hotel" || seen.has(p.name) || inCorr(p.z, 0)) continue;
     seen.add(p.name);
-    labels.push({ name: p.name.split(" ").slice(0, 3).join(" ").replace(/\s+[؀-ۿ].*$/, ""), sub: p.kind === "worship" ? "mosquée" : "", x: p.x, y: 30, z: p.z });
+    const name = p.name.replace(/\s+[\u0600-\u06FF].*$/, "").split(" ").slice(0, 3).join(" ");
+    labels.push({ name, sub: spec.poiSub?.(name) ?? (p.kind === "worship" ? "mosquée" : ""), x: p.x, y: 30, z: p.z });
   }
+  // one label per named main street, at the middle of its longest run
+  const longest = new Map<string, { L: number; x: number; z: number }>();
+  for (const r of Z.roads) {
+    if (!r.name || !["primary", "secondary", "trunk"].includes(r.k)) continue;
+    let L = 0; for (let i = 0; i + 3 < r.p.length; i += 2) L += Math.hypot(r.p[i + 2] - r.p[i], r.p[i + 3] - r.p[i + 1]);
+    const name = r.name.replace(/\s+[\u0600-\u06FF].*$/, "");
+    if ((longest.get(name)?.L ?? 0) >= L) continue;
+    let acc = 0, mx = r.p[0], mz = r.p[1];
+    for (let i = 0; i + 3 < r.p.length; i += 2) { const l = Math.hypot(r.p[i + 2] - r.p[i], r.p[i + 3] - r.p[i + 1]); if (acc + l >= L / 2) { const t = (L / 2 - acc) / (l || 1); mx = r.p[i] + (r.p[i + 2] - r.p[i]) * t; mz = r.p[i + 1] + (r.p[i + 3] - r.p[i + 1]) * t; break; } acc += l; }
+    longest.set(name, { L, x: mx, z: mz });
+  }
+  for (const [name, v] of longest) if (v.L > 120) labels.push({ name, sub: "", x: v.x, y: 3, z: v.z });
   return { core: core.build(), detail: detail.build(), labels, solids, lamps, stats };
 }

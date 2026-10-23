@@ -9,6 +9,10 @@ export type PlacedZone = {
   zone: OsmZone; ox: number; oz: number;
   /** local bands kept free of zone buildings (a city corridor running through the zone, e.g. the tram boulevard) */
   corridors: { z0: number; z1: number }[];
+  /** illustrative frontage blocks where OSM maps streets but no buildings (default true; false in villa districts) */
+  fill?: boolean;
+  /** plausible garden trees around the mapped houses (illustrative; villa districts) */
+  gardens?: boolean;
 };
 
 export function inPoly(p: number[], x: number, z: number) {
@@ -99,6 +103,7 @@ export function zoneFillers(P: PlacedZone): Filler[] {
   let out = FILL.get(Z);
   if (out) return out;
   out = [];
+  if (P.fill === false) { FILL.set(Z, out); return out; }
   const ix = indexOf(Z), hard = Z.areas.filter((a) => HARD.has(a.k)), placed: Filler[] = [];
   const clash = (q: number[]) => placed.some((f) => Math.hypot(f.o[0] - q[0], f.o[1] - q[1]) < (f.o[3] + f.o[4]) / 2 + 6 && polyOverlap(f.p, q));
   let id = 1;
@@ -168,6 +173,18 @@ export function zoneGreenery(P: PlacedZone) {
       if (Z.paths.some((p) => { for (let i = 0; i + 3 < p.p.length; i += 2) if (segDist(p.p[i], p.p[i + 1], p.p[i + 2], p.p[i + 3], px, pz) < p.w / 2 + 1.5) return true; return false; })) continue;
       const [wx, wz] = W(px, pz);
       if (hash(px + 3, pz - 7) < 0.3) palms.push([wx, wz]); else trees.push([wx, wz, 0.8 + hash(pz, px + 1) * 0.6]);
+    }
+  }
+  // villa gardens (illustrative): two to four trees or palms around each house, on its own side of the street
+  if (P.gardens) for (const b of Z.buildings) {
+    if (b.type !== "house" && !(b.type === "yes" && b.a < 600)) continue;
+    const n = 2 + Math.floor(hash(b.o[0], b.o[1]) * 3), R = Math.max(b.o[3], b.o[4]) / 2 + 4;
+    for (let k = 0; k < n; k++) {
+      const a = hash(b.o[0] + k, b.o[1] - k) * Math.PI * 2, r = R + hash(b.o[1] + k, b.o[0]) * 5;
+      const x = b.o[0] + Math.cos(a) * r, z = b.o[1] + Math.sin(a) * r;
+      if (!ok(x, z) || roadClear(ix, x, z) < 3) continue;
+      const [wx, wz] = W(x, z);
+      if (hash(x, z) < 0.3) palms.push([wx, wz]); else trees.push([wx, wz, 0.8 + hash(z, x) * 0.6]);
     }
   }
   // no tree inside an illustrative filler

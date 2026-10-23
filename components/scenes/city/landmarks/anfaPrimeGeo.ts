@@ -136,7 +136,28 @@ const box = (w: number, h: number, d: number, x: number, y: number, z: number) =
 const slab = (w: number, d: number, x: number, z: number, y: number) => ni(new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2).translate(x, y, z));
 
 // ---------------------------------------------------------------- the model
-export function buildAnfaPrime() {
+/** The runs of the front fence (local x spans at z = 29) kept by `keep` (the gate between −6 and 9 stays open). */
+export function fenceRuns(keep: (x: number, z: number) => boolean = () => true): [number, number][] {
+  const runs: [number, number][] = [];
+  let a: number | null = null, last = 0;
+  for (let x = -48; x <= 48.001; x += 0.38) {
+    const on = (x < -6 || x > 9) && keep(x, 29);
+    if (on && a === null) a = x;
+    if (!on && a !== null) { runs.push([a, last]); a = null; }
+    if (on) last = x;
+  }
+  if (a !== null) runs.push([a, last]);
+  return runs;
+}
+/** the part of [x0, x1] at depth z that `keep` accepts (the garden lawns are clipped to the parcel) */
+const clipSpan = (x0: number, x1: number, z: number, keep: (x: number, z: number) => boolean): [number, number] | null => {
+  let a: number | null = null, b = 0;
+  for (let x = x0; x <= x1 + 1e-6; x += 0.5) if (keep(x, z)) { if (a === null) a = x; b = x; }
+  return a === null || b - a < 2 ? null : [a, b];
+};
+
+/** The clinic model in its local frame; `keep` trims the front garden, the fence and the planting to the real parcel. */
+export function buildAnfaPrime(keep: (x: number, z: number) => boolean = () => true) {
   const B: Partial<Record<ApKey, G[]>> = {};
   const add = (k: ApKey, g: G) => { (B[k] ??= []).push(g); };
   const r = rng(2025);
@@ -185,9 +206,14 @@ export function buildAnfaPrime() {
   add("white", rod(new V(12.5, 0, 15.5), new V(15, 8.7, 13), 0.3));
   // forecourt, lawns, slatted fence with the gate posts
   add("plaza", slab(24, 17, 2, 20.5, 0.06));
-  add("lawn", slab(36, 12, -28, 22.5, 0.07)); add("lawn", slab(26, 9, 33, 24, 0.07));
-  for (let x = -48; x <= 48; x += 0.38) if (x < -6 || x > 9) add("fence", box(0.1, 1.9, 0.12, x, 0.35, 29));
-  add("fence", box(42, 0.35, 0.4, -27, 0, 29)); add("fence", box(39, 0.35, 0.4, 28.5, 0, 29));
+  for (const [w, d, x, z] of [[36, 12, -28, 22.5], [26, 9, 33, 24]] as const) {
+    const sp = clipSpan(x - w / 2, x + w / 2, z, keep);
+    if (sp) add("lawn", slab(sp[1] - sp[0], d, (sp[0] + sp[1]) / 2, z, 0.07));
+  }
+  for (const [x0, x1] of fenceRuns(keep)) {
+    for (let x = x0; x <= x1 + 1e-6; x += 0.38) add("fence", box(0.1, 1.9, 0.12, x, 0.35, 29));
+    add("fence", box(x1 - x0 + 0.4, 0.35, 0.4, (x0 + x1) / 2, 0, 29));
+  }
   for (const x of [-6.15, 9.15]) add("fence", box(0.3, 2.5, 0.3, x, 0, 29));
   // cloud-pruned niwaki and palms in the front garden
   const niwaki = (x: number, z: number, s: number) => {
@@ -201,7 +227,7 @@ export function buildAnfaPrime() {
     }
     add("leaf", ni(new THREE.IcosahedronGeometry(0.8 * s, 1).scale(1, 0.45, 1).translate(top.x, top.y + 0.25 * s, top.z)));
   };
-  for (const [x, z, s] of [[-30, 25, 1.3], [-21, 26, 1.2], [-12, 22.5, 1], [-8.5, 26.5, 1.1], [13, 22, 1], [21, 26.6, 1.25], [30, 25, 1.3], [38, 24, 1.1]]) niwaki(x, z, s);
+  for (const [x, z, s] of [[-30, 25, 1.3], [-21, 26, 1.2], [-12, 22.5, 1], [-8.5, 26.5, 1.1], [13, 22, 1], [21, 26.6, 1.25], [30, 25, 1.3], [38, 24, 1.1]]) if (keep(x, z)) niwaki(x, z, s);
   const palm = (x: number, z: number, h: number) => {
     add("trunk", rod(new V(x, 0, z), new V(x, h, z), 0.38, 0.22, 7));
     for (let i = 0; i < 9; i++) {
@@ -210,7 +236,7 @@ export function buildAnfaPrime() {
       add("frond", ni(f.translate(x, h, z)));
     }
   };
-  for (const [x, z, h] of [[-40, 21, 8], [-33, 22, 9], [-13, 21, 7], [26, 21, 8.5], [36, 22, 7.5], [44, 20, 9], [-46, 10, 8], [42, 6, 8], [-44, 26.5, 2.6], [-26, 27.6, 2.2], [44, 27, 2.4]]) palm(x, z, h);
+  for (const [x, z, h] of [[-40, 21, 8], [-33, 22, 9], [-13, 21, 7], [26, 21, 8.5], [36, 22, 7.5], [44, 20, 9], [-46, 10, 8], [42, 6, 8], [-44, 26.5, 2.6], [-26, 27.6, 2.2], [44, 27, 2.4]]) if (keep(x, z)) palm(x, z, h);
 
   return (Object.keys(B) as ApKey[]).map((key) => ({ key, geo: mergeGeometries(B[key]!, false) }));
 }
