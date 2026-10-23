@@ -4,6 +4,7 @@
 // suburbs, industrial east, countryside) and the sites of the remarkable places (port, El Hank, corniche, Arab League
 // park, Anfa racetrack, rail). World metres, x east, z south (map north = −Z), y up. plan.ts re-exports the stable names.
 import * as THREE from "three";
+import { CFC_BOX } from "./landmarks/cfcData";
 
 // ---------------------------------------------------------------- coastline
 export const N = new THREE.Vector2(-Math.SQRT1_2, -Math.SQRT1_2);   // towards the ocean (north-west)
@@ -44,6 +45,13 @@ export function distBoulevard(x: number, z: number) {
 }
 export const TWIN: [number, number][] = [[-880, 560], [-835, 610]];
 export const CFC = new THREE.Vector2(-1750, -500); // business district cluster (centre of the signature towers)
+/** The Casablanca Finance City district (landmarks/CfcDistrict, from OpenStreetMap): its real buildings, streets and Anfa
+ *  Park around the CFC Tower, which stands at CFC. Map north is −z in both, so the district keeps its real orientation; the
+ *  box edges fall on the 120 m grid lines (x −2100 / −900, z −900 / 60), the city's streets run around it. */
+export const CFC_DISTRICT = { x0: CFC.x + CFC_BOX.x0, x1: CFC.x + CFC_BOX.x1, z0: CFC.y + CFC_BOX.z0, z1: CFC.y + CFC_BOX.z1 };
+/** inside the CFC district (m > 0 widens the box, m < 0 shrinks it) */
+export const inCfc = (x: number, z: number, m = 0) =>
+  x > CFC_DISTRICT.x0 - m && x < CFC_DISTRICT.x1 + m && z > CFC_DISTRICT.z0 - m && z < CFC_DISTRICT.z1 + m;
 
 // ---------------------------------------------------------------- deterministic noise
 export function rng(seed: number) { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }

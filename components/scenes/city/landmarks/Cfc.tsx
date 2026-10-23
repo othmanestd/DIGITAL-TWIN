@@ -13,6 +13,7 @@ import { ENV, rng } from "./env";
 import { TEX } from "./textures";
 import { chamfered, loft, merge, texBox, texFloor, type G, type Ring } from "./geo";
 import { lmOpacity, setFade, yawedSolids } from "./shared";
+import { cfcDistrictTowers } from "./CfcDistrict";
 
 type Kind = "sig" | "slab" | "slender" | "twin" | "podium";
 type Lot = { x: number; z: number; w: number; d: number; kind: Kind };
@@ -31,9 +32,16 @@ function lots(): Lot[] {
   return out;
 }
 
-/** The towers of the cluster (footprints, for the colliders and the pedestrians' plaza). */
-let TOWERS: CfcTower[] | null = null;
+/** The main towers of the real district (landmarks/CfcDistrict, which replaces this cluster): footprints for the
+ *  pedestrians' plazas. */
+let REAL: CfcTower[] | null = null;
 export function cfcTowers(): CfcTower[] {
+  return (REAL ??= cfcDistrictTowers().map((t) => ({ ...t, kind: "slab" as Kind })));
+}
+
+/** The towers of the generic cluster (footprints, for its colliders and geometry). */
+let TOWERS: CfcTower[] | null = null;
+export function cfcClusterTowers(): CfcTower[] {
   if (TOWERS) return TOWERS;
   const P = cityPlan(), r = rng(77);
   const spec: Record<Kind, { fw: number; fd: number; h: number }> = {
@@ -55,7 +63,7 @@ export function cfcTowers(): CfcTower[] {
 }
 
 export function cfcSolids(): Solid[] {
-  return cfcTowers().flatMap((t) => yawedSolids(t.x, t.z, t.yaw, -t.fw / 2, t.fw / 2, -t.fd / 2, t.fd / 2, t.h, 10));
+  return cfcClusterTowers().flatMap((t) => yawedSolids(t.x, t.z, t.yaw, -t.fw / 2, t.fw / 2, -t.fd / 2, t.fd / 2, t.h, 10));
 }
 
 type Bucket = Record<string, G[]>;
@@ -74,7 +82,7 @@ const glassBox = (b: Bucket, v: string, t: CfcTower, w: number, h: number, d: nu
 };
 
 function build() {
-  const towers = cfcTowers();
+  const towers = cfcClusterTowers();
   const glass = { cool: TEX.glass("cool"), green: TEX.glass("green"), bronze: TEX.glass("bronze") };
   const lat = TEX.lattice();
   const mk = (g: { map: THREE.Texture; glow: THREE.Texture }) => new THREE.MeshStandardMaterial({ map: g.map, roughness: 0.28, metalness: 0.32, envMapIntensity: 1.25, emissive: "#FFFFFF", emissiveMap: g.glow, emissiveIntensity: 0 });
