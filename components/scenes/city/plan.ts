@@ -66,6 +66,13 @@ export function inRace(x: number, z: number, m = 0) {
   const lx = dx * c - dz * s, lz = dx * s + dz * c;
   return (lx / (RACE.a + m)) ** 2 + (lz / (RACE.b + m)) ** 2 < 1;
 }
+/** inside the Twin Center lot (towers, podium, plaza: about 160 × 110 m around the pair, landmarks/TwinCenter) + margin */
+export function inTwin(x: number, z: number, m = 0) {
+  const cx = (TWIN[0][0] + TWIN[1][0]) / 2, cz = (TWIN[0][1] + TWIN[1][1]) / 2, dx = TWIN[1][0] - TWIN[0][0], dz = TWIN[1][1] - TWIN[0][1];
+  const L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L;
+  const lx = (x - cx) * ux + (z - cz) * uz, lz = -(x - cx) * uz + (z - cz) * ux;
+  return Math.abs(lx) < 80 + m && Math.abs(lz) < 55 + m;
+}
 /** the esplanade on the land side of the mosque */
 export const inEsplanade = (x: number, z: number) => { const t = coastT(x, z), n = -sea(x, z); return t > -620 && t < 90 && n < 430; };
 
@@ -114,7 +121,7 @@ function makePlan(): Plan {
   rbs.push([line(5), line(-7)], [line(-12), line(5)]);
 
   const nearRb = (x: number, z: number, m: number) => rbs.some(([rx, rz]) => Math.hypot(x - rx, z - rz) < m);
-  const blocked = (x: number, z: number) => inLeague(x, z, 4) || inRace(x, z, 26) || inEsplanade(x, z) || Math.hypot(x - LIGHTHOUSE.x, z - LIGHTHOUSE.z) < 95 || inAnfaPrime(x, z, 4);
+  const blocked = (x: number, z: number) => inLeague(x, z, 4) || inRace(x, z, 26) || inEsplanade(x, z) || Math.hypot(x - LIGHTHOUSE.x, z - LIGHTHOUSE.z) < 95 || inAnfaPrime(x, z, 4) || inTwin(x, z, 4);
   /** a grid street exists between two nodes: on land, dense enough (boulevards reach further out), not through the medina / parks */
   const streetOn = (x0: number, z0: number, x1: number, z1: number, w: number) => {
     if (!land(x0, z0, 110) || !land(x1, z1, 110)) return false;
@@ -472,10 +479,7 @@ function makePlan(): Plan {
     }
     if (r() < 0.18 && b.w > 8 && b.d > 8) roofs.push({ x: b.x + (r() - 0.5) * (b.w - 6), z: b.z + (r() - 0.5) * (b.d - 6), y: b.h, k: 4, s: 0.8 + r() * 0.4 });
   }
-  // landmarks: a Twin-Center-like pair and a business district cluster
-  for (const [x, z] of TWIN) boxes.push({ x, z, w: 30, d: 30, h: 116, yaw: 0.26, c: 0.15, win: 7, pal: PAL.GLASS, shop: 0, acc: 0 });
-  boxes.push({ x: -858, z: 585, w: 95, d: 70, h: 16, yaw: 0.26, c: 0.15, win: 2, pal: PAL.WHITE, shop: 1, acc: 3 });
-  signs.push({ x: TWIN[0][0], z: TWIN[0][1], w: 18, d: 0.8, h: 118, yaw: 0.26, c: 0 });
+  // landmarks: the Twin Center is drawn by landmarks/TwinCenter (its lot is kept clear, see `blocked`); a business district cluster
   for (let k = 0; k < 9; k++) {
     const a = k * 2.4, rr = 40 + k * 22;
     const x = CFC.x + Math.cos(a) * rr, z = CFC.y + Math.sin(a) * rr;
@@ -578,6 +582,8 @@ function makePlan(): Plan {
   // the Anfa Prime lot (see landmarks/AnfaPrime): its own garden, nothing of the plan inside
   const dropLot = (list: number[][]) => { for (let k = list.length - 1; k >= 0; k--) if (inAnfaPrime(list[k][0], list[k][1], -1)) list.splice(k, 1); };
   dropLot(trees); dropLot(palms); dropLot(streetTrees);
+  // the Twin Center lot (landmarks/TwinCenter): its towers, podium and plaza, no tree of the plan inside
+  for (const list of [trees, palms, streetTrees] as number[][][]) for (let k = list.length - 1; k >= 0; k--) if (inTwin(list[k][0], list[k][1], -2)) list.splice(k, 1);
   return { segs, grid, boxes, near, signs, cfc, cfcSigns, parks, trees, palms, roundabouts: rbs, decals, roofs, parked, tram, poles, streetTrees, net, kerbs, medians, pools, hips, minarets, plazas };
 }
 

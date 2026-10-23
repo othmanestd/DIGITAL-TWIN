@@ -7,6 +7,7 @@ import { Mosque, mosqueSolids } from "./Mosque";
 import { Cfc, cfcSolids } from "./Cfc";
 import { Trams } from "./Tram";
 import { AnfaPrime, anfaPrimeSolids } from "./AnfaPrime";
+import { TwinCenter, twinCenterSolids } from "./TwinCenter";
 
 export { MOSQUE_TOP } from "./Mosque";
 export { ANFA_PRIME_ID } from "./AnfaPrime";
@@ -17,7 +18,7 @@ export { ENV } from "./env";
 export function CityLandmarks() {
   // walk-mode solids of the landmarks (the legacy ones in plan.citySolids go away with LEGACY_LANDMARKS)
   useEffect(() => {
-    registerSolids("landmarks", [...mosqueSolids(), ...cfcSolids(), ...anfaPrimeSolids()]);
+    registerSolids("landmarks", [...mosqueSolids(), ...cfcSolids(), ...anfaPrimeSolids(), ...twinCenterSolids()]);
     return () => registerSolids("landmarks", []);
   }, []);
   return (
@@ -26,6 +27,7 @@ export function CityLandmarks() {
       <Cfc />
       <Trams />
       <AnfaPrime />
+      <TwinCenter />
     </>
   );
 }

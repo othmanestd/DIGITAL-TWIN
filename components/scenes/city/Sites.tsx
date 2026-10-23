@@ -244,7 +244,8 @@ export function CitySites() {
   const res = useMemo(() => {
     const b = new Boxes(), solids: { x0: number; x1: number; z0: number; z1: number; h: number }[] = [];
     const lawn = { pos: [] as number[], idx: [] as number[] };
-    buildPort(b, solids); buildLighthouse(b, solids); buildRacetrack(b, lawn); buildRail(b); buildBeachClubs(b); buildTwinCrowns(b);
+    buildPort(b, solids); buildLighthouse(b, solids); buildRacetrack(b, lawn); buildRail(b); buildBeachClubs(b); // Twin Center: landmarks/TwinCenter
+    void buildTwinCrowns;
     const geo = b.geometry();
     const mat = plainMat({ vertexColors: true, roughness: 0.82, side: THREE.DoubleSide }, "sites");
     const lg = new THREE.BufferGeometry();
