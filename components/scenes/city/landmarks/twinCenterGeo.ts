@@ -145,11 +145,10 @@ export function towerFaces(cx: number) {
   return { front: mergeGeometries(front, false), side: mergeGeometries(side, false) };
 }
 
-/** Relief, crowns, arcade, podium, plaza and stair (local frame). `inwi` = index of the tower with the telecom crown. */
-export function buildSite(inwi: number) {
-  const B: Partial<Record<TcKey, G[]>> = {}, add = (k: TcKey, g: G) => { (B[k] ??= []).push(g); };
-  const r = rng(1999), W = TC.W, fh = TC.H / TC.FLOORS;
-  for (const [i, cx] of [-TC.HALF_GAP, TC.HALF_GAP].entries()) {
+/** One tower's relief, arcade and crown at local x = cx (the telecom crown when `inwi`). */
+function towerInto(add: (k: TcKey, g: G) => void, cx: number, inwi: boolean, r: () => number) {
+  const W = TC.W, fh = TC.H / TC.FLOORS;
+  {
     // corner pilasters standing 0.3 m proud of the faces, the full height
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) add("stone", box(6.3, TC.H - 2 * fh, 6.3, cx + sx * (W / 2 - 2.85), 2 * fh, sz * (W / 2 - 2.85)));
     // stone belts between the tiers
@@ -164,7 +163,7 @@ export function buildSite(inwi: number) {
     // crown: parapet ring and roof; on the "inwi" tower a magenta band and telecom masts with dishes
     add("stone", box(W + 0.3, 0.5, W + 0.3, cx, TC.H, 0));
     add("stoneDark", box(W - 1.2, 0.3, W - 1.2, cx, TC.H - 0.2, 0));
-    if (i === inwi) {
+    if (inwi) {
       add("purple", box(W + 0.5, TC.CROWN, W + 0.5, cx, TC.H + 0.5, 0));
       for (const [mx, mz, mh] of [[-6, -5, 16], [4, 3, 12], [8, -8, 9]] as const) {
         add("steel", box(0.8, mh, 0.8, cx + mx, TC.H + 0.5 + TC.CROWN, mz));
@@ -175,6 +174,22 @@ export function buildSite(inwi: number) {
       add("steel", box(0.3, 6, 0.3, cx + 9, TC.H + TC.CROWN - 0.7, -6));
     }
   }
+}
+const merged = (B: Partial<Record<TcKey, G[]>>) => (Object.keys(B) as TcKey[]).map((key) => ({ key, geo: mergeGeometries(B[key]!, false) }));
+
+/** A single tower centred at the local origin (the Maârif district places each one on its OSM footprint). */
+export function buildTower(inwi: boolean) {
+  const B: Partial<Record<TcKey, G[]>> = {}, add = (k: TcKey, g: G) => { (B[k] ??= []).push(g); };
+  towerInto(add, 0, inwi, rng(inwi ? 2001 : 1999));
+  return merged(B);
+}
+
+/** Both towers, podium, plaza and stair in one local frame (the first, free-standing version; the Maârif district now
+ *  draws the real podium). `inwi` = index of the tower with the telecom crown. */
+export function buildSite(inwi: number) {
+  const B: Partial<Record<TcKey, G[]>> = {}, add = (k: TcKey, g: G) => { (B[k] ??= []).push(g); };
+  const r = rng(1999);
+  for (const [i, cx] of [-TC.HALF_GAP, TC.HALF_GAP].entries()) towerInto(add, cx, i === inwi, r);
   // the podium behind the towers (five shop levels) and its roof terraces
   add("podium", box(150, 21, 46, 0, 0, -38));
   add("stone", box(151, 1.2, 47, 0, 21, -38));
@@ -185,5 +200,5 @@ export function buildSite(inwi: number) {
   for (const sx of [-1, 1]) add("stone", box(1.2, 6.6, 12.6, sx * 15.6, 0, 17.3));
   // flagpole on the plaza
   add("steel", ni(new THREE.CylinderGeometry(0.1, 0.14, 16, 8).translate(9, 14, 8)));
-  return (Object.keys(B) as TcKey[]).map((key) => ({ key, geo: mergeGeometries(B[key]!, false) }));
+  return merged(B);
 }

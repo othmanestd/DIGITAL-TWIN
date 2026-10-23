@@ -18,9 +18,11 @@ import {
 } from "./district";
 import {
   N, T, COAST, wiggle, sea, AVENUES, DOWNTOWN, TWIN, CFC, rng, hash2, distToLine, density, zoneAt, inMedina, Z, type Zone,
-  coastT, atCoast, LEAGUE, RACE, HANK, distRail, CORNICHE, beachWidth, RADIALS, RINGS, RC, distBoulevard, inAnfaPrime, inCfc,
+  coastT, atCoast, LEAGUE, RACE, HANK, distRail, CORNICHE, beachWidth, RADIALS, RINGS, RC, distBoulevard, inAnfaPrime, inCfc, inMaarif,
 } from "./geography";
 import { cfcGreenery, cfcRoadSegs } from "./cfcDistrict";
+import { zoneGreenery, zoneRoadSegs } from "./osmZonePlan";
+import { MAARIF_ZONE } from "./maarifZone";
 export type { Bx, Seg, Quad };
 export { N, T, COAST, wiggle, sea, AVENUES, DOWNTOWN, TWIN, CFC, rng };
 // ---------------------------------------------------------------- city plan constants
@@ -122,7 +124,7 @@ function makePlan(): Plan {
   rbs.push([line(5), line(-7)], [line(-12), line(5)]);
 
   const nearRb = (x: number, z: number, m: number) => rbs.some(([rx, rz]) => Math.hypot(x - rx, z - rz) < m);
-  const blocked = (x: number, z: number) => inLeague(x, z, 4) || inRace(x, z, 26) || inEsplanade(x, z) || Math.hypot(x - LIGHTHOUSE.x, z - LIGHTHOUSE.z) < 95 || inAnfaPrime(x, z, 4) || inTwin(x, z, 4) || inCfc(x, z, -1);
+  const blocked = (x: number, z: number) => inLeague(x, z, 4) || inRace(x, z, 26) || inEsplanade(x, z) || Math.hypot(x - LIGHTHOUSE.x, z - LIGHTHOUSE.z) < 95 || inAnfaPrime(x, z, 4) || inTwin(x, z, 4) || inCfc(x, z, -1) || inMaarif(x, z, -1);
   /** a grid street exists between two nodes: on land, dense enough (boulevards reach further out), not through the medina / parks */
   const streetOn = (x0: number, z0: number, x1: number, z1: number, w: number) => {
     if (!land(x0, z0, 110) || !land(x1, z1, 110)) return false;
@@ -145,6 +147,7 @@ function makePlan(): Plan {
         const [x0, z0, x1, z1] = vertical ? [c, s0, c, s1] : [s0, c, s1, c];
         if (inSuper((x0 + x1) / 2, (z0 + z1) / 2, 1)) continue;
         if (inCfc((x0 + x1) / 2, (z0 + z1) / 2, -2)) continue; // the CFC district has its real streets (below)
+        if (inMaarif((x0 + x1) / 2, (z0 + z1) / 2, -2) && !(z0 === TRAM.z && z1 === TRAM.z)) continue; // Maârif too, but the tram boulevard stays
         const w = width(a);
         if (!streetOn(x0, z0, x1, z1, w)) continue;
         // out in the loose edge of the city the streets lose their pavements (dusty lanes)
@@ -156,6 +159,8 @@ function makePlan(): Plan {
   }
   // the real streets of the Casablanca Finance City district (OpenStreetMap, see cfcDistrict.ts)
   for (const s of cfcRoadSegs()) segs.push(s);
+  // … and of the Maârif pilot district around the Twin Center (osmZonePlan.ts)
+  for (const s of zoneRoadSegs(MAARIF_ZONE)) segs.push(s);
   // district streets around the hospital (front boulevard, back street, side streets, hospital axis)
   for (const d of DISTRICT_ROADS) segs.push({ x0: d.x0, z0: d.z0, x1: d.x1, z1: d.z1, w: d.w, c: d.w > 20 ? 1 : 0, d: true });
   // avenues (long diagonals, cut into 120 m pieces so they clip to land); out in the plain they become country roads
@@ -165,7 +170,7 @@ function makePlan(): Plan {
       const x0 = av.p[0] + dx * t, z0 = av.p[1] + dz * t, x1 = x0 + dx * 120, z1 = z0 + dz * 120;
       if (!land(x0, z0, 110) || !land(x1, z1, 110) || boxNearSuper(x0, z0, x1, z1, 20)) continue;
       const mx = (x0 + x1) / 2, mz = (z0 + z1) / 2;
-      if (inLeague(mx, mz, 30) || inRace(mx, mz, 30) || inCfc(mx, mz, -2)) continue;
+      if (inLeague(mx, mz, 30) || inRace(mx, mz, 30) || inCfc(mx, mz, -2) || inMaarif(mx, mz, -2)) continue;
       const d = density(mx, mz);
       segs.push(d > 0.16 ? { x0, z0, x1, z1, w: 34, c: 1 } : { x0, z0, x1, z1, w: 10, c: 2 });
     }
@@ -177,7 +182,7 @@ function makePlan(): Plan {
       const a0 = (i / n) * Math.PI * 2, a1 = ((i + 1) / n) * Math.PI * 2;
       const x0 = RC.x + Math.cos(a0) * R, z0 = RC.z + Math.sin(a0) * R, x1 = RC.x + Math.cos(a1) * R, z1 = RC.z + Math.sin(a1) * R;
       const mx = (x0 + x1) / 2, mz = (z0 + z1) / 2;
-      if (!land(x0, z0, 110) || !land(x1, z1, 110) || boxNearSuper(x0, z0, x1, z1, 20) || inLeague(mx, mz, 30) || inRace(mx, mz, 30) || inCfc(mx, mz, -2)) continue;
+      if (!land(x0, z0, 110) || !land(x1, z1, 110) || boxNearSuper(x0, z0, x1, z1, 20) || inLeague(mx, mz, 30) || inRace(mx, mz, 30) || inCfc(mx, mz, -2) || inMaarif(mx, mz, -2)) continue;
       const d = density(mx, mz);
       if (d < 0.1) continue;
       segs.push({ x0, z0, x1, z1, w: 32, c: 1 });
@@ -593,6 +598,12 @@ function makePlan(): Plan {
   for (const list of [parked, signs] as Bx[][]) for (let k = list.length - 1; k >= 0; k--) if (inCfc(list[k].x, list[k].z, -1)) list.splice(k, 1);
   for (let k = decals.length - 1; k >= 0; k--) if (inCfc((decals[k].x0 + decals[k].x1) / 2, (decals[k].z0 + decals[k].z1) / 2, -1)) decals.splice(k, 1);
   { const g = cfcGreenery(); trees.push(...g.trees); palms.push(...g.palms); }
+  // the Maârif district (landmarks/MaarifDistrict): the same, except along the tram boulevard that crosses it
+  const inM = (x: number, z: number) => inMaarif(x, z, -1) && Math.abs(z - TRAM.z) > 22;
+  for (const list of [trees, palms, streetTrees, poles] as number[][][]) for (let k = list.length - 1; k >= 0; k--) if (inM(list[k][0], list[k][1])) list.splice(k, 1);
+  for (const list of [parked, signs] as Bx[][]) for (let k = list.length - 1; k >= 0; k--) if (inM(list[k].x, list[k].z)) list.splice(k, 1);
+  for (let k = decals.length - 1; k >= 0; k--) if (inM((decals[k].x0 + decals[k].x1) / 2, (decals[k].z0 + decals[k].z1) / 2)) decals.splice(k, 1);
+  { const g = zoneGreenery(MAARIF_ZONE); trees.push(...g.trees); palms.push(...g.palms); }
   return { segs, grid, boxes, near, signs, cfc, cfcSigns, parks, trees, palms, roundabouts: rbs, decals, roofs, parked, tram, poles, streetTrees, net, kerbs, medians, pools, hips, minarets, plazas };
 }
 

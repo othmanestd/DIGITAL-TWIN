@@ -52,6 +52,12 @@ export const CFC_DISTRICT = { x0: CFC.x + CFC_BOX.x0, x1: CFC.x + CFC_BOX.x1, z0
 /** inside the CFC district (m > 0 widens the box, m < 0 shrinks it) */
 export const inCfc = (x: number, z: number, m = 0) =>
   x > CFC_DISTRICT.x0 - m && x < CFC_DISTRICT.x1 + m && z > CFC_DISTRICT.z0 - m && z < CFC_DISTRICT.z1 + m;
+/** The Maârif pilot district (landmarks/MaarifDistrict, from OpenStreetMap), anchored on the Twin Center: the OSM node
+ *  "Twin Center" (local origin of zones/maarifData) sits at the centre between the two TWIN points. Box edges on the
+ *  120 m grid lines (x −1500 / −300, z 60 / 1140). The tram boulevard of the plan (z = 780) still runs through it. */
+export const MAARIF_DISTRICT = { ox: (TWIN[0][0] + TWIN[1][0]) / 2, oz: (TWIN[0][1] + TWIN[1][1]) / 2, x0: -1500, x1: -300, z0: 60, z1: 1140, tramZ: 780 };
+export const inMaarif = (x: number, z: number, m = 0) =>
+  x > MAARIF_DISTRICT.x0 - m && x < MAARIF_DISTRICT.x1 + m && z > MAARIF_DISTRICT.z0 - m && z < MAARIF_DISTRICT.z1 + m;
 
 // ---------------------------------------------------------------- deterministic noise
 export function rng(seed: number) { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }

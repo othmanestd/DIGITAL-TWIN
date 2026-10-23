@@ -256,3 +256,121 @@ export function paintPaving(seed: number): HTMLCanvasElement {
   }
   return c;
 }
+
+// ---------------------------------------------------------------- Maârif: residential typologies (approximate, not per building)
+/** The residential façades of Maârif / Racine / Gauthier as typologies (not documented per building): 0 balconies (see
+ *  paintApart), 1 ribbon windows between floor bands (1950s–70s), 2 recessed loggias, 3 tall bays with wrought-iron
+ *  balconettes (1930s–50s). 4 bays of 4 m × 4 floors of 3.2 m, tile CFC_TILE.apart. */
+export function paintResidence(seed: number, style: number, wall: string): Pair {
+  if (style === 0) return paintApart(seed, wall);
+  const [c, g, e, ge] = pair(), r = rng(seed);
+  g.fillStyle = wall; g.fillRect(0, 0, 512, 512);
+  grain(g, r, 2400, 0.12);
+  const lit = (x: number, y: number, w: number, h: number) => { if (r() < 0.3) { ge.fillStyle = WARM[Math.floor(r() * 3)]; ge.fillRect(x, y, w, h); } };
+  for (let j = 0; j < 4; j++) {
+    const y = j * 128;
+    if (style === 1) {
+      pane(g, 0, y + 34, 512, 58, (r() - 0.5) * 0.1, "#8A9CB4", "#384660");
+      for (let k = 0; k < 512; k += 64) {
+        g.fillStyle = "rgba(235,236,238,0.75)"; g.fillRect(k, y + 34, 2, 58);
+        const sh = r() < 0.5 ? Math.floor(r() * 50) : 0;
+        if (sh) { g.fillStyle = shade("#D8D3C8", (r() - 0.5) * 0.08); g.fillRect(k + 2, y + 34, 62, sh); }
+        lit(k + 3, y + 36 + sh, 58, Math.max(0, 54 - sh));
+        if (r() < 0.08) { g.fillStyle = "#E4E4E0"; g.fillRect(k + 20, y + 96, 22, 14); }
+      }
+      g.fillStyle = "rgba(40,36,32,0.26)"; g.fillRect(0, y + 98, 512, 5);
+      g.fillStyle = shade(wall, 0.25); g.fillRect(0, y + 92, 512, 7);
+    } else if (style === 2) {
+      for (let i = 0; i < 4; i++) {
+        const x = i * 128, lx = x + 14, lw = 100;
+        g.fillStyle = "rgba(30,30,34,0.85)"; g.fillRect(lx, y + 16, lw, 100);           // the loggia's shadowed depth
+        pane(g, lx + 10, y + 24, lw - 20, 72, (r() - 0.5) * 0.1, "#6F8098", "#26303E");
+        lit(lx + 12, y + 26, lw - 24, 68);
+        g.fillStyle = shade(wall, 0.2); g.fillRect(lx - 4, y + 96, lw + 8, 6);          // slab nose
+        g.fillStyle = r() < 0.5 ? "rgba(70,72,76,0.9)" : shade(wall, -0.05);            // railing or parapet
+        if (r() < 0.5) for (let k = lx; k < lx + lw; k += 6) g.fillRect(k, y + 72, 2, 24); else g.fillRect(lx, y + 76, lw, 20);
+        g.fillRect(lx, y + 70, lw, 3);
+        if (r() < 0.25) for (let k = 0; k < 6; k++) { g.fillStyle = ["#C64F4F", "#3F78B5", "#F2F0E8", "#E0B640"][Math.floor(r() * 4)]; g.fillRect(lx + 10 + k * 14, y + 50, 8, 14); } // laundry
+        if (r() < 0.3) { g.fillStyle = "#4E7A3E"; g.beginPath(); g.arc(lx + 18 + r() * 60, y + 70, 9, 0, 7); g.fill(); }
+      }
+    } else {
+      for (let i = 0; i < 4; i++) {
+        const x = i * 128;
+        for (const wx of [x + 22, x + 74]) {
+          g.fillStyle = "rgba(60,54,48,0.28)"; g.fillRect(wx - 3, y + 14, 38, 98);
+          pane(g, wx, y + 17, 32, 92, (r() - 0.5) * 0.1, "#8496AE", "#344158");
+          g.fillStyle = r() < 0.5 ? "#5C7B5A" : "#7E6248"; g.globalAlpha = r() < 0.4 ? 0.9 : 0; g.fillRect(wx, y + 17, 32, 92); g.globalAlpha = 1; // closed shutters
+          lit(wx + 2, y + 19, 28, 88);
+          g.fillStyle = "rgba(40,40,44,0.85)";                                            // wrought-iron balconette
+          g.fillRect(wx - 6, y + 84, 44, 2); g.fillRect(wx - 6, y + 106, 44, 2);
+          for (let k = wx - 6; k < wx + 38; k += 5) g.fillRect(k, y + 84, 1.5, 22);
+          g.fillStyle = shade(wall, 0.22); g.fillRect(wx - 7, y + 106, 46, 6);
+        }
+        g.fillStyle = shade(wall, -0.06); g.fillRect(x + 8, y + 4, 112, 6);              // moulded band over the bays
+      }
+    }
+  }
+  return [c, e];
+}
+
+/** Ground floor of a residence (3.6 m, tile [16, 3.6]): stone plinth, a door, small barred windows high up. */
+export function paintBase(seed: number, wall: string): Pair {
+  const [c, g, e, ge] = pair(), r = rng(seed);
+  g.fillStyle = shade(wall, -0.04); g.fillRect(0, 0, 512, 512);
+  grain(g, r, 2600, 0.14);
+  g.fillStyle = shade("#C9C3B6", (r() - 0.5) * 0.08); g.fillRect(0, 412, 512, 100);                // plinth 0.7 m
+  g.fillStyle = "rgba(60,50,40,0.25)"; for (let k = 0; k < 512; k += 64) g.fillRect(k, 412, 1.5, 100);
+  const door = Math.floor(r() * 4);
+  for (let i = 0; i < 4; i++) {
+    const x = i * 128;
+    if (i === door) {
+      g.fillStyle = "rgba(40,34,28,0.35)"; g.fillRect(x + 30, 120, 68, 392);
+      g.fillStyle = r() < 0.5 ? "#5B4632" : "#3E4650"; g.fillRect(x + 36, 128, 56, 384);           // wood or metal door
+      g.fillStyle = "rgba(255,255,255,0.12)"; g.fillRect(x + 40, 140, 22, 360); g.fillRect(x + 66, 140, 22, 360);
+      g.fillStyle = shade(wall, 0.2); g.fillRect(x + 24, 104, 80, 16);                            // lintel
+      ge.fillStyle = WARM[1]; ge.fillRect(x + 54, 108, 20, 10);                                   // entrance lamp
+    } else {
+      pane(g, x + 34, 70, 60, 150, (r() - 0.5) * 0.1, "#6E7F96", "#2C3646");
+      g.fillStyle = "rgba(50,50,54,0.9)"; for (let k = x + 38; k < x + 94; k += 8) g.fillRect(k, 70, 2, 150);
+      if (r() < 0.25) { ge.fillStyle = WARM[0]; ge.fillRect(x + 36, 72, 56, 146); }
+    }
+  }
+  return [c, e];
+}
+
+/** Shops on the boulevards (ground floor, 4.2 m, tile [16, 4.2]): shopfronts under coloured awnings, roller shutters half
+ *  down here and there, blank fascia boards (no lettering, no brand). */
+export function paintShopAwning(seed: number): Pair {
+  const [c, g, e, ge] = pair(), r = rng(seed);
+  g.fillStyle = "#E9E4DA"; g.fillRect(0, 0, 512, 512);
+  const AWN = ["#B23A3A", "#2F6B4A", "#2D5F9A", "#C78A2C", "#6B6F76", "#8A3E64"];
+  for (let i = 0; i < 4; i++) {
+    const x = i * 128;
+    pane(g, x + 6, 150, 116, 362, (r() - 0.5) * 0.1, "#5D6F86", "#1D2632");
+    ge.fillStyle = WARM[Math.floor(r() * 2)]; ge.fillRect(x + 8, 152, 112, 358);
+    const sh = r() < 0.3 ? Math.floor(r() * 280) : 0;                                            // roller shutter
+    if (sh) { g.fillStyle = "#9EA1A4"; g.fillRect(x + 6, 150, 116, sh); g.fillStyle = "rgba(0,0,0,0.15)"; for (let k = 150; k < 150 + sh; k += 6) g.fillRect(x + 6, k, 116, 1); ge.fillStyle = "#000"; ge.fillRect(x + 6, 150, 116, sh); }
+    g.fillStyle = shade(["#F2EEE6", "#2B2F36", "#C9B98F", "#1E4E7A"][Math.floor(r() * 4)], (r() - 0.5) * 0.1); g.fillRect(x + 6, 28, 116, 50); // fascia
+    ge.fillStyle = "rgba(255,244,226,0.6)"; ge.fillRect(x + 10, 34, 108, 38);
+    const a = AWN[Math.floor(r() * AWN.length)], striped = r() < 0.45;                           // awning (seen flat)
+    for (let k = 0; k < 116; k += 12) { g.fillStyle = striped && (k / 12) % 2 ? "#F1ECE2" : a; g.fillRect(x + 6 + k, 84, 12, 56); }
+    g.fillStyle = "rgba(0,0,0,0.25)"; g.fillRect(x + 6, 140, 116, 8);
+    g.fillStyle = "#EDE8DE"; g.fillRect(x, 0, 6, 512);
+  }
+  return [c, e];
+}
+
+/** Soft contact shadow at the foot of the walls (alpha map: opaque at the wall, fading out). */
+export function paintContact(): HTMLCanvasElement {
+  const [c, g] = mk(8, 64);
+  const gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, "#FFFFFF"); gr.addColorStop(0.35, "#7A7A7A"); gr.addColorStop(1, "#000000");
+  g.fillStyle = gr; g.fillRect(0, 0, 8, 64);
+  return c;
+}
+/** Warm pool of light under a street lamp (alpha map). */
+export function paintPool(): HTMLCanvasElement {
+  const [c, g] = mk(128);
+  const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, "#FFFFFF"); gr.addColorStop(0.4, "#8A8A8A"); gr.addColorStop(1, "#000000");
+  g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+  return c;
+}
