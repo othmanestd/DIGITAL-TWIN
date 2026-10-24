@@ -6,9 +6,10 @@ import { useApp } from "@/lib/store";
 import { altToG, MAX_ALT } from "@/lib/world";
 import { tone } from "@/lib/ui/tone";
 
-type Mark = { key: "hospital" | "morocco" | "world" | "jabb"; label: string; g: number; alt: number };
+type Mark = { key: "hospital" | "city" | "morocco" | "world" | "jabb"; label: string; g: number; alt: number };
 const MARKS: Mark[] = [
   { key: "hospital", label: "Hôpital", alt: 260, g: altToG(260) },
+  { key: "city", label: "Casablanca", alt: 9_000, g: altToG(9_000) },
   { key: "morocco", label: "Maroc", alt: 1.9e6, g: altToG(1.9e6) },
   { key: "world", label: "Monde", alt: 2.1e7, g: altToG(2.1e7) },
   { key: "jabb", label: "Akdital", alt: MAX_ALT, g: 1 },
@@ -21,6 +22,7 @@ function Icon({ k }: { k: Mark["key"] | "plus" | "minus" | "keys" }) {
       {k === "plus" && <path d="M12 5v14M5 12h14" />}
       {k === "minus" && <path d="M5 12h14" />}
       {k === "hospital" && <><path d="M4 21V7l8-4 8 4v14" /><path d="M9 21v-5h6v5M12 8v4M10 10h4" /></>}
+      {k === "city" && <><path d="M3 20.5h18" /><path d="M4.5 20.5v-8l4-2.5v10.5" /><path d="M8.5 20.5V5.5l6-2.5v17.5" /><path d="M14.5 20.5V9.5l5 2.5v8.5" /></>}
       {k === "morocco" && <><path d="M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11z" /><circle cx="12" cy="10" r="2.2" /></>}
       {k === "world" && <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3 3.3 3 14.7 0 18M12 3c-3 3.3-3 14.7 0 18" /></>}
       {k === "jabb" && <><circle cx="12" cy="12" r="9.5" /><path d="M12 5.2c-1.6 2-2.4 3.2-2.4 4.4a2.4 2.4 0 0 0 4.8 0c0-1.2-.8-2.4-2.4-4.4zM8.4 10.6c-1.4 1.8-2.1 2.9-2.1 4a2.1 2.1 0 0 0 4.2 0c0-1.1-.7-2.2-2.1-4zM15.6 10.6c-1.4 1.8-2.1 2.9-2.1 4a2.1 2.1 0 0 0 4.2 0c0-1.1-.7-2.2-2.1-4z" fill="currentColor" stroke="none" /></>}
@@ -63,7 +65,8 @@ export default function ZoomSlider() {
             ref={tone} data-anchor={`zoom:level:${m.key}`}
             title={m.label}
             onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => (m.key === "jabb" ? requestZoom({ g: m.g, staged: true }) : requestZoom({ level: m.key, value: m.key === "hospital" ? 0.62 : m.key === "morocco" ? 0.92 : 0.55, staged: true }))}
+            aria-label={m.label} aria-current={nearest.key === m.key ? "true" : undefined}
+            onClick={() => (m.key === "jabb" ? requestZoom({ g: m.g, staged: true }) : m.key === "city" ? requestZoom({ level: "city", staged: true }) : requestZoom({ level: m.key, value: m.key === "hospital" ? 0.62 : m.key === "morocco" ? 0.92 : 0.55, staged: true }))}
             className={`${btn} absolute left-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 ${nearest.key === m.key ? "tone-on" : "tone-dim"}`}
             style={{ top: `${m.g * 100}%` }}
           >

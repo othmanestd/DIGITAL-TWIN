@@ -7,6 +7,9 @@ export const MAX_ALT = 4e8;       // metres — the Earth hides inside the top d
 /** Altitude bands (metres) of each level, used by the zoom slider, shortcuts, level sync and fades. */
 export const BANDS: Record<Level | "jabb", [number, number]> = {
   hospital: [MIN_ALT, 2_500],
+  // the 3D city of Casablanca: up to 60 km, then the Morocco map takes over (the Morocco band keeps its lower bound for
+  // the band values its slider rungs and the assistant already use)
+  city: [2_500, 60_000],
   morocco: [2_500, 3_000_000],
   world: [3_000_000, 60_000_000],
   jabb: [60_000_000, MAX_ALT],
@@ -14,7 +17,10 @@ export const BANDS: Record<Level | "jabb", [number, number]> = {
 
 export const altToG = (a: number) => Math.min(1, Math.max(0, Math.log(a / MIN_ALT) / Math.log(MAX_ALT / MIN_ALT)));
 export const gToAlt = (g: number) => MIN_ALT * Math.pow(MAX_ALT / MIN_ALT, Math.min(1, Math.max(0, g)));
-export const levelForAlt = (a: number): Level => (a < BANDS.hospital[1] ? "hospital" : a < BANDS.world[0] ? "morocco" : "world");
+/** `nearHospital`: the view is on a hospital (the typical one or a modelled establishment); elsewhere low altitudes are
+ *  the city of Casablanca. */
+export const levelForAlt = (a: number, nearHospital = true): Level =>
+  a < BANDS.hospital[1] && nearHospital ? "hospital" : a < BANDS.city[1] ? "city" : a < BANDS.world[0] ? "morocco" : "world";
 /** value 0..1 inside a band → altitude */
 export const bandAlt = (b: keyof typeof BANDS, v: number) => { const [lo, hi] = BANDS[b]; return lo * Math.pow(hi / lo, Math.min(1, Math.max(0, v))); };
 

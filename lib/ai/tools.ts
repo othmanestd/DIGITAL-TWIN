@@ -2,7 +2,7 @@
 // and the client (execution through the blue cursor).
 
 export type ToolCall =
-  | { name: "navigate"; args: { level: "world" | "morocco" | "hospital" } }
+  | { name: "navigate"; args: { level: "world" | "morocco" | "city" | "hospital" } }
   | { name: "select"; args: { kind: "floor" | "dept" | "person" | "xp" | "city" | "site" | "country"; id: string } }
   | { name: "open_case"; args: { id: string } }
   | { name: "open_section"; args: { section: "explorer" | "synthese" | "cas" | "gouvernance" | "emplois" | "deploiement" | "sources" } }
@@ -17,8 +17,8 @@ export const TOOL_DEFS = [
     type: "function",
     function: {
       name: "navigate",
-      description: "Change de niveau de zoom : world (globe), morocco (réseau des établissements au Maroc), hospital (l'hôpital type en 3D).",
-      parameters: { type: "object", properties: { level: { type: "string", enum: ["world", "morocco", "hospital"] } }, required: ["level"], additionalProperties: false },
+      description: "Change de niveau de zoom : world (globe), morocco (réseau des établissements au Maroc), city (la ville de Casablanca en 3D : quartiers, monuments, établissements Akdital), hospital (l'hôpital type en 3D).",
+      parameters: { type: "object", properties: { level: { type: "string", enum: ["world", "morocco", "city", "hospital"] } }, required: ["level"], additionalProperties: false },
     },
   },
   {

@@ -5,7 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useApp, type Sel } from "@/lib/store";
 import { I } from "@/components/ui/icons";
-import { DeptView, CaseView, PersonView, FloorView, PlaceView, XpView, FacilityView, crumbs } from "./views";
+import { DeptView, CaseView, PersonView, FloorView, PlaceView, XpView, FacilityView, LandmarkView, crumbs } from "./views";
 import s from "@/components/ui/styles";
 
 const useIso = typeof window !== "undefined" ? useLayoutEffect : useEffect;
@@ -46,6 +46,7 @@ export default function SidePanel() {
     else if (kind === "case") body = <CaseView id={cur.sel.id} />;
     else if (kind === "xp") body = <XpView id={cur.sel.id} />;
     else if (kind === "facility") body = <FacilityView id={cur.sel.id} />;
+    else if (kind === "landmark") body = <LandmarkView id={cur.sel.id} />;
   }
 
   return (

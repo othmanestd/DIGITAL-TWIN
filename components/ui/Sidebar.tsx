@@ -18,6 +18,7 @@ const TOP = 76, BOTTOM_FREE = 88;
 const LEVELS: { id: Level; label: string; icon: (p: { size?: number }) => React.ReactNode }[] = [
   { id: "world", label: "Monde", icon: (p) => <I.globe {...p} /> },
   { id: "morocco", label: "Maroc", icon: (p) => <I.pin {...p} /> },
+  { id: "city", label: "Casablanca", icon: (p) => <I.city {...p} /> },
   { id: "hospital", label: "Hôpital", icon: (p) => <I.hospital {...p} /> },
 ];
 
@@ -45,7 +46,7 @@ const FLOOR_BTNS: { label: string; id: string; title: string }[] = [
 /** Height of the full rail for a button size b (matches the markup below). */
 function railHeight(b: number, withFloors: boolean, withLabels: boolean) {
   const pad = 16, gap = 4;
-  const levels = withLabels ? 3 * (b - 4) + 2 * 2 + 6 : b + 6;
+  const levels = withLabels ? LEVELS.length * (b - 4) + (LEVELS.length - 1) * 2 + 6 : b + 6;
   const groups = ROWS * b + (ROWS - GROUPS.length) * gap + (GROUPS.length - 1) * (Math.round(b * 0.22) * 2 + 1);
   const fr = Math.ceil(FLOOR_BTNS.length / 2);
   const floors = withFloors ? Math.round(b * 0.35) + 9 + 18 + fr * (b - 8) + (fr - 1) * gap : 0;
@@ -113,7 +114,7 @@ function LevelSwitch({ b, labels }: { b: number; labels: boolean }) {
         const on = level === l.id;
         return (
           <Tip key={l.id} content={labels ? null : l.label} side="right" className={labels ? "block" : "block flex-1"}>
-            <button type="button" onClick={() => setLevel(l.id)} data-anchor={`nav:level:${l.id}`} aria-label={l.label}
+            <button type="button" onClick={() => setLevel(l.id)} data-anchor={`nav:level:${l.id}`} aria-label={l.label} aria-current={on ? "true" : undefined}
               className={`relative z-0 flex w-full items-center gap-2 rounded-[11px] text-[12.5px] font-medium transition-colors ${labels ? "px-2.5" : "justify-center"} ${on ? "text-white" : "text-[var(--mut)] hover:text-[var(--txt)]"}`}
               style={{ height: labels ? b - 4 : b }}>
               {on && <motion.span layoutId="atlas-level-thumb" className="absolute inset-0 -z-10 rounded-[11px]" transition={{ type: "spring", stiffness: 420, damping: 36 }}

@@ -22,6 +22,7 @@ import WalkWorld from "./walk/WalkWorld";
 import { walkBusy, WALK_API } from "./walk/state";
 import { CASA_REEL } from "@/lib/geo/casaFrame";
 import { CasaReel } from "./city/CasaReel";
+import { ANFA_PRIME } from "./city/geography";
 
 const MAP_SCALE_M = 1000 / MAP_UNITS_PER_KM;          // metres per map unit (≈ 7 580)
 const GLOBE_SCALE_M = EARTH_R / GLOBE_RADIUS;          // metres per globe unit (63 710)
@@ -90,8 +91,9 @@ export default function UnifiedWorld() {
   }, [camera]);
 
   // overview flights for the three levels (contents handle their own selections)
-  const go = (level: "hospital" | "morocco" | "world", o: { duration?: number; done?: () => void } = {}) => {
+  const go = (level: "hospital" | "city" | "morocco" | "world", o: { duration?: number; done?: () => void } = {}) => {
     if (level === "hospital") rig.fitBox(HOSPITAL_BOX.clone(), { polar: 1.02, azimuth: 0.72, padding: 0.02, ...o });
+    else if (level === "city") rig.flyTo(CITY_SHOT.t, CITY_SHOT.d, { polar: 0.82, azimuth: 0.12, ...o });
     else if (level === "morocco") rig.flyTo(shots.morocco, 2.55e6, { polar: 0.5, azimuth: 0.04, ...o });
     else rig.flyTo(EARTH_CENTER, R_TOP + 2.1e7, { polar: shots.worldPolar, azimuth: shots.worldAz, ...o });
   };
@@ -101,12 +103,15 @@ export default function UnifiedWorld() {
   // Earth). ≈ 2.1 s a rung. Any new command, wheel or drag stops it (dive token).
   const dive = useRef(0);
   const CASA = useMemo(() => new THREE.Vector3(0, 8, 0), []);
-  type Rung = "hospital" | "casa" | "morocco" | "world" | "jabb";
-  const LADDER: Rung[] = ["hospital", "casa", "morocco", "world", "jabb"];
+  // overview of the city of Casablanca, looking north: the real city from the coast at Anfa / CFC to the port (Casa réel),
+  // or the generated city around the typical hospital
+  const CITY_SHOT = useMemo(() => (CASA_REEL ? { t: new THREE.Vector3(-2800, 0, -300), d: 10_500 } : { t: new THREE.Vector3(-700, 0, -150), d: 4_600 }), []);
+  type Rung = "hospital" | "city" | "morocco" | "world" | "jabb";
+  const LADDER: Rung[] = ["hospital", "city", "morocco", "world", "jabb"];
   const rungOf = (alt: number): number => (alt > 4e7 ? 4 : alt > 3.2e6 ? 3 : alt > 6e4 ? 2 : alt > 2_500 ? 1 : 0);
   const fly = (r: Rung, want: number | undefined, done?: () => void) => {
     if (r === "hospital") go("hospital", { duration: 2.2, done });
-    else if (r === "casa") rig.flyTo(CASA, 2.4e4, { polar: 0.78, azimuth: 0.45, duration: 2.0, done });
+    else if (r === "city") go("city", { duration: 2.0, done });
     else if (r === "morocco") rig.flyTo(shots.morocco, want ?? 2.55e6, { polar: 0.5, azimuth: 0.04, duration: 2.1, done });
     else if (r === "world") rig.flyTo(EARTH_CENTER, R_TOP + (want ?? 2.1e7), { polar: shots.worldPolar, azimuth: shots.worldAz, duration: 2.1, done });
     else rig.flyTo(EARTH_CENTER, R_TOP + MAX_ALT, { duration: 2.3, done });
@@ -136,7 +141,7 @@ export default function UnifiedWorld() {
     if (sel?.kind === "overview") {
       if (walkBusy()) WALK_API.stop();
       st.current.intro = false; dive.current++;
-      const id = sel.id as "hospital" | "morocco" | "world";
+      const id = sel.id as "hospital" | "city" | "morocco" | "world";
       if (!travel(id)) go(id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -236,8 +241,11 @@ export default function UnifiedWorld() {
       // a click on a rung of the zoom rail that skips rungs: staged travel, not a straight dive
       if (cmd.staged) {
         const to: Rung = cmd.g !== undefined ? "jabb" : (cmd.level as Rung);
-        const want = cmd.value !== undefined && to !== "hospital" && to !== "jabb" ? bandAlt(cmd.level, cmd.value) : undefined;
+        const want = cmd.value !== undefined && to !== "hospital" && to !== "city" && to !== "jabb" ? bandAlt(cmd.level, cmd.value) : undefined;
         if (travel(to, want)) return;
+        // one rung away: the overview of the city or the hospital, as the left rail does (a plain zoom would stay over
+        // whatever district is under the camera)
+        if (to === "city" || to === "hospital") { useApp.getState().setLevel(to); return; }
       }
       // where the camera is going (a flight under way, or the damping's end state), so quick clicks add up and a slider
       // drag steers the flight it started instead of reading a mid-air state
@@ -369,7 +377,10 @@ export default function UnifiedWorld() {
       s.lastReport = now;
       const app = useApp.getState();
       app.setZoom(altToG(alt));
-      app.syncLevel(levelForAlt(alt), alt);
+      // below 2.5 km the level is the hospital only over a hospital (the typical one, Anfa Prime), elsewhere the city
+      const T = c.getTarget(tmp.t), r = (app.level === "hospital" ? 1.3 : 1) * (450 + 0.5 * alt);
+      const onHospital = walkBusy() || Math.hypot(T.x, T.z) < r || Math.hypot(T.x - ANFA_PRIME.x, T.z - ANFA_PRIME.z) < r;
+      app.syncLevel(levelForAlt(alt, onHospital), alt);
     }
   });
 

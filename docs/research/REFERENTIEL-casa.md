@@ -175,3 +175,14 @@ Branche `feat/anfa-prime-hospital`, 24/10/2026. Rien n'est poussé, mergé ni d�
   - les collisions « À pied » ne couvrent pas encore la couche ville ;
   - pas de distinction visuelle entre bâtiments OSM et volumes illustratifs (la distinction est dans les données) ;
   - en 2026, la couverture des bâtiments dans OSM est inégale selon les quartiers.
+
+## 11. Niveau « Ville — Casablanca » (24/10/2026)
+
+Parcours : Monde → Maroc → **Casablanca** → Hôpital → Étage → Service.
+
+- Rail de gauche, slider de zoom, raccourci **C** et assistant (outil `navigate`, niveau `city`) : vue d'ensemble de la ville (Casa réel : du littoral d'Anfa / CFC au port ; ville générée : autour de l'hôpital type).
+- Niveau automatique par l'altitude : sous 2,5 km le niveau est « Hôpital » seulement au-dessus d'un hôpital (hôpital type, Anfa Prime), sinon « Casablanca » jusqu'à 60 km.
+- Étiquettes à l'approche (Casa réel) : rayon propre à chaque lieu (`r` du référentiel, plus grand pour un grand site), qui grandit avec l'altitude ; marge de 20 % avant de disparaître ; au plus 8 à la fois, les plus proches et à l'écran ; aucune au-dessus de 4,5 km. Les lieux déjà étiquetés par leur quartier OSM (Twin Center, CFC Tower, Hassan II, Anfa Park) gardent leur étiquette, avec un bouton « Découvrir » ajouté.
+- Fiche (panneau latéral, `LandmarkView`) : uniquement ce que documente le référentiel — type de lieu, position et statut, état dans la maquette, remarque, lien OSM, date de vérification ; architecte et date : « non renseignés ». Aucune image de référence, aucune publicité. Le bouton « Voir de plus près » est la seule action qui déplace la caméra.
+- Anfa Prime : son étiquette ouvre l'établissement, puis ses étages et services. Les autres établissements Akdital : fiche seulement (étages et services non modélisés, aucun plan publié).
+- Limites : le mode À pied part toujours de l'hôpital type (pas de collisions dans les tuiles de Casa réel) ; en ville générée, les fiches donnent les positions réelles mais pas de « Voir de plus près ».

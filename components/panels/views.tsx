@@ -2,11 +2,15 @@
 // Side panel contents, one per selection kind. Verdict first, every unit explained. Departments, people and places fit the panel;
 // a use case opens as a scrollable dossier (dossier.tsx).
 import type { ReactNode } from "react";
+import * as THREE from "three";
 import { useApp } from "@/lib/store";
 import { agg, fr, verdict, MODE_LABEL, CASE, CASES, DATA, FAM, META, YEAR_LABEL, YEARS, FINAL_YEAR, HEAD, V23, etabIn, share, yearTotals, type UseCase } from "@/lib/model";
 import { DEPT, DEPTS, ALL_DEPTS, AP_FAC, AP_FLOORS, CASE_DEPT, ROLE_LABEL, ROLE_COLOR, KIND_COLOR, EXPERIENCES, XP, type Dept, type Role } from "@/lib/hospital";
 import { SITES, CITIES, INTERNATIONAL, GROUP } from "@/lib/geo/network";
 import { facilityBySlug, facilitySites } from "@/lib/facilities";
+import { placeById, REFERENTIAL_CHECKED } from "@/lib/geo/casaReferential";
+import { CASA_REEL, geoToScene } from "@/lib/geo/casaFrame";
+import { rig } from "@/lib/rig";
 import { DeptIcon, I } from "@/components/ui/icons";
 import { AkditalMark } from "@/components/ui/AkditalLogo";
 import { MiniBar, Tip, Dot, MarketTile } from "@/components/ui/kit";
@@ -555,7 +559,8 @@ export function crumbs(kind: string, id: string, caseId: string | null): { label
   else if (kind === "city") out = [{ label: "Maroc", go: () => st.setLevel("morocco") }, { label: CITIES.find((x) => x.slug === id)?.name ?? id }];
   else if (kind === "site") { const x = SITES.find((y) => y.slug === id); out = [{ label: "Maroc", go: () => st.setLevel("morocco") }, ...(x ? [{ label: x.city, go: () => st.select({ kind: "city", id: x.citySlug }) }] : []), { label: x?.name ?? id }]; }
   else if (kind === "country") out = [{ label: "Monde", go: () => st.setLevel("world") }, { label: id === "MA" ? "Maroc" : INTERNATIONAL.find((x) => x.iso === id)?.country ?? id }];
-  else if (kind === "facility") { const x = SITES.find((y) => y.slug === id); out = [{ label: x?.city ?? "Casablanca", go: () => st.select({ kind: "city", id: x?.citySlug ?? "casablanca" }) }, { label: x?.name ?? id }]; }
+  else if (kind === "facility") { const x = SITES.find((y) => y.slug === id); out = [{ label: x?.city ?? "Casablanca", go: () => st.setLevel("city") }, { label: x?.name ?? id }]; }
+  else if (kind === "landmark") out = [{ label: "Casablanca", go: () => st.setLevel("city") }, { label: placeById(id)?.name ?? id }];
   if (caseId && kind !== "case") {
     const d = DEPT[CASE_DEPT[caseId]];
     if (kind === "dept" || kind === "person") { const last = out[out.length - 1]; if (kind === "dept" && d) out[out.length - 1] = { ...last, go: () => st.openCase(null) }; if (kind === "person") out[out.length - 1] = { ...last, go: () => st.openCase(null) }; }
@@ -564,3 +569,52 @@ export function crumbs(kind: string, id: string, caseId: string | null): { label
   return out;
 }
 void CASES; void MiniBar;
+
+const POS_LABEL = { osm: "position OpenStreetMap", "osm-probable": "OpenStreetMap, identité probable", fiche: "repère de fiche, non vérifié" } as const;
+const SCENE_LABEL = {
+  modelled: "Modélisé d'après les volumes OpenStreetMap.",
+  district: "Dans un quartier reconstitué d'après OpenStreetMap.",
+  marker: "Repère seulement : pas encore modélisé en 3D.",
+} as const;
+
+/** Card of a place of Casablanca (monument, public place, Akdital establishment): only what the referential documents
+ *  (lib/geo/casaReferential.ts) — nothing is added that it does not source. */
+export function LandmarkView({ id }: { id: string }) {
+  const select = useApp((st) => st.select);
+  const p = placeById(id);
+  if (!p) return <div className={`${s.card} rounded-[14px] px-4 py-3 text-[13px] text-[var(--txt-2)]`}>Ce lieu n&apos;est pas dans le référentiel de Casablanca.</div>;
+  const ak = p.type === "Établissement de santé Akdital";
+  const osmUrl = p.osm ? `https://www.openstreetmap.org/${p.osm}` : null;
+  const row = (k: string, v: ReactNode) => (
+    <div className="flex gap-3 py-1.5 text-[12.5px] leading-snug"><span className="w-[118px] shrink-0 text-[var(--mut)]">{k}</span><span className="min-w-0 flex-1 text-[var(--txt)]">{v}</span></div>
+  );
+  return (
+    <div className="flex h-full flex-col gap-5">
+      <Title eyebrow={<>Casablanca · {p.type ?? "lieu"}</>} title={p.name} color={ak ? "#1DB4EA" : "#7C93D6"}
+        icon={ak ? <AkditalMark size={26} /> : <I.city size={22} />} />
+      <div className="flex flex-wrap gap-2">
+        {CASA_REEL && (
+          <button type="button" data-anchor={`landmark-fly:${id}`}
+            onClick={() => { const q = geoToScene(p.lat, p.lon); rig.flyTo(new THREE.Vector3(q.x, 0, q.z), (p.r ?? 1200) * 0.45, { polar: 0.95, duration: 2.2 }); }}
+            className="rounded-full bg-white/[0.08] px-3 py-1.5 text-[12.5px] font-medium text-white ring-1 ring-white/[0.12] hover:bg-white/[0.16]">Voir de plus près</button>
+        )}
+        {id === "anfa-prime-hospital" && (
+          <button type="button" onClick={() => select({ kind: "facility", id })} data-anchor="landmark-facility"
+            className="rounded-full bg-[#1DB4EA] px-3 py-1.5 text-[12.5px] font-semibold text-[#04121c] hover:brightness-110">Étages et services</button>
+        )}
+      </div>
+      <div className={`${s.card} rounded-[14px] px-4 py-2`}>
+        {row("Type de lieu", p.type ?? "non renseigné")}
+        {row("Position", <>{p.lat.toFixed(5)}, {p.lon.toFixed(5)} · {POS_LABEL[p.status]}</>)}
+        {row("Maquette 3D", SCENE_LABEL[p.scene])}
+        {ak && id !== "anfa-prime-hospital" && row("Étages et services", "non modélisés : aucun plan publié")}
+        {p.note && row("Remarque", p.note)}
+        {row("Architecte, date", "non renseignés dans le référentiel")}
+      </div>
+      <div className="text-[11.5px] leading-snug text-[var(--mut)]">
+        Position vérifiée le {REFERENTIAL_CHECKED} (Nominatim / OpenStreetMap){osmUrl ? <> · <a href={osmUrl} target="_blank" rel="noreferrer" className="underline hover:text-white">objet {p.osm}</a></> : null}
+        {" · "}<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="underline hover:text-white">© contributeurs OpenStreetMap (ODbL)</a>
+      </div>
+    </div>
+  );
+}

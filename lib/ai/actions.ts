@@ -156,7 +156,7 @@ export async function perform(op: Op): Promise<void> {
 export function opOf(call: ToolCall): Op | null {
   const a = call.args as Record<string, unknown>;
   switch (call.name) {
-    case "navigate": return ["world", "morocco", "hospital"].includes(String(a.level)) ? { do: "level", level: a.level as Level } : null;
+    case "navigate": return ["world", "morocco", "city", "hospital"].includes(String(a.level)) ? { do: "level", level: a.level as Level } : null;
     case "select": {
       const kind = String(a.kind);
       const id = String(a.id || "");
@@ -176,7 +176,7 @@ export function opOf(call: ToolCall): Op | null {
 /** Short French label for the chips under an answer ("Ouvre A-02"). */
 export function opLabel(op: Op): string {
   switch (op.do) {
-    case "level": return op.level === "world" ? "Vue monde" : op.level === "morocco" ? "Vue Maroc" : "Hôpital type";
+    case "level": return op.level === "world" ? "Vue monde" : op.level === "morocco" ? "Vue Maroc" : op.level === "city" ? "Casablanca" : "Hôpital type";
     case "home": return "Vue d'ensemble";
     case "select": return op.kind === "dept" ? DEPT[op.id]?.short ?? op.id : op.kind === "xp" ? XP[op.id]?.short ?? op.id : op.kind === "floor" ? `Étage ${op.id.replace("main:", "").replace("annex:", "siège ")}` : op.id;
     case "case": return `Cas ${op.id}`;
@@ -185,7 +185,7 @@ export function opLabel(op: Op): string {
     case "view": return op.perSite ? "Un établissement" : "Tout le groupe";
     case "point": return op.anchor;
     case "panel": return op.open ? "Panneau" : "Plein écran";
-    case "zoom": return op.level === "world" ? "Vue monde" : op.level === "morocco" ? "Vue Maroc" : "Zoom";
+    case "zoom": return op.level === "world" ? "Vue monde" : op.level === "morocco" ? "Vue Maroc" : op.level === "city" ? "Casablanca" : "Zoom";
     case "cue": return "Visite";
   }
 }

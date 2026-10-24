@@ -15,6 +15,8 @@ import { ENV } from "./env";
 import { lmOpacity, setFade, yawedSolids } from "./shared";
 import { NIGHT, SHARED_TEX, zoneMaterials } from "./zoneMaterials";
 import { creditNear } from "./OsmCredit";
+import { DiscoverButton } from "./Discover";
+import { placeIdOf } from "@/lib/geo/casaReferential";
 import { buildCfcDistrict, type CfcKey } from "./cfcDistrictGeo";
 
 let BUILT: ReturnType<typeof buildCfcDistrict> | null = null;
@@ -54,6 +56,8 @@ export function CfcDistrict() {
       const d = Math.hypot(camera.position.x - (CFC.x + l.x), camera.position.z - (CFC.y + l.z), camera.position.y - l.y);
       const show = g.visible && near && frame.alt < LABEL_ALT && d < (l.hero ? LABEL_NEAR : LABEL_NEAR * 0.38);
       el.style.opacity = show ? "1" : "0";
+      el.style.pointerEvents = show && placeIdOf(l.name) ? "auto" : "none"; // its "Découvrir" button, only while shown
+      el.style.visibility = show ? "visible" : "hidden"; // out of the tab order while hidden
     });
     if (g.visible && near && frame.alt < LABEL_ALT * 2) creditNear();
     if (!g.visible) return;
@@ -66,9 +70,10 @@ export function CfcDistrict() {
       {res.parts.map((p) => <mesh key={p.key} geometry={p.geo} material={res.M[p.key]!} raycast={() => null} />)}
       {res.labels.map((l, i) => (
         <GeoHtml key={i} position={[l.x, l.y, l.z]} center zIndex={5}>
-          <div ref={(e) => { tags.current[i] = e; }} style={{ opacity: 0 }}
+          <div ref={(e) => { tags.current[i] = e; }} style={{ opacity: 0, visibility: "hidden", transition: "opacity .3s, visibility .3s" }}
             className={`pointer-events-none whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold text-white shadow-[0_6px_18px_-8px_rgba(0,0,0,.6)] ring-1 backdrop-blur transition-opacity duration-300 ${l.hero ? "bg-[#0B1020]/85 ring-white/25" : "bg-[#0B1020]/60 ring-white/10 text-[10px]"}`}>
             {l.name}{l.sub ? <span className="ml-1.5 font-normal opacity-70">· {l.sub}</span> : null}
+            {placeIdOf(l.name) && <DiscoverButton id={placeIdOf(l.name)!} />}
           </div>
         </GeoHtml>
       ))}

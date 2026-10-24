@@ -18,7 +18,7 @@ const NAV_HELP: [string, string][] = [
   ["+ / −", "Zoomer / dézoomer"],
   ["Boussole", "Remettre le nord en haut"],
   ["0", "Recadrer la vue"],
-  ["H · M · W", "Hôpital · Maroc · Monde"],
+  ["H · C · M · W", "Hôpital · Casablanca · Maroc · Monde"],
   ["Échap", "Remonter d'un niveau"],
 ];
 

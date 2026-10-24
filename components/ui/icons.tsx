@@ -61,6 +61,7 @@ export const I = {
   arrowRight: (p: P) => <Svg {...p}><path d="M5 12h14M13 6l6 6-6 6" /></Svg>,
   globe: (p: P) => <Svg {...p}><circle cx="12" cy="12" r="9" /><path d="M3 12h18" /><path d="M12 3c2.6 2.5 3.9 5.5 3.9 9s-1.3 6.5-3.9 9c-2.6-2.5-3.9-5.5-3.9-9S9.4 5.5 12 3z" /></Svg>,
   pin: (p: P) => <Svg {...p}><path d="M12 21s7-6.1 7-11.2A7 7 0 0 0 5 9.8C5 14.9 12 21 12 21z" /><circle cx="12" cy="9.8" r="2.5" /></Svg>,
+  city: (p: P) => <Svg {...p}><path d="M3 20.5h18" /><path d="M4.5 20.5v-8l4-2.5v10.5" /><path d="M8.5 20.5V5.5l6-2.5v17.5" /><path d="M14.5 20.5V9.5l5 2.5v8.5" /><path d="M11 8h1M11 11h1M11 14h1M16.8 14h.5M6.3 14.5h.5" /></Svg>,
   hospital: (p: P) => <Svg {...p}><rect x="4" y="3.5" width="16" height="17.5" rx="1.5" /><path d="M12 7.5v5M9.5 10h5M9.5 21v-4h5v4" /></Svg>,
   layers: (p: P) => <Svg {...p}><path d="M12 3.5l9 5-9 5-9-5z" /><path d="M3 13l9 5 9-5" /></Svg>,
   person: (p: P) => <Svg {...p}><circle cx="12" cy="8" r="3.6" /><path d="M5 20.5a7 7 0 0 1 14 0" /></Svg>,
