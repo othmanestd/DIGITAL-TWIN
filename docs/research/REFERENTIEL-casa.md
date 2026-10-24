@@ -143,3 +143,35 @@ Branche `feat/anfa-prime-hospital`, 24/10/2026. Rien n'est poussé, mergé ni d�
 3. Littoral et port : bassins, Casa Port, El Hank, Corniche.
 4. Établissements Akdital, avec leurs photos : Longchamps et Jerrada (empreintes OSM disponibles), Aïn Borja, HPC.
 5. Décision Mounsef : passer le mode Casa réel en mode par défaut, et y réintroduire un remplissage procédural découpé par la côte.
+
+## 10. Ajout du 24/10 (après retour) : toute la ville en mode Casa réel
+
+**Retour d'Othmane** : « rien ne s'affiche dans la map ». En mode Casa réel, seuls les quartiers modélisés étaient visibles.
+
+**Couche ville** (`components/scenes/city/CasaCity.tsx`) : tout Casablanca à partir d'OpenStreetMap.
+- **Source** : extrait Geofabrik du Maroc du 23/10/2026, lu avec pyosmium par `docs/research/casa-city-extract.py`. Les données sont dans `public/casa/` : 651 tuiles de 1 km, projetées par la **même chaîne** (`casaFrame`).
+- **Contenu réel** : **50 549 bâtiments OSM**, **52 374 tronçons de rue** (avec leurs trottoirs), rail et tram, parcs, plages, eau, cimetières.
+- **Hauteurs des bâtiments** : la valeur OSM `height` si elle existe, sinon `building:levels` × 3,2 m + 1,4 m. Les bâtiments sans l'un ni l'autre ont une hauteur estimée par type, avec `e = 1` dans les données.
+- **Volumes illustratifs** (`docs/research/casa-city-fillers.py`) : **160 097 volumes de façade, marqués `f = 1`**, là où OSM a des rues mais aucun bâtiment.
+  - Seulement dans le tissu urbain, défini comme au moins 900 m de rues dans un rayon de 150 m.
+  - Jamais à moins de 15 m d'un bâtiment OSM.
+  - Jamais dans un parc, sur une plage, dans l'eau, en zone industrielle ou en mer.
+  - Hauteur de 3 à 5 niveaux. **Ce ne sont pas des empreintes réelles.**
+- **Rendu** :
+  - les tuiles se chargent autour de la caméra ;
+  - à moins de 3 km, les façades sont des typologies (fenêtres éclairées la nuit) ;
+  - au-delà, ce sont des volumes colorés, avec un appel de dessin par tuile ;
+  - les quartiers détaillés (CFC, Maârif, Anfa Prime, Hassan II) et le campus de l'hôpital type gardent leurs propres bâtiments.
+- **Mesures** (navigateur intégré) :
+
+| Vue | Appels de dessin | Triangles |
+|---|---|---|
+| Ville à 5 km | 736 | 1,12 M |
+| Centre à 700 m | 654 | 0,50 M |
+| Maârif à 900 m | 764 | 1,35 M |
+| Anfa Prime à 420 m | 702 | 1,11 M |
+
+- **Limites** :
+  - les collisions « À pied » ne couvrent pas encore la couche ville ;
+  - pas de distinction visuelle entre bâtiments OSM et volumes illustratifs (la distinction est dans les données) ;
+  - en 2026, la couverture des bâtiments dans OSM est inégale selon les quartiers.

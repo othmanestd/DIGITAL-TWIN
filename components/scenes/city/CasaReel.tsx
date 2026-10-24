@@ -16,6 +16,7 @@ import { geoToScene } from "@/lib/geo/casaFrame";
 import { AKDITAL_CASA, CASA_LANDMARKS, type Place } from "@/lib/geo/casaReferential";
 import { GeoHtml } from "../geo/GeoHtml";
 import { COASTLINE } from "./landmarks/zones/coastData";
+import { CasaCity } from "./CasaCity";
 
 const FAR = 90_000;   // extent of the land / sea polygons (m): beyond the 30 … 75 km hole of the Morocco map
 
@@ -88,7 +89,7 @@ export function CasaReel() {
       const el = tags.current[i];
       if (!el) return;
       const d = Math.hypot(camera.position.x - p.x, camera.position.z - p.z);
-      el.style.opacity = op > 0.5 && frame.alt < 9000 && d < Math.max(2500, frame.alt * 2.2) ? "1" : "0";
+      el.style.opacity = op > 0.5 && frame.alt < 4000 && d < Math.min(2200, Math.max(900, frame.alt * 1.1)) ? "1" : "0";
     });
   });
   return (
@@ -96,6 +97,7 @@ export function CasaReel() {
       <mesh geometry={res.sea} material={res.M.sea} raycast={() => null} renderOrder={-2} />
       <mesh geometry={res.land} material={res.M.land} raycast={() => null} renderOrder={-1} />
       <mesh geometry={res.foam} material={res.M.foam} raycast={() => null} />
+      <CasaCity />
       {res.pins.map((p, i) => (
         <group key={p.id} position={[p.x, 0, p.z]}>
           <mesh geometry={res.pinGeo} material={p.ak ? res.M.pinAk : res.M.pin} raycast={() => null} />
