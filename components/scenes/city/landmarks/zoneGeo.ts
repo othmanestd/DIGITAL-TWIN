@@ -125,7 +125,7 @@ export function buildZone(Pz: PlacedZone, spec: ZoneSpec = {}) {
     if (b.lv == null && b.h == null) stats.estimated++;
     const kind = t === "house" || est?.villa ? "villa" : (t === "retail" || t === "commercial" || t === "garage") && lv <= 3 ? "low" : t === "office" || t === "commercial" || t === "university" ? "office" : "res";
     const h = b.h ?? (kind === "villa" ? lvH(lv) - 1 : lvH(lv));
-    const y0 = b.minLv ? lvH(b.minLv) : 0;
+    const y0 = b.minH ?? (b.minLv ? lvH(b.minLv) : 0);
     const shopFront = kind !== "villa" && lv >= 3 && (b.shop === 1 || (nearMain(b.o[0], b.o[1], b.o[4] / 2 + 10) && hash(b.id, 13) < 0.55));
     if (shopFront) stats.shops++;
     building(b, P, holes, h, kind, shopFront, y0);

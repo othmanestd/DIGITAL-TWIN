@@ -13,7 +13,9 @@ export type CfcKey =
   | "lawn" | "scrub" | "turf" | "skate" | "rubber" | "water" | "sand" | "asphalt" | "plaza" | "path" | "rail" | "bed" | "mark"
   // Maârif: residential typologies × wall tint, ground floors, shops, street details
   | "res.0" | "res.1" | "res.2" | "res.3" | "res.4" | "res.5" | "res.6" | "res.7" | "base.w" | "base.c" | "shopAwn" | "awning"
-  | "kerb" | "zebra" | "ao" | "dish" | "cage";
+  | "kerb" | "zebra" | "ao" | "dish" | "cage"
+  // monuments built from OSM building:parts (Hassan II): the shared landmark textures
+  | "arcade" | "zellige" | "greenTile" | "stoneW";
 /** the key set of every zone (CFC, Maârif …) */
 export type ZoneKey = CfcKey;
 
@@ -27,6 +29,7 @@ export const TILE: Partial<Record<CfcKey, readonly [number, number]>> = {
   "res.0": CFC_TILE.apart, "res.1": CFC_TILE.apart, "res.2": CFC_TILE.apart, "res.3": CFC_TILE.apart,
   "res.4": CFC_TILE.apart, "res.5": CFC_TILE.apart, "res.6": CFC_TILE.apart, "res.7": CFC_TILE.apart,
   "base.w": [16, 3.6], "base.c": [16, 3.6], shopAwn: [16, 4.2], kerb: [4, 4], cage: [6, 6],
+  arcade: [24, 27], zellige: [4.8, 4.8], greenTile: [6, 6], stoneW: [6, 6],
 };
 export const tileOf = (k: CfcKey): readonly [number, number] => TILE[k] ?? [10, 10];
 

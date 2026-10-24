@@ -21,10 +21,10 @@ const tex = (c: HTMLCanvasElement, srgb = true) => {
 export const NIGHT: Partial<Record<CfcKey, number>> = {
   "glass.cool": 0.85, "glass.green": 0.85, "glass.bronze": 0.85, "glass.silver": 0.85, "glass.sage": 0.85, bcpGlass: 0.85, screen: 0.8, "apart.white": 0.8, "apart.cream": 0.8,
   deco: 0.8, grc: 0.75, veil: 0.9, green: 0.8, shop: 0.9, panel: 0.7, villa: 0.7,
-  "res.0": 0.8, "res.1": 0.8, "res.2": 0.8, "res.3": 0.8, "res.4": 0.8, "res.5": 0.8, "res.6": 0.8, "res.7": 0.8, "base.w": 0.6, "base.c": 0.6, shopAwn: 0.9,
+  "res.0": 0.8, "res.1": 0.8, "res.2": 0.8, "res.3": 0.8, "res.4": 0.8, "res.5": 0.8, "res.6": 0.8, "res.7": 0.8, "base.w": 0.6, "base.c": 0.6, shopAwn: 0.9, arcade: 0.6,
 };
 /** keys whose textures belong to the shared TEX cache */
-export const SHARED_TEX: ReadonlySet<CfcKey> = new Set(["glass.cool", "glass.green", "glass.bronze"]);
+export const SHARED_TEX: ReadonlySet<CfcKey> = new Set(["glass.cool", "glass.green", "glass.bronze", "arcade", "zellige", "greenTile", "stoneW"]);
 /** Maârif wall tints: white and cream render */
 const WALL = ["#F2EFE8", "#ECE3D0"] as const;
 
@@ -61,6 +61,9 @@ const MAKE: Record<CfcKey, () => THREE.MeshStandardMaterial> = {
   zebra: () => std({ color: "#F4F4F0", roughness: 0.8, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }),
   ao: () => std({ color: "#000000", alphaMap: tex(paintContact(), false), transparent: true, opacity: 0.34, depthWrite: false, roughness: 1, ...ground }),
   dish: () => std({ color: "#E3E5E7", roughness: 0.5, metalness: 0.2 }), cage: () => std({ color: "#EEEBE3", roughness: 0.85 }),
+  arcade: () => std({ map: TEX.arcade(), emissive: "#FFFFFF", emissiveMap: TEX.arcadeGlow(), emissiveIntensity: 0, roughness: 0.8 }),
+  zellige: () => std({ map: TEX.zGreen(), roughness: 0.45, metalness: 0.1 }), greenTile: () => std({ map: TEX.roof(), roughness: 0.55 }),
+  stoneW: () => std({ map: TEX.stone(), roughness: 0.85 }),
 };
 
 /** The materials for the given keys (each made once per call). */

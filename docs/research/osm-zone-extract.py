@@ -199,7 +199,8 @@ for bid, t, p, holes in raw:
     col = t.get("building:colour") or t.get("building:facade:colour")
     blds.append({
         "id": bid, "type": t.get("building") or "part", "name": t.get("name:fr") or t.get("name") or t.get("addr:housename") or "",
-        "lv": num(t.get("building:levels")), "h": num(t.get("height")), "minLv": num(t.get("building:min_level")),
+        "lv": num(t.get("building:levels")), "h": num(t.get("height")), "minLv": num(t.get("building:min_level")), "minH": num(t.get("min_height")),
+        "roofShape": t.get("roof:shape") or "", "arch": t.get("building:architecture") or "",
         "col": col or "", "roof": t.get("roof:colour") or "", "shop": 1 if shop else 0, "a": round(A_),
         "p": flat(p), "holes": [flat(h) for h in holes if len(h) > 2], "o": [rd(cx), rd(cz), round(yaw, 4), rd(w), rd(d)],
     })
@@ -231,7 +232,7 @@ AREA = [("leisure", "park", "park"), ("leisure", "garden", "garden"), ("landuse"
         ("landuse", "meadow", "grass"), ("natural", "scrub", "scrub"), ("leisure", "pitch", "pitch"), ("leisure", "playground", "play"),
         ("natural", "water", "water"), ("leisure", "swimming_pool", "pool"), ("amenity", "fountain", "water"),
         ("landuse", "construction", "site"), ("landuse", "brownfield", "site"), ("leisure", "sports_centre", "sport"),
-        ("highway", "pedestrian", "plaza"), ("amenity", "parking", "parking")]
+        ("highway", "pedestrian", "plaza"), ("amenity", "parking", "parking"), ("landuse", "religious", "plaza"), ("place", "square", "plaza")]
 areas = []
 for wid, (refs, t) in ways.items():
     if refs[0] != refs[-1]: continue

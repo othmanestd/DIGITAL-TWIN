@@ -5,6 +5,7 @@
 // park, Anfa racetrack, rail). World metres, x east, z south (map north = −Z), y up. plan.ts re-exports the stable names.
 import * as THREE from "three";
 import { CFC_BOX } from "./landmarks/cfcData";
+import { CASA_REEL, geoToScene } from "@/lib/geo/casaFrame";
 
 // ---------------------------------------------------------------- coastline
 export const N = new THREE.Vector2(-Math.SQRT1_2, -Math.SQRT1_2);   // towards the ocean (north-west)
@@ -44,7 +45,14 @@ export function distBoulevard(x: number, z: number) {
   return d;
 }
 export const TWIN: [number, number][] = [[-880, 560], [-835, 610]];
-export const CFC = new THREE.Vector2(-1750, -500); // business district cluster (centre of the signature towers)
+/** where a georeferenced point lands: through the single chain (casaFrame) in "Casa réel" mode, else the procedural anchor */
+const placed = (lat: number, lon: number, fallback: [number, number]): [number, number] => {
+  if (!CASA_REEL) return fallback;
+  const p = geoToScene(lat, lon);
+  return [p.x, p.z];
+};
+// business district cluster (the CFC Tower; OSM way 871612907 at 33.5635842, −7.6609624 in Casa réel mode)
+export const CFC = new THREE.Vector2(...placed(33.5635842, -7.6609624, [-1750, -500]));
 /** The Casablanca Finance City district (landmarks/CfcDistrict, from OpenStreetMap): its real buildings, streets and Anfa
  *  Park around the CFC Tower, which stands at CFC. Map north is −z in both, so the district keeps its real orientation; the
  *  box edges fall on the 120 m grid lines (x −2100 / −900, z −900 / 60), the city's streets run around it. */
@@ -55,7 +63,12 @@ export const inCfc = (x: number, z: number, m = 0) =>
 /** The Maârif pilot district (landmarks/MaarifDistrict, from OpenStreetMap), anchored on the Twin Center: the OSM node
  *  "Twin Center" (local origin of zones/maarifData) sits at the centre between the two TWIN points. Box edges on the
  *  120 m grid lines (x −1500 / −300, z 60 / 1140). The tram boulevard of the plan (z = 780) still runs through it. */
-export const MAARIF_DISTRICT = { ox: (TWIN[0][0] + TWIN[1][0]) / 2, oz: (TWIN[0][1] + TWIN[1][1]) / 2, x0: -1500, x1: -300, z0: 60, z1: 1140, tramZ: 780 };
+export const MAARIF_DISTRICT = (() => {
+  // Casa réel: the OSM node "Twin Center" (770235536) through the chain; the box follows the zone (same local extent)
+  const [ox, oz] = placed(33.5865844, -7.6322923, [(TWIN[0][0] + TWIN[1][0]) / 2, (TWIN[0][1] + TWIN[1][1]) / 2]);
+  const d = CASA_REEL ? { x0: ox - 642.5, x1: ox + 557.5, z0: oz - 525, z1: oz + 555 } : { x0: -1500, x1: -300, z0: 60, z1: 1140 };
+  return { ox, oz, ...d, tramZ: 780 };
+})();
 export const inMaarif = (x: number, z: number, m = 0) =>
   x > MAARIF_DISTRICT.x0 - m && x < MAARIF_DISTRICT.x1 + m && z > MAARIF_DISTRICT.z0 - m && z < MAARIF_DISTRICT.z1 + m;
 
@@ -109,7 +122,9 @@ export const ANFA_PRIME = (() => {
   // yaw: the model's front (+z) faces boulevard Ghandi as in reality. OSM way 338743767 (Bd Ghandi) runs on a bearing of
   // 121.7° past the clinic's parcel (OSM way 1432538704, landuse=construction, 4,974 m²), so the front looks south-west:
   // rotation −0.5535 rad (−31.7°). The position stays anchored (the city is not georeferenced), see ANFA_DISTRICT.
-  return { x: (lot.x0 + lot.x1) / 2, z: 11, yaw: -0.5535, lot, anchor: { dx: RACE.x - 90, dz: RACE.z - 780 } };
+  // Casa réel: the centroid of the OSM parcel (way 1432538704) through the chain, the model at (5.5, 15) m from it
+  const [px, pz] = placed(33.5820211, -7.6594471, [(lot.x0 + lot.x1) / 2 - 5.5, 11 - 15]);
+  return { x: px + 5.5, z: pz + 15, yaw: -0.5535, lot, anchor: { dx: RACE.x - 90, dz: RACE.z - 780 } };
 })();
 /** local (model) → world offset of the Anfa Prime model, rotated by its yaw */
 export const apWorld = (lx: number, lz: number): [number, number] => {
@@ -120,7 +135,10 @@ export const apWorld = (lx: number, lz: number): [number, number] => {
  *  Khattabi and its roundabout, the Anfa villas). Zone origin = the centroid of the clinic's OSM parcel; the model sits at
  *  (5.5, 15) m from it, its buildings within the parcel (99 % of their footprint). Box on the grid lines (x −3300 / −2580,
  *  z −180 / 420): clear of the generated coast and of the generated racetrack. */
-export const ANFA_DISTRICT = { ox: -3000 - 5.5, oz: 11 - 15, x0: -3300, x1: -2580, z0: -180, z1: 420 };
+export const ANFA_DISTRICT = (() => {
+  const ox = ANFA_PRIME.x - 5.5, oz = ANFA_PRIME.z - 15;
+  return CASA_REEL ? { ox, oz, x0: ox - 294.5, x1: ox + 425.5, z0: oz - 176, z1: oz + 424 } : { ox, oz, x0: -3300, x1: -2580, z0: -180, z1: 420 };
+})();
 export const inAnfaZone = (x: number, z: number, m = 0) =>
   x > ANFA_DISTRICT.x0 - m && x < ANFA_DISTRICT.x1 + m && z > ANFA_DISTRICT.z0 - m && z < ANFA_DISTRICT.z1 + m;
 /** inside the Anfa Prime lot (+ margin) */

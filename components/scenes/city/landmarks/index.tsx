@@ -11,6 +11,8 @@ import { TwinCenter, twinCenterSolids } from "./TwinCenter";
 import { MaarifDistrict, maarifSolids } from "./MaarifDistrict";
 import { AnfaPrimeDistrict, anfaDistrictSolids } from "./AnfaPrimeDistrict";
 import { OsmCredit } from "./OsmCredit";
+import { HassanDistrict, hassanSolids } from "./HassanDistrict";
+import { CASA_REEL } from "@/lib/geo/casaFrame";
 
 export { MOSQUE_TOP } from "./Mosque";
 export { ANFA_PRIME_ID } from "./AnfaPrime";
@@ -21,14 +23,16 @@ export { ENV } from "./env";
 export function CityLandmarks() {
   // walk-mode solids of the landmarks (the legacy ones in plan.citySolids go away with LEGACY_LANDMARKS)
   useEffect(() => {
-    registerSolids("landmarks", [...mosqueSolids(), ...cfcDistrictSolids(), ...anfaPrimeSolids(), ...twinCenterSolids(), ...maarifSolids(), ...anfaDistrictSolids()]);
+    // "Casa réel" (casaFrame): the OSM Hassan II replaces the procedural mosque, the procedural tram line is not drawn
+    const own = CASA_REEL ? hassanSolids() : mosqueSolids();
+    registerSolids("landmarks", [...own, ...cfcDistrictSolids(), ...anfaPrimeSolids(), ...twinCenterSolids(), ...maarifSolids(), ...anfaDistrictSolids()]);
     return () => registerSolids("landmarks", []);
   }, []);
   return (
     <>
-      <Mosque />
+      {CASA_REEL ? <HassanDistrict /> : <Mosque />}
       <CfcDistrict />
-      <Trams />
+      {!CASA_REEL && <Trams />}
       <AnfaPrime />
       <TwinCenter />
       <MaarifDistrict />

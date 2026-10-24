@@ -20,6 +20,8 @@ import { GlobeContent, GLOBE_RADIUS, GLOBE_VIEW_LONLAT, globePoint } from "./geo
 import { CASA_LONLAT } from "@/lib/geo/projection";
 import WalkWorld from "./walk/WalkWorld";
 import { walkBusy, WALK_API } from "./walk/state";
+import { CASA_REEL } from "@/lib/geo/casaFrame";
+import { CasaReel } from "./city/CasaReel";
 
 const MAP_SCALE_M = 1000 / MAP_UNITS_PER_KM;          // metres per map unit (≈ 7 580)
 const GLOBE_SCALE_M = EARTH_R / GLOBE_RADIUS;          // metres per globe unit (63 710)
@@ -333,9 +335,10 @@ export default function UnifiedWorld() {
       <Stars />
       <group ref={hosp}>
         <HospitalContent />
-        <CityContent />
+        {/* "Casa réel" (lib/geo/casaFrame): the georeferenced ground and districts instead of the procedural city */}
+        {CASA_REEL ? <CasaReel /> : <CityContent />}
         <CityLandmarks />
-        <CityPedestrians />
+        {!CASA_REEL && <CityPedestrians />}
       </group>
       {/* the map lies under the campus base (basement pit to −5.9 m) so the plaza never flickers against it */}
       <group position={[0, -6.5, 0]} scale={MAP_SCALE_M}>

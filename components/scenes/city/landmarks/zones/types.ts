@@ -2,6 +2,8 @@
 // = `origin` (lat/lon), equirectangular at that latitude. p = flat [x0, z0, x1, z1, …]; o = oriented box [cx, cz, yaw, w, d].
 export type ZoneBuilding = {
   id: number; type: string; name: string; lv: number | null; h: number | null; minLv: number | null;
+  /** min_height (m), roof:shape, building:architecture as mapped (absent in zones extracted before 24/10/2026) */
+  minH?: number | null; roofShape?: string; arch?: string;
   /** façade / roof colour tags as mapped ("" when not mapped) */
   col: string; roof: string;
   /** 1 when a shop, office, café, bank … point of OSM lies inside the footprint */
