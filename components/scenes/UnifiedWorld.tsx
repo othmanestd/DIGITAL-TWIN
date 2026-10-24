@@ -54,7 +54,7 @@ export default function UnifiedWorld() {
   const gpos = useMemo(() => EARTH_CENTER.clone(), []);
   /** the Earth's north-pole axis in world space: camera up while orbiting the Earth, so north stays up on screen */
   const POLE = useMemo(() => new THREE.Vector3(0, 1, 0).applyQuaternion(gq).normalize(), [gq]);
-  const tmp = useMemo(() => ({ t: new THREE.Vector3(), d: new THREE.Vector3(), p: new THREE.Vector3() }), []);
+  const tmp = useMemo(() => ({ t: new THREE.Vector3(), d: new THREE.Vector3(), p: new THREE.Vector3(), q: new THREE.Vector3() }), []);
 
   // world-space anchors of the three overviews
   const shots = useMemo(() => {
@@ -79,6 +79,7 @@ export default function UnifiedWorld() {
     camera.fov = 38; camera.near = 0.5; camera.far = 4e9; camera.updateProjectionMatrix();
     rig.attach(c, camera);
     rig.upFor = (t: THREE.Vector3) => (t.distanceTo(EARTH_CENTER) < 2e5 ? POLE : new THREE.Vector3(0, 1, 0));
+    rig.polarLimit = (d: number) => THREE.MathUtils.lerp(1.42, 0.06, fadeIn(d, 9e5, 3.4e6)); // spread over a few wheel steps
     c.smoothTime = 0.16; c.draggingSmoothTime = 0.06; c.dollySpeed = 1; c.infinityDolly = false;
     c.mouseButtons.wheel = 0; // handled below
     const s = st.current;
@@ -152,7 +153,7 @@ export default function UnifiedWorld() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // wheel / trackpad: fast, smooth, toward the cursor (straight to the centre when orbiting the Earth)
+  // wheel / trackpad: fast, smooth, about the point under the cursor (straight to the centre when orbiting the Earth)
   useEffect(() => {
     const el = gl.domElement;
     const onWheel = (e: WheelEvent) => {
@@ -167,15 +168,35 @@ export default function UnifiedWorld() {
       dy = Math.max(-240, Math.min(240, dy));
       const lnS = dy * SPEED * (e.shiftKey ? 0.35 : 1);
       const centre = c.getTarget(tmp.t).distanceTo(EARTH_CENTER) < 2e5;
-      c.dollyToCursor = !centre;
       const rect = el.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-      c._dollyInternal(lnS / -LN095, x, y);
+      // ground: the point under the cursor stays under it and the target stays on the ground (lib/rig.ts zoomAt);
+      // globe: camera-controls' own dolly toward the Earth's centre
+      if (centre) {
+        c.dollyToCursor = false;
+        // zooming in on the globe: turn it so Morocco comes under the camera by the hand-over altitude, where the view
+        // lands on the flat map (it only covers Morocco: a hand-over above the Gulf would put the ground target 9 000 km away)
+        if (lnS < 0) {
+          const P = c.getPosition(tmp.p, true), r = P.distanceTo(EARTH_CENTER), a = r - R_TOP, a1 = a * Math.exp(lnS);
+          const HI = 1.5e7, LO = PIVOT_OUT * 0.95, from = Math.min(a, HI);
+          if (a1 < HI) {
+            const w = from <= LO ? 1 : THREE.MathUtils.clamp(Math.log(from / a1) / Math.log(from / LO), 0, 1);
+            const u = P.sub(EARTH_CENTER).normalize();
+            const goal = tmp.d.set(shots.morocco.x, R_TOP, shots.morocco.z).normalize();
+            const q = new THREE.Quaternion().setFromUnitVectors(u, goal);
+            u.applyQuaternion(new THREE.Quaternion().slerp(q, w)).multiplyScalar(r).add(EARTH_CENTER);
+            void c.setPosition(u.x, u.y, u.z, true);
+            c.normalizeRotations();
+          }
+        }
+        c._dollyInternal(lnS / -LN095, x, y);
+      }
+      else rig.zoomAt(Math.exp(lnS), x, y);
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, [gl, tmp]);
+  }, [gl, tmp, shots]);
 
   // keyboard / nav-pad camera moves: orbit, tilt, pan (orbit the globe when the pivot is the Earth's centre), and "north up"
   useEffect(() => {
@@ -212,32 +233,54 @@ export default function UnifiedWorld() {
       if (!cmd || !c || cmd.nonce === last) return;
       last = cmd.nonce; st.current.intro = false; dive.current++;
       if (walkBusy()) WALK_API.stop();
-      const alt = frame.alt;
       // a click on a rung of the zoom rail that skips rungs: staged travel, not a straight dive
       if (cmd.staged) {
         const to: Rung = cmd.g !== undefined ? "jabb" : (cmd.level as Rung);
         const want = cmd.value !== undefined && to !== "hospital" && to !== "jabb" ? bandAlt(cmd.level, cmd.value) : undefined;
         if (travel(to, want)) return;
       }
-      let want = alt;
+      // where the camera is going (a flight under way, or the damping's end state), so quick clicks add up and a slider
+      // drag steers the flight it started instead of reading a mid-air state
+      const a = rig.anim, T = new THREE.Vector3();
+      let D: number, centre: boolean, polar: number, endAlt: number;
+      if (a) {
+        T.copy(a.T1); D = a.D1; centre = T.distanceTo(EARTH_CENTER) < 2e5; polar = a.P1;
+        endAlt = centre ? D - R_TOP : T.y + D * Math.max(0.05, Math.cos(polar));
+      } else {
+        c.getTarget(T, true); const P = c.getPosition(tmp.q, true);
+        D = Math.max(1e-3, P.distanceTo(T)); centre = T.distanceTo(EARTH_CENTER) < 2e5;
+        polar = Math.acos(THREE.MathUtils.clamp((P.y - T.y) / D, -1, 1));
+        endAlt = centre ? P.distanceTo(EARTH_CENTER) - R_TOP : Math.max(1, P.y);
+      }
+      let want = endAlt;
       let fast = false;
       if (cmd.g !== undefined) { want = gToAlt(cmd.g); fast = true; }
       else if (cmd.value !== undefined) want = bandAlt(cmd.level, cmd.value);
-      else if (cmd.delta) want = alt * Math.exp(cmd.delta * 4.6);
+      else if (cmd.delta) want = endAlt * Math.exp(cmd.delta * 4.6);
       want = Math.min(MAX_ALT, Math.max(14, want));
-      const centre = c.getTarget(tmp.t).distanceTo(EARTH_CENTER) < 2e5;
-      const dur = fast ? 0.5 : undefined;
-      if (want > PIVOT_IN) {
-        rig.flyTo(EARTH_CENTER, R_TOP + want, centre ? { duration: dur } : { polar: shots.worldPolar, azimuth: shots.worldAz, duration: dur });
+      // slider drag (g): one short flight for a jump (longer for a longer jump), then each move steers it — no restart
+      // from rest at every move
+      const dur = fast ? Math.min(1.4, 0.5 + 0.1 * Math.abs(Math.log(want / endAlt))) : undefined, retarget = fast;
+      // crossing between the ground and the globe is always a log-space flight: damping the target and the position
+      // separately swung the view (≈ 50°) or dipped the camera under the ground
+      const toCentre = centre ? want > PIVOT_OUT : want > PIVOT_IN;
+      if (toCentre) {
+        // rising off the map: straight up over where the camera is, so the framing carries on (the rungs of the rail keep
+        // their curated world shot)
+        const up = c.getPosition(tmp.q, true).sub(EARTH_CENTER).normalize();
+        rig.flyTo(EARTH_CENTER, R_TOP + want, centre ? { duration: dur, retarget }
+          : { polar: Math.acos(THREE.MathUtils.clamp(up.y, -1, 1)), azimuth: Math.atan2(up.x, up.z), duration: dur, cinematic: true });
       } else if (centre) {
-        rig.flyTo(shots.morocco, want, { polar: want < 3000 ? 1.0 : 0.62, azimuth: 0.06, duration: dur });
+        rig.flyTo(shots.morocco, want, { polar: want < 3000 ? 1.0 : 0.62, azimuth: 0.06, duration: dur, cinematic: true });
       } else {
-        // descending: glide towards Casablanca (the city, then the hospital), like Google Maps homing in
-        const t = c.getTarget(new THREE.Vector3());
-        const w = want < alt ? 1 - fadeIn(want, 3e4, 6e5) : 0;
-        t.lerp(new THREE.Vector3(0, 8, 0), w);
-        const pol = want < 3000 ? Math.max(c.polarAngle, 0.9) : c.polarAngle;
-        rig.flyTo(t, c.distance * (want / Math.max(alt, 1)), { duration: dur, polar: Math.min(pol, 1.2) });
+        // descending from the Morocco view: glide towards Casablanca, like Google Maps homing in. The offset from the city
+        // shrinks with the altitude between 600 km and 30 km, so it is gone at city scale — below that, zooming stays on
+        // whatever you are looking at (it no longer pulls the view back to the typical hospital).
+        const pa = fadeIn(endAlt, 3e4, 6e5);
+        const w = want < endAlt && pa > 1e-3 ? 1 - fadeIn(want, 3e4, 6e5) / pa : 0;
+        T.lerp(CASA, w);
+        const pol = want < 3000 ? Math.max(polar, 0.9) : polar;
+        rig.flyTo(T, D * (want / Math.max(endAlt, 1)), { duration: dur, polar: Math.min(pol, 1.2), retarget });
       }
     });
   }, [shots, tmp]);
@@ -248,22 +291,31 @@ export default function UnifiedWorld() {
     const flying = rig.tick();
     const s = st.current;
     const cam = camera.position;
-    const alt = Math.max(1, cam.distanceTo(EARTH_CENTER) - R_TOP);
+    // altitude: above the sphere when orbiting the Earth, above the flat map on the ground (the sphere would add the
+    // Earth's curvature, ≈ 900 m at 100 km from Casablanca, and skew the slider and every level-of-detail switch)
+    const sphereAlt = Math.max(1, cam.distanceTo(EARTH_CENTER) - R_TOP);
+    const alt = c.getTarget(tmp.t).distanceTo(EARTH_CENTER) < 2e5 ? sphereAlt : Math.max(1, Math.min(sphereAlt, cam.y));
     frame.alt = alt;
 
     // pivot hand-over: ground ⇄ Earth centre (the view direction passes through both, so nothing swings)
     const tgt = c.getTarget(tmp.t);
     const centre = tgt.distanceTo(EARTH_CENTER) < 2e5;
-    if (!flying && !s.dragging && !walkBusy()) {
+    // only once the damping has settled: switching the pivot mid-glide would drop the rest of the glide (a visible jump)
+    const settled = c.getPosition(tmp.q, true).distanceTo(cam) < 0.01 * alt;
+    if (!flying && !s.dragging && settled && !walkBusy()) {
+      // the up axis changes first, then the camera is re-aimed from where it is: the controls store angles relative to
+      // the up axis, so re-aiming first and changing the axis after made the view swing (≈ 60° of tilt) at every hand-over
       if (!centre && alt > PIVOT_IN) {
-        void c.setTarget(EARTH_CENTER.x, EARTH_CENTER.y, EARTH_CENTER.z, false);
+        const pos = c.getPosition(tmp.p, true);
         camera.up.copy(POLE); c.updateCameraUp();
+        void c.setLookAt(pos.x, pos.y, pos.z, EARTH_CENTER.x, EARTH_CENTER.y, EARTH_CENTER.z, false);
       } else if (centre && alt < PIVOT_OUT) {
-        const dir = tmp.d.copy(EARTH_CENTER).sub(cam).normalize();
-        const k = dir.y < -1e-3 ? cam.y / -dir.y : alt;
-        const p = tmp.p.copy(cam).addScaledVector(dir, k);
-        void c.setTarget(p.x, 0, p.z, false);
+        const pos = c.getPosition(tmp.p, true);
+        const dir = tmp.d.copy(EARTH_CENTER).sub(pos).normalize();
+        const k = dir.y < -1e-3 ? pos.y / -dir.y : alt;
+        const hx = pos.x + dir.x * k, hz = pos.z + dir.z * k;
         camera.up.set(0, 1, 0); c.updateCameraUp();
+        void c.setLookAt(pos.x, pos.y, pos.z, hx, 0, hz, false);
       }
     }
     // limits per pivot mode; at high altitude the ground view straightens up so the map flattens into the globe

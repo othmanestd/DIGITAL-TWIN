@@ -135,6 +135,7 @@ export function CasaCity() {
   const root = useRef<THREE.Group>(null);
   const state = useMemo(() => ({
     index: null as Index | null, live: new Map<string, Live>(), queue: 0, last: 0, rects: skipRects(),
+    want: new Set<string>(), order: [] as Live[],
     groundMat: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, transparent: true, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
     coarseMat: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, transparent: true }),
     M: zoneMaterials(["res.0", "res.1", "res.2", "res.3", "res.4", "res.5", "res.6", "res.7", "villa", "glass.silver", "glass.sage", "panel", "concrete", "parapet", "roof"]),
@@ -163,11 +164,31 @@ export function CasaCity() {
     state.groundMat.opacity = op; state.coarseMat.opacity = op;
     const n = ENV.night;
     for (const [k, v] of Object.entries(NIGHT) as [CfcKey, number][]) { const m = state.M[k]; if (m) m.emissiveIntensity = n * v; }
-    if (!g.visible || clock.elapsedTime - state.last < 0.2) return;
-    state.last = clock.elapsedTime;
+    if (!g.visible) return;
     const T = I.tile, cx = camera.position.x, cz = camera.position.z;
     const radius = Math.min(20000, Math.max(3500, frame.alt * 2.6));
-    const want = new Set<string>();
+    if (clock.elapsedTime - state.last >= 0.2) { state.last = clock.elapsedTime; scan(I, cx, cz, radius); }
+    // build / switch LOD within a few milliseconds a frame (nearest first), so zooming never stalls on a burst of tiles
+    const t0 = performance.now();
+    for (const l of state.order) {
+      if (performance.now() - t0 > 4) break;
+      if (!state.want.has(l.key) || !l.data) continue;
+      const [i, j] = l.key.split("_").map(Number), ox = i * T, oz = j * T;
+      if (!l.ground) { l.ground = new THREE.Mesh(groundOf(l.data, ox, oz), state.groundMat); l.ground.raycast = () => {}; l.ground.renderOrder = -1; g.add(l.ground); continue; }
+      const near = l.dist < NEAR && frame.alt < 1800;
+      if (near && !l.detail) {
+        const grp = new THREE.Group();
+        for (const p of detailedOf(l.data, ox, oz, skip)) { const m = new THREE.Mesh(p.geo, state.M[p.key]); m.raycast = () => {}; grp.add(m); }
+        l.detail = grp; g.add(grp);
+      } else if (!near && !l.coarse) { l.coarse = new THREE.Mesh(coarseOf(l.data, ox, oz, skip), state.coarseMat); l.coarse.raycast = () => {}; g.add(l.coarse); }
+      if (l.detail) l.detail.visible = near;
+      if (l.coarse) l.coarse.visible = !near || !l.detail;
+    }
+  });
+  /** which tiles the view wants (fetching the missing ones), nearest first; drops the far ones */
+  function scan(I: Index, cx: number, cz: number, radius: number) {
+    const T = I.tile, want = state.want;
+    want.clear();
     for (const [i, j] of I.tiles) {
       const d = Math.hypot((i + 0.5) * T - cx, (j + 0.5) * T - cz);
       if (d > radius) continue;
@@ -181,24 +202,8 @@ export function CasaCity() {
         fetch(`/casa/tiles/${key}.json`).then((r) => r.json()).then((t: TileData) => { l!.data = t; }).catch(() => {}).finally(() => { l!.loading = false; state.queue--; });
       }
     }
-    // build / switch LOD, a few tiles per tick (nearest first), drop the far ones
-    let budget = 6;
-    const order = [...state.live.values()].sort((a, b) => a.dist - b.dist);
-    for (const l of order) {
-      if (!want.has(l.key)) { if (l.dist > radius * 1.3) { drop(l); state.live.delete(l.key); } continue; }
-      if (!l.data) continue;
-      const [i, j] = l.key.split("_").map(Number), ox = i * T, oz = j * T;
-      if (!l.ground && budget > 0) { l.ground = new THREE.Mesh(groundOf(l.data, ox, oz), state.groundMat); l.ground.raycast = () => {}; l.ground.renderOrder = -1; g.add(l.ground); budget--; }
-      const near = l.dist < NEAR && frame.alt < 1800;
-      if (near && !l.detail && budget > 0) {
-        const grp = new THREE.Group();
-        for (const p of detailedOf(l.data, ox, oz, skip)) { const m = new THREE.Mesh(p.geo, state.M[p.key]); m.raycast = () => {}; grp.add(m); }
-        l.detail = grp; g.add(grp); budget--;
-      }
-      if (!near && !l.coarse && budget > 0) { l.coarse = new THREE.Mesh(coarseOf(l.data, ox, oz, skip), state.coarseMat); l.coarse.raycast = () => {}; g.add(l.coarse); budget--; }
-      if (l.detail) l.detail.visible = near;
-      if (l.coarse) l.coarse.visible = !near || !l.detail;
-    }
-  });
+    for (const l of state.live.values()) if (!want.has(l.key) && l.dist > radius * 1.3) { drop(l); state.live.delete(l.key); }
+    state.order = [...state.live.values()].sort((a, b) => a.dist - b.dist);
+  }
   return <group ref={root} />;
 }
