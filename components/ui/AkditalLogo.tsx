@@ -1,7 +1,7 @@
 // Akdital logo: the official mark (gradient ring + three drops) followed by the wordmark in a rounded bold sans (Nunito 800).
-import { Nunito } from "next/font/google";
+import localFont from "next/font/local";
 
-const nunito = Nunito({ subsets: ["latin"], weight: ["800"], display: "swap" });
+const nunito = localFont({ src: "../../app/fonts/nunito-latin-wght-normal.woff2", weight: "200 1000", display: "swap" }); // shipped font (OFL), no Google Fonts fetch at build
 
 /** Akdital brand colours (accents only). */
 export const AKDITAL = { navy: "#1E2A5E", blue: "#1488CC", light: "#1DB4EA" };
