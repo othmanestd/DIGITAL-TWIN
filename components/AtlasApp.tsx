@@ -2,6 +2,7 @@
 import dynamic from "next/dynamic";
 import { useApp } from "@/lib/store";
 import TopBar from "@/components/ui/TopBar";
+import PlacesExplorer from "@/components/places/PlacesExplorer";
 import Sidebar from "@/components/ui/Sidebar";
 import Timeline from "@/components/ui/Timeline";
 import SidePanel from "@/components/panels/SidePanel";
@@ -41,6 +42,7 @@ export default function AtlasApp() {
         )}
       </div>
       {section === "explorer" && !walking && <Sidebar />}
+      {section === "explorer" && !walking && <PlacesExplorer />}
       <SidePanel />
       {section !== "explorer" && <SectionView />}
       <TopBar />

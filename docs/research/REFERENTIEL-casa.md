@@ -186,3 +186,14 @@ Parcours : Monde → Maroc → **Casablanca** → Hôpital → Étage → Servic
 - Fiche (panneau latéral, `LandmarkView`) : uniquement ce que documente le référentiel — type de lieu, position et statut, état dans la maquette, remarque, lien OSM, date de vérification ; architecte et date : « non renseignés ». Aucune image de référence, aucune publicité. Le bouton « Voir de plus près » est la seule action qui déplace la caméra.
 - Anfa Prime : son étiquette ouvre l'établissement, puis ses étages et services. Les autres établissements Akdital : fiche seulement (étages et services non modélisés, aucun plan publié).
 - Limites : le mode À pied part toujours de l'hôpital type (pas de collisions dans les tuiles de Casa réel) ; en ville générée, les fiches donnent les positions réelles mais pas de « Voir de plus près ».
+
+## 12. Explorateur des établissements (26/10/2026)
+
+Panneau « Explorer les établissements » (`components/places/PlacesExplorer.tsx`, données `lib/geo/places.ts`, navigation `components/places/locate.ts`).
+
+- Liste : les 8 établissements Casablanca / Bouskoura du répertoire officiel akdital.ma (lu le 26/10/2026), Mibtech, et les établissements des autres villes du réseau (`network.json`), montrés sur la carte du Maroc car seule leur ville est connue.
+- Positions : uniquement celles du référentiel (OSM, OSM probable, repère de fiche Google), jamais le centre-ville de `network.json`. Statuts affichés : « Position vérifiée (OSM) », « Position probable (OSM) », « Repère Google · à vérifier », « Ville seulement », « Localisation à vérifier ». Bouskoura : aucune position, la caméra ne bouge pas.
+- 3D : Anfa Prime = modèle détaillé (ouvre ses étages et services) ; Longchamps, Jerrada, Atfal = volume de leur empreinte OSM ; les autres = marqueur.
+- Écart signalé : sur akdital.ma, ANFA PRIME est classé dans le filtre « Agadir » ; conservé à Casablanca (parcelle OSM, adresse publique Bd Ghandi).
+- Mibtech : repère de la fiche Google « MIBTECH » ; adresse officielle « 24 Rue des Papillons » = boulevard Mahdi Elmandjra (ancien nom dans OSM) ; bâtiment exact à confirmer (`mibtech-identification.md`).
+- Ville générée : les positions réelles n'existent qu'en Casa réel ; « Ouvrir en Casa réel » recharge la vue réelle et vole au lieu (`?casa=reel&lieu=<id>`).

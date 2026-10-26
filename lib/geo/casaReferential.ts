@@ -51,8 +51,17 @@ export const AKDITAL_CASA: Place[] = [
   { id: "cioc", type: "Établissement de santé Akdital", r: 1200, name: "Centre International d'Oncologie Casablanca", lat: 33.5568574, lon: -7.6309231, status: "fiche", scene: "marker", note: "aucune entité OSM correspondante ; à 146 m de Jerrada Oasis" },
 ];
 
-/** Every place of the referential by id (monuments, public places and the Akdital establishments). */
-export const placeById = (id: string): Place | undefined => CASA_LANDMARKS.find((p) => p.id === id) ?? AKDITAL_CASA.find((p) => p.id === id);
+/** Partner buildings (not Akdital). Mibtech: the point of its Google Maps listing « MIBTECH » (link given by the user, the
+ *  listing the official site mibtech.ma links to as well); the exact building is not identified yet
+ *  (docs/research/mibtech-identification.md), so it stays a marker. */
+export const PARTNERS_CASA: Place[] = [
+  { id: "mibtech", type: "Bâtiment partenaire", r: 900, name: "Mibtech", lat: 33.5557132, lon: -7.643536, status: "fiche", scene: "marker",
+    note: "repère de la fiche Google « MIBTECH » ; siège officiel « 24 Rue des Papillons » (ancien nom du boulevard Mahdi Elmandjra dans OSM) ; aucun bâtiment OSM sous le repère : bâtiment exact à confirmer" },
+];
+
+/** Every place of the referential by id (monuments, public places, the Akdital establishments, partners). */
+export const placeById = (id: string): Place | undefined =>
+  CASA_LANDMARKS.find((p) => p.id === id) ?? AKDITAL_CASA.find((p) => p.id === id) ?? PARTNERS_CASA.find((p) => p.id === id);
 /** The referential place a district label names (labels drawn by the OSM districts carry the same name). */
 export const placeIdOf = (name: string): string | undefined => CASA_LANDMARKS.find((p) => p.name === name)?.id;
 /** Date the positions were checked (Nominatim / OpenStreetMap). */

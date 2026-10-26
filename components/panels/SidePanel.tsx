@@ -76,7 +76,7 @@ export default function SidePanel() {
             </span>
           ))}
         </nav>
-        <button type="button" onClick={() => select({ kind: "overview", id: level })} data-anchor="panel:close" aria-label="Fermer le panneau"
+        <button type="button" onClick={() => select({ kind: "overview", id: level }, sel?.kind === "landmark" ? { focus: false } : undefined)} data-anchor="panel:close" aria-label="Fermer le panneau"
           className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/[0.06] text-[var(--txt-2)] ring-1 ring-white/[0.08] transition-colors hover:bg-white/[0.14] hover:text-white">
           <I.close size={16} />
         </button>

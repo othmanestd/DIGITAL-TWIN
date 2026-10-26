@@ -9,6 +9,8 @@ import { DEPT, DEPTS, ALL_DEPTS, AP_FAC, AP_FLOORS, CASE_DEPT, ROLE_LABEL, ROLE_
 import { SITES, CITIES, INTERNATIONAL, GROUP } from "@/lib/geo/network";
 import { facilityBySlug, facilitySites } from "@/lib/facilities";
 import { placeById, REFERENTIAL_CHECKED } from "@/lib/geo/casaReferential";
+import { explorerPlace, hasPoint, COORD_LABEL, MODEL_LABEL } from "@/lib/geo/places";
+import { locatePlace, openInCasaReel } from "@/components/places/locate";
 import { CASA_REEL, geoToScene } from "@/lib/geo/casaFrame";
 import { rig } from "@/lib/rig";
 import { DeptIcon, I } from "@/components/ui/icons";
@@ -560,7 +562,7 @@ export function crumbs(kind: string, id: string, caseId: string | null): { label
   else if (kind === "site") { const x = SITES.find((y) => y.slug === id); out = [{ label: "Maroc", go: () => st.setLevel("morocco") }, ...(x ? [{ label: x.city, go: () => st.select({ kind: "city", id: x.citySlug }) }] : []), { label: x?.name ?? id }]; }
   else if (kind === "country") out = [{ label: "Monde", go: () => st.setLevel("world") }, { label: id === "MA" ? "Maroc" : INTERNATIONAL.find((x) => x.iso === id)?.country ?? id }];
   else if (kind === "facility") { const x = SITES.find((y) => y.slug === id); out = [{ label: x?.city ?? "Casablanca", go: () => st.setLevel("city") }, { label: x?.name ?? id }]; }
-  else if (kind === "landmark") out = [{ label: "Casablanca", go: () => st.setLevel("city") }, { label: placeById(id)?.name ?? id }];
+  else if (kind === "landmark") out = [{ label: "Casablanca", go: () => st.setLevel("city") }, { label: explorerPlace(id)?.name ?? placeById(id)?.name ?? id }];
   if (caseId && kind !== "case") {
     const d = DEPT[CASE_DEPT[caseId]];
     if (kind === "dept" || kind === "person") { const last = out[out.length - 1]; if (kind === "dept" && d) out[out.length - 1] = { ...last, go: () => st.openCase(null) }; if (kind === "person") out[out.length - 1] = { ...last, go: () => st.openCase(null) }; }
@@ -581,6 +583,7 @@ const SCENE_LABEL = {
  *  (lib/geo/casaReferential.ts) — nothing is added that it does not source. */
 export function LandmarkView({ id }: { id: string }) {
   const select = useApp((st) => st.select);
+  if (explorerPlace(id)) return <ExplorerPlaceView id={id} />;
   const p = placeById(id);
   if (!p) return <div className={`${s.card} rounded-[14px] px-4 py-3 text-[13px] text-[var(--txt-2)]`}>Ce lieu n&apos;est pas dans le référentiel de Casablanca.</div>;
   const ak = p.type === "Établissement de santé Akdital";
@@ -614,6 +617,54 @@ export function LandmarkView({ id }: { id: string }) {
       <div className="text-[11.5px] leading-snug text-[var(--mut)]">
         Position vérifiée le {REFERENTIAL_CHECKED} (Nominatim / OpenStreetMap){osmUrl ? <> · <a href={osmUrl} target="_blank" rel="noreferrer" className="underline hover:text-white">objet {p.osm}</a></> : null}
         {" · "}<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="underline hover:text-white">© contributeurs OpenStreetMap (ODbL)</a>
+      </div>
+    </div>
+  );
+}
+
+/** Card of an establishment of the explorer (lib/geo/places.ts): institutional, public and sourced facts only — no beds,
+ *  services or equipment that the sources do not give. */
+function ExplorerPlaceView({ id }: { id: string }) {
+  const select = useApp((st) => st.select);
+  const p = explorerPlace(id)!;
+  const ak = p.brand === "Akdital";
+  const row = (k: string, v: ReactNode) => (
+    <div className="flex gap-3 py-1.5 text-[12.5px] leading-snug"><span className="w-[118px] shrink-0 text-[var(--mut)]">{k}</span><span className="min-w-0 flex-1 text-[var(--txt)]">{v}</span></div>
+  );
+  const link = (href: string, label: string) => <a href={href} target="_blank" rel="noreferrer" className="underline decoration-white/30 hover:text-white">{label}</a>;
+  const btn = "rounded-full bg-white/[0.08] px-3 py-1.5 text-[12.5px] font-medium text-white ring-1 ring-white/[0.12] hover:bg-white/[0.16]";
+  return (
+    <div className="flex h-full flex-col gap-5">
+      <Title eyebrow={<>{p.city} · {p.category}{ak ? " · réseau Akdital" : ""}</>} title={p.name} color={ak ? "#1DB4EA" : "#9B8CFF"}
+        icon={ak ? <AkditalMark size={26} /> : <I.city size={22} />} />
+      <div className="flex flex-wrap gap-2">
+        {hasPoint(p) && CASA_REEL && <button type="button" className={btn} onClick={() => locatePlace(id)} data-anchor={`place-fly:${id}`}>Localiser sur la carte</button>}
+        {hasPoint(p) && !CASA_REEL && <button type="button" className={btn} onClick={() => openInCasaReel(id)}>Ouvrir en Casa réel</button>}
+        {p.networkSlug && ak && <button type="button" className={btn} onClick={() => select({ kind: "site", id: p.networkSlug! })}>Voir sur la carte du Maroc</button>}
+      </div>
+      {p.model3D === "marker" && hasPoint(p) && (
+        <p className="rounded-[12px] bg-[#F2B84B]/10 px-3 py-2 text-[12px] leading-snug text-[#F2D38B] ring-1 ring-[#F2B84B]/25">Modèle 3D pas encore disponible : un marqueur indique la position.</p>
+      )}
+      {!hasPoint(p) && (
+        <p className="rounded-[12px] bg-white/[0.05] px-3 py-2 text-[12px] leading-snug text-[var(--txt-2)] ring-1 ring-white/[0.08]">Localisation à vérifier : aucune position de bâtiment n&apos;est confirmée, la caméra ne se déplace pas.</p>
+      )}
+      <div className={`${s.card} rounded-[14px] px-4 py-2`}>
+        {row("Nom officiel", p.officialName)}
+        {row("Catégorie", p.category)}
+        {row("Ville", p.city)}
+        {row("Quartier", p.district ? <>{p.district} <span className="text-[var(--mut)]">(selon OpenStreetMap au point)</span></> : "non renseigné")}
+        {row("Adresse", p.address ? <>{p.address} <span className="text-[var(--mut)]">({p.addressSource})</span></> : "non renseignée")}
+        {row("Coordonnées", p.latitude != null && p.longitude != null && hasPoint(p)
+          ? <>{p.latitude.toFixed(6)}, {p.longitude.toFixed(6)} · {COORD_LABEL[p.coordinateStatus]}{p.coordinateSource ? <span className="text-[var(--mut)]"> · {p.coordinateSource}</span> : null}</>
+          : COORD_LABEL[p.coordinateStatus])}
+        {row("Modèle 3D", MODEL_LABEL[p.model3D])}
+        {p.officialUrl && row("Site officiel", link(p.officialUrl, p.officialUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")))}
+        {p.mapUrl && row("Google Maps", link(p.mapUrl, p.brand === "Mibtech" ? "lien fourni" : "voir le point"))}
+        {p.description && row("Remarque", p.description)}
+      </div>
+      <div className="text-[11.5px] leading-snug text-[var(--mut)]">
+        Sources : {p.dataSource}{p.lastVerifiedAt ? ` · vérifié le ${p.lastVerifiedAt}` : ""}
+        {hasPoint(p) ? <>{" · "}{link("https://www.openstreetmap.org/copyright", "© contributeurs OpenStreetMap (ODbL)")}</> : null}
       </div>
     </div>
   );
