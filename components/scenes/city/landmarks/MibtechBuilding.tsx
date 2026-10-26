@@ -1,18 +1,15 @@
 "use client";
-// Mibtech's building (Casa réel only), boulevard Mahdi Elmandjra (ex Rue des Papillons), L'Oasis.
-// Sources (docs/research/mibtech-identification.md): both Google pins of the « MIBTECH » listing; overhead imagery (Esri World
-// Imagery z19) for the massing; three street photos supplied by the user (Google Maps, Feb. and Jul. 2025) for the
-// architecture — REFERENCES only: every surface below is procedural, nothing is copied from a photo, and the shop signs and
-// posters of the ground floor are left out (no advertising in the city).
-// What the photos show, and what is modelled:
-//   · ground floor (≈ 4.6 m): light grey stone plinth, glazed shopfronts, a service door, and on the right the office entrance:
-//     a recessed portal clad in anthracite fluted panels, glazed door and transom, dark granite step;
-//   · above it, cantilevered over the street (≈ 1.4 m), three office floors (≈ 3.8 m) in a navy-blue glass curtain wall with dark
-//     mullions and a band at each floor;
-//   · in front of the glass, light grey aluminium fins, folded into facets and turned at varying angles (the "wave"), hanging
-//     below the slab and rising in a saw-tooth above the roof, on the street front and around the south-west corner.
-// Estimated (not measured): footprint ≈ 26 × 14 m + a north-west annex ≈ 11 × 9 m (overhead view), floor heights (photos),
-// total ≈ 16 m. The back (north-west) and the side against the neighbour are not documented: plain render.
+// MIBTECH's building (Casa réel only), boulevard Mahdi Elmandjra (ex Rue des Papillons), L'Oasis.
+// Sources (docs/research/mibtech-identification.md, mibtech-interieur-phase-A.md):
+//   · the three office floors, their footprint, walls, windows, partitions, doors, columns, stair and lift: the architect's
+//     dimensioned plans (MB Interior Architects, « plan cotation » APS, 16/10/2024) → mibtech/mibtechPlanData.ts (generated)
+//     → mibtech/mibtechGeo.ts; the plans' footprint matches the roof seen on the overhead imagery (Esri World Imagery z19);
+//   · the street front (no plan of it): three street photos supplied by the user (Google Maps, Feb. and Jul. 2025), REFERENCES
+//     only — procedural surfaces, no shop sign: navy-blue curtain wall, folded aluminium fins, the cantilever over the street,
+//     the ground floor (stone plinth, neutral shopfronts, service door) and the office entrance (fluted anthracite portal).
+// Heights are provisional (mibtechGeo MB_H): ground floor 4.6 m, 3.8 m floor to floor, roof at 16 m.
+// Placement: the plans' frame (x along the street front, z towards the street, origin = middle of the façade glass) is set
+// on the front line found earlier from the Google pins and the overhead view, the boulevard's bearing 40°.
 import * as THREE from "three";
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
@@ -22,19 +19,29 @@ import { useApp } from "@/lib/store";
 import { geoToScene } from "@/lib/geo/casaFrame";
 import type { Solid } from "../collide";
 import { ENV } from "./env";
-import { lmOpacity, setFade, yawedSolids } from "./shared";
+import { lmOpacity, setFade } from "./shared";
+import { MB_H, MB_OUTLINE, MB_TOP, buildMibtech, inOutline, type MbMat } from "./mibtech/mibtechGeo";
+import { MIBTECH_PLANS } from "./mibtech/mibtechPlanData";
 
 export const MIBTECH_ID = "mibtech";
 const ROOF_PIN = geoToScene(33.5558823, -7.6435464);
-/** east / north offsets (m) from the roof pin → scene (x east, z south) */
-const P = (e: number, n: number): [number, number] => [ROOF_PIN.x + e, ROOF_PIN.z - n];
-const MAIN = { c: P(4.9, -1.3), L: 26, W: 14 };
-const ANNEX = { c: P(-2.7, 8), w: 11, d: 9 };
-// local frame of the main wing: +x along the boulevard (towards the north-east), +z towards the street (south-east)
-const THETA = (50 * Math.PI) / 180; // bearing of the boulevard 40° → group rotation
-const GF = 4.6, FLOOR = 3.8, FLOORS = 3, TOP = GF + FLOORS * FLOOR; // 16.0 m
-const CANT = 1.4; // cantilever of the upper floors over the street
-const HL = MAIN.L / 2, HW = MAIN.W / 2;
+const THETA = (50 * Math.PI) / 180;                               // plan +x → along the boulevard (bearing 40°)
+const U: [number, number] = [Math.cos(THETA), -Math.sin(THETA)];  // plan +x in the scene
+const V: [number, number] = [Math.sin(THETA), Math.cos(THETA)];   // plan +z (towards the street) in the scene
+/** scene position of the plans' origin (middle of the street façade glass) */
+const ORIGIN: [number, number] = [ROOF_PIN.x + 4.9 + 7 * V[0], ROOF_PIN.z + 1.3 + 7 * V[1]];
+/** scene point → plan frame */
+export const toPlan = (x: number, z: number): [number, number] => {
+  const dx = x - ORIGIN[0], dz = z - ORIGIN[1];
+  return [dx * U[0] + dz * U[1], dx * V[0] + dz * V[1]];
+};
+/** plan frame → scene point */
+export const fromPlan = (x: number, z: number): [number, number] => [ORIGIN[0] + x * U[0] + z * V[0], ORIGIN[1] + x * U[1] + z * V[1]];
+const GF = MB_H.ground, TOP = MB_TOP, FLOOR = MB_H.floor;
+// street front in the plan frame: the façade glass of the floors (curtain wall element of the plans) and the ground floor
+const FRONT = (() => { const c = MIBTECH_PLANS[2].curtain.reduce((a, P) => (P.length > a.length ? P : a), MIBTECH_PLANS[2].curtain[0]); const xs = c.map((q) => q[0]); return { x0: Math.min(...xs), x1: Math.max(...xs) }; })();
+const PLATE = (() => { const xs = MB_OUTLINE.map((q) => q[0]); return { x0: Math.min(...xs), x1: Math.max(...xs) }; })();
+const CANT = 1.4; // the ground floor's street wall, set back under the floors (photos; estimated)
 
 // ---------------------------------------------------------------- procedural textures (canvas)
 function canvas(w: number, h: number, f: (g: CanvasRenderingContext2D) => void) {
@@ -143,75 +150,80 @@ function fins(): THREE.BufferGeometry {
       parts.push(g);
     }
   };
-  const pitch = 1.0, off = 0.55;
+  const pitch = 1.0, off = 0.6;
   let i = 0;
-  for (let x = -HL + 0.45; x <= HL - 0.3; x += pitch) blade(x, HW + off, 0, i++);         // street front (+z)
-  for (let z = HW - 0.5; z >= -HW + 0.4; z -= pitch) blade(-HL - off, z, Math.PI / 2, i++); // south-west side (−x)
+  for (let x = PLATE.x0 + 0.45; x <= PLATE.x1 - 0.3; x += pitch) blade(x, off, 0, i++);   // street front
+  for (let z = -0.5; z >= -6.5; z -= pitch) blade(PLATE.x0 - off, z, Math.PI / 2, i++);  // around the south-west corner
   const m = mergeGeometries(parts)!; parts.forEach((p) => p.dispose());
   return m;
 }
 
-function build() {
-  const glass = acc(), stone = acc(), flute = acc(), shop = acc(), dark = acc(), render = acc(), roof = acc(), door = acc();
-  const zs = HW - CANT; // ground-floor street wall, under the cantilever
-  // ---- upper floors: curtain wall on the street and the south-west side, render elsewhere
-  wall(glass, -HL, HW, HL, HW, GF, TOP, GLASS_TILE, -1);
-  wall(glass, -HL, -HW, -HL, HW, GF, TOP, GLASS_TILE, -1);
-  wall(render, HL, HW, HL, -HW, GF, TOP, [4, 4], -1);
-  wall(render, HL, -HW, -HL, -HW, GF, TOP, [4, 4], -1);
-  flat(dark, -HL, zs, HL, HW, GF, false);                         // soffit of the cantilever
-  wall(dark, -HL, HW, HL, HW, GF - 0.45, GF, [4, 4], -1);          // slab edge
-  // roof: flat, thin parapet, plant room
-  flat(roof, -HL, -HW, HL, HW, TOP, true, [6, 6]);
-  for (const [x0, z0, x1, z1] of [[-HL, HW - 0.25, HL, HW], [-HL, -HW, HL, -HW + 0.25], [-HL, -HW, -HL + 0.25, HW], [HL - 0.25, -HW, HL, HW]] as const) boxWalls(dark, x0, z0, x1, z1, TOP, TOP + 0.5, [4, 4]);
-  boxWalls(render, 1.5, -5.5, 6.5, -1.5, TOP, TOP + 3, [4, 4]);
-  // ---- ground floor along the street (south-west → north-east)
-  wall(stone, -HL, zs, -9, zs, 0, GF, STONE_TILE, -1);
-  wall(door, -11.8, zs + 0.02, -10.2, zs + 0.02, 0, 2.4, [1.6, 2.4], -1);  // service door
-  wall(shop, -9, zs, -3, zs, 0, GF, SHOP_TILE, -1);
-  wall(stone, -3, zs, -2.4, zs, 0, GF, STONE_TILE, -1);
-  wall(shop, -2.4, zs, 6.5, zs, 0, GF, SHOP_TILE, -1);
-  wall(flute, 6.5, zs, 8, zs, 0, GF, FLUTE_TILE, -1);
-  // entrance portal: recessed 2 m, fluted anthracite, glazed door + transom, granite step
-  const zb = zs - 2;
-  wall(flute, 8, zb, HL, zb, 0, GF, FLUTE_TILE, -1);
-  wall(flute, 8, zs, 8, zb, 0, GF, FLUTE_TILE, -1);
-  wall(flute, HL, zb, HL, zs, 0, GF, FLUTE_TILE, -1);
-  flat(dark, 8, zb, HL, zs, GF - 0.02, false);
-  // glazed door and transom in a dark frame (photo 2)
-  wall(door, 9.0, zb + 0.02, 11.0, zb + 0.02, 0.15, 4.0, [2, 4], -1);
-  wall(shop, 9.12, zb + 0.04, 10.88, zb + 0.04, 0.15, 2.75, [1.76, GF], -1);
-  wall(shop, 9.12, zb + 0.04, 10.88, zb + 0.04, 2.87, 3.88, [1.76, GF], -1, 0.3);
-  boxWalls(dark, 8, zb, HL, HW, 0, 0.15, [4, 4]);
-  // ground-floor sides and back
-  wall(stone, -HL, -HW, -HL, zs, 0, GF, STONE_TILE, -1);
-  wall(stone, HL, zs, HL, -HW, 0, GF, STONE_TILE, -1);
-  wall(stone, HL, -HW, -HL, -HW, 0, GF, STONE_TILE, -1);
-  return { glass: geo(glass), stone: geo(stone), flute: geo(flute), shop: geo(shop), dark: geo(dark), render: geo(render), roof: geo(roof), door: geo(door), fins: fins() };
-}
-/** the north-west annex (world axes, centred on its own origin): plain render, same height (not documented) */
-function buildAnnex() {
-  const r = acc(), w = ANNEX.w / 2, d = ANNEX.d / 2;
-  boxWalls(r, -w, -d, w, d, 0, TOP, [4, 4]);
-  return geo(r);
+/** the street front from the photos (plan frame): curtain wall skin, cantilever, ground floor, office entrance, roof plant room */
+function front() {
+  const glass = acc(), stone = acc(), flute = acc(), shop = acc(), dark = acc(), render = acc(), door = acc();
+  const zs = -CANT, X0 = PLATE.x0, X1 = PLATE.x1;
+  wall(glass, FRONT.x0, 0.04, FRONT.x1, 0.04, GF, TOP, GLASS_TILE, -1);   // navy skin over the plans' glazed front (seen from outside)
+  flat(dark, X0, zs, X1, 0.04, GF, false);                                // soffit of the cantilever
+  wall(dark, X0, 0.05, X1, 0.05, GF - 0.45, GF, [4, 4], -1);              // slab edge
+  // ground floor along the street (south-west → north-east), set back under the floors
+  wall(stone, X0, zs, X0 + 6, zs, 0, GF, STONE_TILE, -1);
+  wall(door, X0 + 3.2, zs + 0.02, X0 + 4.8, zs + 0.02, 0, 2.4, [1.6, 2.4], -1); // service door
+  wall(shop, X0 + 6, zs, X0 + 12, zs, 0, GF, SHOP_TILE, -1);
+  wall(stone, X0 + 12, zs, X0 + 12.6, zs, 0, GF, STONE_TILE, -1);
+  wall(shop, X0 + 12.6, zs, X1 - 8.5, zs, 0, GF, SHOP_TILE, -1);
+  wall(flute, X1 - 8.5, zs, X1 - 7, zs, 0, GF, FLUTE_TILE, -1);
+  // office entrance: portal recessed 2 m, fluted anthracite, glazed door + transom, granite step (photo 2)
+  const zb = zs - 2, a = X1 - 7, b = X1 - 2;
+  wall(flute, a, zb, b, zb, 0, GF, FLUTE_TILE, -1);
+  wall(flute, a, zs, a, zb, 0, GF, FLUTE_TILE, -1);
+  wall(flute, b, zb, b, zs, 0, GF, FLUTE_TILE, -1);
+  flat(dark, a, zb, b, zs, GF - 0.32, false);
+  wall(door, a + 1.5, zb + 0.02, a + 3.5, zb + 0.02, 0.15, 4.0, [2, 4], -1);
+  wall(shop, a + 1.62, zb + 0.04, a + 3.38, zb + 0.04, 0.15, 2.75, [1.76, GF], -1);
+  wall(shop, a + 1.62, zb + 0.04, a + 3.38, zb + 0.04, 2.87, 3.88, [1.76, GF], -1, 0.3);
+  boxWalls(dark, a, zb, b, 0, 0, 0.15, [4, 4]);
+  wall(stone, b, zs, X1, zs, 0, GF, STONE_TILE, -1);
+  // roof: stair exit / plant room over the core
+  const sb = MIBTECH_PLANS[2].stair_meta.box;
+  boxWalls(render, sb[0][0], sb[0][1], sb[1][0], sb[1][1], TOP, TOP + 3, [4, 4]);
+  return { glass: geo(glass), stone: geo(stone), flute: geo(flute), shop: geo(shop), dark: geo(dark), render: geo(render), door: geo(door), fins: fins() };
 }
 
-/** Walk-mode solids (world). */
+/** Walk-mode solids (world): the footprint as 2 m cells (each pushed as the AABB of its rotated square). */
 export function mibtechSolids(): Solid[] {
-  const yaw = Math.PI / 2 + THETA; // yawedSolids frame: its local +z along the boulevard
-  return [
-    ...yawedSolids(MAIN.c[0], MAIN.c[1], yaw, -HW, HW, -HL, HL, TOP, 12),
-    ...yawedSolids(ANNEX.c[0], ANNEX.c[1], 0, -ANNEX.w / 2, ANNEX.w / 2, -ANNEX.d / 2, ANNEX.d / 2, TOP, 12),
-  ];
+  const out: Solid[] = [], c = 2;
+  const xs = MB_OUTLINE.map((q) => q[0]), zs = MB_OUTLINE.map((q) => q[1]);
+  for (let x = Math.min(...xs); x < Math.max(...xs); x += c)
+    for (let z = Math.min(...zs); z < Math.max(...zs); z += c) {
+      if (!inOutline(MB_OUTLINE, x + c / 2, z + c / 2)) continue;
+      const pts = [[x, z], [x + c, z], [x, z + c], [x + c, z + c]].map(([a, b]) => fromPlan(a, b));
+      out.push({ x0: Math.min(...pts.map((p) => p[0])), x1: Math.max(...pts.map((p) => p[0])), z0: Math.min(...pts.map((p) => p[1])), z1: Math.max(...pts.map((p) => p[1])), h: TOP });
+    }
+  return out;
 }
-/** Where the city layer must not draw the older OSM villas (scene rect around the lot). */
-export const MIBTECH_SKIP = (() => { const a = P(-8, 9), b = P(4, -9); return { x0: a[0], x1: b[0], z0: a[1], z1: b[1] }; })();
+/** The city layer must not draw the older OSM villas on the building's footprint (scene point, 1 m margin). */
+export function mibtechCovers(x: number, z: number) {
+  const [px, pz] = toPlan(x, z);
+  return inOutline(MB_OUTLINE, px, pz) || [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => inOutline(MB_OUTLINE, px + a, pz + b));
+}
 /** label height above the ground */
 export const MIBTECH_TOP = TOP;
 
+/** provisional interior materials (no finish schedule, photo or render of the interior yet: neutral, to be replaced) */
+function plainMats(): Record<MbMat, THREE.MeshStandardMaterial> {
+  const m = (color: string, o: Partial<THREE.MeshStandardMaterialParameters> = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, ...o });
+  return {
+    wall: m("#E9E6DF"), column: m("#D8D6D1"), partition: m("#F1EFEA"), cubicle: m("#C9CCD1", { roughness: 0.5 }),
+    glass: m("#A9C4D6", { transparent: true, opacity: 0.22, roughness: 0.05, metalness: 0.1, depthWrite: false }),
+    frame: m("#3B4048", { roughness: 0.45, metalness: 0.5 }), door: m("#B08A62", { roughness: 0.6 }),
+    floor: m("#C9C4BA", { roughness: 0.7 }), ceiling: m("#F4F3EF", { roughness: 0.95 }), slabEdge: m("#DAD7D0"),
+    lift: m("#9DA3A8", { roughness: 0.35, metalness: 0.6 }), roof: m("#C8C4BC", { roughness: 0.95 }), groundWall: m("#BDB8AE", { roughness: 0.82 }),
+  };
+}
+
 export function MibtechBuilding() {
   const res = useMemo(() => {
-    const G = build(), annex = buildAnnex();
+    const F = front(), B = buildMibtech();
     const T = { glass: glassTex(false), glassN: glassTex(true), stone: stoneTex(), flute: fluteTex(), shop: shopTex(false), shopN: shopTex(true) };
     const M = {
       glass: new THREE.MeshStandardMaterial({ map: T.glass, emissiveMap: T.glassN, emissive: "#FFFFFF", emissiveIntensity: 0, roughness: 0.14, metalness: 0.2, envMapIntensity: 1.2 }),
@@ -220,44 +232,61 @@ export function MibtechBuilding() {
       shop: new THREE.MeshStandardMaterial({ map: T.shop, emissiveMap: T.shopN, emissive: "#FFFFFF", emissiveIntensity: 0, roughness: 0.12, metalness: 0.4 }),
       dark: new THREE.MeshStandardMaterial({ color: "#272B31", roughness: 0.7, metalness: 0.2 }),
       render: new THREE.MeshStandardMaterial({ color: "#D9D6CF", roughness: 0.9 }),
-      roof: new THREE.MeshStandardMaterial({ color: "#C8C4BC", roughness: 0.95 }),
       door: new THREE.MeshStandardMaterial({ color: "#14181D", roughness: 0.2, metalness: 0.5 }),
       fin: new THREE.MeshStandardMaterial({ color: "#D6DADF", roughness: 0.38, metalness: 0.45, envMapIntensity: 1.1 }),
     };
-    return { G, annex, T, M };
+    const P = plainMats();
+    return { F, B, T, M, P };
   }, []);
-  const list = useMemo(() => Object.values(res.M) as THREE.Material[], [res]);
+  const list = useMemo(() => [...Object.values(res.M), ...Object.values(res.P)] as THREE.Material[], [res]);
   useEffect(() => () => {
-    Object.values(res.G).forEach((g) => g.dispose()); res.annex.dispose();
-    Object.values(res.T).forEach((t) => t.dispose()); Object.values(res.M).forEach((m) => m.dispose());
-  }, [res]);
+    Object.values(res.F).forEach((g) => g.dispose()); Object.values(res.B).forEach((l) => l.forEach((p) => p.geo.dispose()));
+    Object.values(res.T).forEach((t) => t.dispose()); list.forEach((m) => m.dispose());
+  }, [res, list]);
   const root = useRef<THREE.Group>(null);
   const fade = useRef({ v: 1 });
+  // dev (QA): __mibtech.show(f) shows the building up to floor f (0 = the whole building), for top views against the plans
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    (window as unknown as { __mibtech?: unknown }).__mibtech = {
+      root: () => root.current,
+      show(f: number) {
+        const g = root.current; if (!g) return;
+        g.traverse((o) => {
+          const m = /^mibtech\.(f(\d)|roof)$/.exec(o.name);
+          if (m) o.visible = !f || (m[2] ? Number(m[2]) <= f : false);
+          if (o instanceof THREE.Mesh && o.parent === g) o.visible = !f; // the street-front dressing
+        });
+      },
+      origin: ORIGIN, theta: THETA,
+    };
+  }, []);
   useFrame(() => {
     const g = root.current;
     if (!g) return;
     const op = lmOpacity(frame.alt);
     g.visible = op > 0.004;
     if (!g.visible) return;
-    setFade(list, op, fade.current);
+    setFade(list.filter((m) => m !== res.P.glass), op, fade.current);
     res.M.glass.emissiveIntensity = ENV.night * 0.9; res.M.shop.emissiveIntensity = 0.28 + ENV.night * 0.6; // shops lit by day too (photos)
   });
   const onClick = (e: ThreeEvent<MouseEvent>) => { if (e.delta > 6) return; e.stopPropagation(); useApp.getState().select({ kind: "landmark", id: MIBTECH_ID }); };
-  const { G, M } = res;
+  const { F, B, M, P } = res;
   return (
-    <group ref={root} onClick={onClick} name="mibtech">
-      <group position={[MAIN.c[0], 0, MAIN.c[1]]} rotation={[0, THETA, 0]}>
-        <mesh geometry={G.glass} material={M.glass} castShadow />
-        <mesh geometry={G.stone} material={M.stone} castShadow receiveShadow />
-        <mesh geometry={G.flute} material={M.flute} />
-        <mesh geometry={G.shop} material={M.shop} />
-        <mesh geometry={G.dark} material={M.dark} castShadow />
-        <mesh geometry={G.render} material={M.render} castShadow />
-        <mesh geometry={G.roof} material={M.roof} receiveShadow />
-        <mesh geometry={G.door} material={M.door} />
-        <mesh geometry={G.fins} material={M.fin} castShadow />
-      </group>
-      <mesh position={[ANNEX.c[0], 0, ANNEX.c[1]]} geometry={res.annex} material={M.render} castShadow />
+    <group ref={root} onClick={onClick} name="mibtech" position={[ORIGIN[0], 0, ORIGIN[1]]} rotation={[0, THETA, 0]}>
+      {Object.entries(B).map(([grp, parts]) => (
+        <group key={grp} name={`mibtech.${grp}`}>
+          {parts.map((p) => <mesh key={p.key} geometry={p.geo} material={P[p.key]} castShadow={p.key === "wall" || p.key === "slabEdge" || p.key === "roof"} />)}
+        </group>
+      ))}
+      <mesh geometry={F.glass} material={M.glass} />
+      <mesh geometry={F.stone} material={M.stone} castShadow receiveShadow />
+      <mesh geometry={F.flute} material={M.flute} />
+      <mesh geometry={F.shop} material={M.shop} />
+      <mesh geometry={F.dark} material={M.dark} castShadow />
+      <mesh geometry={F.render} material={M.render} castShadow />
+      <mesh geometry={F.door} material={M.door} />
+      <mesh geometry={F.fins} material={M.fin} castShadow />
     </group>
   );
 }

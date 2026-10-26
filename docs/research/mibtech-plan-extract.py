@@ -263,6 +263,9 @@ def main():
     for n, tag in FLOORS:
         pdf = next(f for f in glob.glob(os.path.join(src, "*.pdf")) if tag in f)
         out, meta, ctx = extract(pdf)
+        out["slab"], meta["slab_area_m2"] = slab_outline(out)
+        out["slab"] = [out["slab"]]
+        meta["slab_vertices"] = len(out["slab"][0])
         data[n] = out; metas[n] = meta
         print(f"étage {n}: {json.dumps(meta, ensure_ascii=False)}")
         if shots:
@@ -275,10 +278,65 @@ def main():
         f.write("export type PlanPoly = [number, number][];\n")
         f.write("export type PlanClass = \"masonry\" | \"window\" | \"curtain\" | \"concrete\" | \"partition\" | \"cubicle\" | \"door\" | \"glass\" | \"unit\" | \"stair\" | \"lift\";\n")
         f.write("export type StairMeta = { box: [number, number][]; lift: [number, number][]; tread_lines: number; tread_depth_m: number | null };\n")
-        f.write("export type FloorPlan = Record<PlanClass, PlanPoly[]> & { stair_meta: StairMeta };\n")
+        f.write("export type FloorPlan = Record<PlanClass | \"slab\", PlanPoly[]> & { stair_meta: StairMeta };\n")
         f.write(f"export const PLAN_META = {json.dumps(metas)} as const;\n")
         f.write(f"export const MIBTECH_PLANS: Record<1 | 2 | 3, FloorPlan> = {json.dumps(data, separators=(',', ':'))};\n")
     print("written", dst)
+
+
+def rdp(P, eps):
+    if len(P) < 3:
+        return P
+    a, b = P[0], P[-1]; L = math.hypot(b[0] - a[0], b[1] - a[1]) or 1e-9
+    d = [abs((b[0] - a[0]) * (a[1] - q[1]) - (a[0] - q[0]) * (b[1] - a[1])) / L for q in P[1:-1]]
+    i = max(range(len(d)), key=d.__getitem__) if d else 0
+    if d and d[i] > eps:
+        return rdp(P[:i + 2], eps)[:-1] + rdp(P[i + 1:], eps)
+    return [a, b]
+
+
+def slab_outline(out, res=0.05, close=7):
+    """The floor plate: everything inside the outer wall ring (walls, windows, glazed façade and concrete included).
+    Rasterised at `res`; small gaps of the ring (corner joints) closed by a dilation of `close` pixels before the outside is
+    flood-filled, then the plate is eroded back by the same amount; the region holding the stair is traced (Moore) and
+    simplified (3 cm)."""
+    from PIL import Image, ImageDraw, ImageFilter
+    # every drawn element but the (open) door leaves: the thin corner glazing of the street front closes the ring
+    ring = [P for k, v in out.items() if k not in ("door", "stair_meta") for P in v]
+    xs = [q[0] for P in ring for q in P]; zs = [q[1] for P in ring for q in P]
+    x0, z0 = min(xs) - 1, min(zs) - 1
+    W, H = int((max(xs) + 1 - x0) / res), int((max(zs) + 1 - z0) / res)
+    im = Image.new("L", (W, H), 0); g = ImageDraw.Draw(im)
+    for P in ring:
+        g.polygon([((q[0] - x0) / res, (q[1] - z0) / res) for q in P], fill=255, outline=255)
+    im = im.filter(ImageFilter.MaxFilter(close))
+    ImageDraw.floodfill(im, (0, 0), 128)
+    plate = im.point(lambda v: 0 if v == 128 else 255).filter(ImageFilter.MinFilter(close))
+    sb = out["stair_meta"]["box"]
+    seed = (int(((sb[0][0] + sb[1][0]) / 2 - x0) / res), int(((sb[0][1] + sb[1][1]) / 2 - z0) / res))
+    ImageDraw.floodfill(plate, seed, 200)
+    px = plate.load()
+    inside_ = lambda i, j: 0 <= i < W and 0 <= j < H and px[i, j] == 200
+    start = next((i, j) for j in range(H) for i in range(W) if inside_(i, j))
+    nb = [(-1, 0), (-1, -1), (0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1)]
+    cur, back, path = start, 0, [start]
+    for _ in range(W * H):
+        for k in range(8):
+            d = (back + k) % 8
+            q = (cur[0] + nb[d][0], cur[1] + nb[d][1])
+            if inside_(*q):
+                back = (d + 6) % 8     # restart the sweep from the neighbour after the one we came from
+                cur = q
+                break
+        if cur == start:
+            break
+        path.append(cur)
+    P = [(round(x0 + (i + 0.5) * res, 3), round(z0 + (j + 0.5) * res, 3)) for i, j in path]
+    # closed ring: split it at the point farthest from the start, simplify both halves
+    far = max(range(len(P)), key=lambda i: (P[i][0] - P[0][0]) ** 2 + (P[i][1] - P[0][1]) ** 2)
+    P = rdp(P[:far + 1], 0.03)[:-1] + rdp(P[far:] + [P[0]], 0.03)[:-1]
+    area = abs(sum(P[i][0] * P[i - 1][1] - P[i - 1][0] * P[i][1] for i in range(len(P))) / 2)
+    return P, round(area, 1)
 
 
 def render(ctx, out, path):
@@ -296,6 +354,11 @@ def render(ctx, out, path):
     s = 2.0
     for cls, items in out.items():
         if cls == "stair_meta":
+            continue
+        if cls == "slab":
+            for P in items:
+                pts = [unloc(q) for q in P]
+                g.line([(x * s, y * s) for x, y in pts + pts[:1]], fill=(255, 0, 0, 255), width=3)
             continue
         for P in items:
             pts = [unloc(q) for q in P]
