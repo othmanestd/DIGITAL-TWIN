@@ -302,6 +302,35 @@ function frostTex() {
     g.globalCompositeOperation = "source-over";
   });
 }
+/** brushed stainless steel (lift doors, speed gates), one texture = 1.2 m: fine horizontal brushing, soft reflection bands */
+function steelTex() {
+  return canvas(64, 256, (g) => {
+    const gr = g.createLinearGradient(0, 0, 64, 0); gr.addColorStop(0, "#A7ADB3"); gr.addColorStop(0.5, "#D5D9DD"); gr.addColorStop(1, "#9AA0A7");
+    g.fillStyle = gr; g.fillRect(0, 0, 64, 256);
+    for (let y = 0; y < 256; y++) { g.fillStyle = `rgba(${rnd(y) > 0.5 ? "255,255,255" : "60,64,70"},${0.04 + rnd(y * 7) * 0.06})`; g.fillRect(0, y, 64, 1); }
+  });
+}
+/** wood panelling (lobby photo): warm brown, long vertical grain, large panels with dark seams; one texture = 2.4 m */
+function panelTex() {
+  return canvas(128, 256, (g) => {
+    g.fillStyle = "#8A5E3C"; g.fillRect(0, 0, 128, 256);
+    for (let x = 0; x < 128; x++) { g.fillStyle = `rgba(${rnd(x * 1.3) > 0.5 ? "60,35,18" : "200,150,105"},${0.05 + rnd(x * 5) * 0.14})`; g.fillRect(x, 0, 1, 256); }
+    for (let n = 0; n < 14; n++) { g.strokeStyle = "rgba(70,42,22,0.25)"; g.lineWidth = 1; g.beginPath(); const x = rnd(n * 9) * 128; g.moveTo(x, 0); g.bezierCurveTo(x + 8, 90, x - 8, 170, x + 4, 256); g.stroke(); }
+    g.fillStyle = "rgba(40,24,12,0.8)"; g.fillRect(0, 0, 128, 2); g.fillRect(0, 0, 1.5, 256); // seams
+  });
+}
+/** black marble with white veins (lobby photo); one texture = 1.6 m */
+function blackMarbleTex() {
+  return canvas(256, 256, (g) => {
+    g.fillStyle = "#121315"; g.fillRect(0, 0, 256, 256);
+    for (let n = 0; n < 9; n++) {
+      g.strokeStyle = `rgba(235,235,232,${0.35 + rnd(n * 3) * 0.5})`; g.lineWidth = 0.6 + rnd(n * 5) * 1.8;
+      g.beginPath(); let x = rnd(n * 7) * 256, y = 0; g.moveTo(x, y);
+      while (y < 256) { x += (rnd(n * 11 + y) - 0.45) * 30; y += 14 + rnd(y + n) * 20; g.lineTo(x, y); }
+      g.stroke();
+    }
+  });
+}
 /** carpet tiles (meeting room photo): mottled grey-green, one texture = 1 m */
 function carpetTex() {
   return canvas(256, 256, (g) => {
@@ -314,7 +343,10 @@ function carpetTex() {
     g.strokeStyle = "rgba(40,42,36,0.35)"; g.lineWidth = 1; g.strokeRect(0.5, 0.5, 127, 127); g.strokeRect(128.5, 128.5, 127, 127); // 50 cm tiles
   });
 }
-function interiorMats(T: { floor: THREE.Texture; terrace: THREE.Texture; ceiling: THREE.Texture; ceilingE: THREE.Texture; veneer: THREE.Texture; wall: THREE.Texture; frost: THREE.Texture; carpet: THREE.Texture }): Record<MbMat, THREE.MeshStandardMaterial> {
+function interiorMats(T: {
+  floor: THREE.Texture; terrace: THREE.Texture; ceiling: THREE.Texture; ceilingE: THREE.Texture; veneer: THREE.Texture; wall: THREE.Texture; frost: THREE.Texture; carpet: THREE.Texture;
+  steel: THREE.Texture; panel: THREE.Texture; blackMarble: THREE.Texture; marble: THREE.Texture;
+}): Record<MbMat, THREE.MeshStandardMaterial> {
   const m = (color: string, o: Partial<THREE.MeshStandardMaterialParameters> = {}) => {
     const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.85, emissive: color, emissiveIntensity: 0, ...o });
     if (mat.map && !mat.emissiveMap) { mat.emissiveMap = mat.map; mat.emissive.set("#FFFFFF"); } // the glow keeps the pattern
@@ -329,10 +361,15 @@ function interiorMats(T: { floor: THREE.Texture; terrace: THREE.Texture; ceiling
     floor: m("#FFFFFF", { map: T.floor, emissive: "#C9C8C4", roughness: 0.3 }), terrace: m("#FFFFFF", { map: T.terrace, emissive: "#9C9C99", roughness: 0.9 }),
     carpet: m("#FFFFFF", { map: T.carpet, emissive: "#5D6056", roughness: 1 }), walnut: m("#5C3A22", { roughness: 0.45 }),
     ceiling: m("#FFFFFF", { map: T.ceiling, emissiveMap: T.ceilingE, emissive: "#FFFFFF", roughness: 0.95 }), slabEdge: m("#DAD7D0"),
-    lift: m("#9DA3A8", { roughness: 0.35, metalness: 0.6 }), roof: m("#C8C4BC", { roughness: 0.95 }), groundWall: m("#BDB8AE", { roughness: 0.82 }),
-    stair: m("#B9B6AF", { roughness: 0.7 }), rail: m("#2A2E33", { roughness: 0.4, metalness: 0.6 }),
+    lift: m("#FFFFFF", { map: T.steel, roughness: 0.3, metalness: 0.8, emissive: "#8E949B" }), roof: m("#C8C4BC", { roughness: 0.95 }), groundWall: m("#BDB8AE", { roughness: 0.82 }),
+    stair: m("#36373A", { roughness: 0.35 }), rail: m("#121315", { roughness: 0.4, metalness: 0.6 }), // dark granite treads, black steel railing (photos)
     desk: m("#D7D0C5", { roughness: 0.5 }), chair: m("#1A1B1E", { roughness: 0.75 }), metal: m("#1E1F22", { roughness: 0.4, metalness: 0.5 }),
-    panel: m("#26272A", { roughness: 0.95 }), screen: m("#141518", { roughness: 0.25, metalness: 0.3 }), leaf: m("#4E7A3C", { roughness: 0.9 }),
+    panel: m("#B7AFA2", { roughness: 0.95 }), screen: m("#141518", { roughness: 0.25, metalness: 0.3 }), leaf: m("#4E7A3C", { roughness: 0.9 }), // greige desk screens (photos)
+    steel: m("#FFFFFF", { map: T.steel, roughness: 0.32, metalness: 0.55, emissive: "#B5BABF" }), plaster: m("#F5F5F3", { roughness: 0.95 }),
+    led: m("#2A0505", { emissive: "#FF2A1A", roughness: 0.4 }), ledStrip: m("#F4F7FF", { emissive: "#FFFFFF", roughness: 0.4 }), blueLed: m("#0A0F40", { emissive: "#3E5BFF", roughness: 0.4 }),
+    marble: m("#FFFFFF", { map: T.marble, emissive: "#D6D8DB", roughness: 0.12, metalness: 0.05 }),
+    woodPanel: m("#FFFFFF", { map: T.panel, emissive: "#8A5E3C", roughness: 0.5 }), blackMarble: m("#FFFFFF", { map: T.blackMarble, emissive: "#202124", roughness: 0.15 }),
+    blind: m("#D8CFBF", { roughness: 0.95 }),
     pot: m("#B8B7B2", { roughness: 0.6 }), fabric: m("#8A8580", { roughness: 0.95 }), porcelain: m("#F7F7F5", { roughness: 0.15 }), cabinet: m("#EFECE6", { roughness: 0.2 }),
   };
 }
@@ -341,7 +378,8 @@ function lightInterior(P: Record<MbMat, THREE.MeshStandardMaterial>, night: numb
   const k = 0.13 + night * 0.2;
   for (const [key, mat] of Object.entries(P) as [MbMat, THREE.MeshStandardMaterial][]) {
     if (key === "glass" || key === "roof" || key === "groundWall" || key === "terrace" || key === "slabEdge") continue;
-    mat.emissiveIntensity = key === "ceiling" ? 0.75 + night * 0.25 : key === "frost" ? k * 1.5 : k;
+    mat.emissiveIntensity = key === "ceiling" ? 0.75 + night * 0.25 : key === "frost" ? k * 1.5
+      : key === "led" || key === "blueLed" ? 1.6 : key === "ledStrip" ? 1.2 : key === "steel" || key === "lift" ? 0.32 : key === "plaster" ? 0.3 : k;
   }
 }
 
@@ -352,6 +390,7 @@ export function MibtechBuilding() {
       glass: glassTex(false), glassN: glassTex(true), stone: stoneTex(), flute: fluteTex(), shop: shopTex(false), shopN: shopTex(true),
       floor: tileTex([208, 207, 202], 2, 1, "rgba(150,148,142,0.55)", 3, true), terrace: tileTex([168, 168, 165], 2, 2, "rgba(90,90,88,0.6)", 9),
       ceiling: ceilingTex(false), ceilingE: ceilingTex(true), veneer: veneerTex(), wall: wallTex(), frost: frostTex(), carpet: carpetTex(),
+      steel: steelTex(), panel: panelTex(), blackMarble: blackMarbleTex(), marble: tileTex([214, 216, 219], 2, 2, "rgba(150,152,156,0.45)", 21, true),
     };
     const M = {
       glass: new THREE.MeshStandardMaterial({ map: T.glass, emissiveMap: T.glassN, emissive: "#FFFFFF", emissiveIntensity: 0, roughness: 0.14, metalness: 0.2, envMapIntensity: 1.2 }),

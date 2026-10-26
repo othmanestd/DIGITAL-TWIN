@@ -22,12 +22,15 @@ export const MB_TOP = floorY(3) + MB_H.floor;
 
 export type MbMat = "wall" | "column" | "partition" | "glass" | "frame" | "door" | "cubicle" | "floor" | "ceiling" | "slabEdge" | "lift" | "roof" | "groundWall" | "stair" | "rail"
   // interior finishes and furniture (lot 5: from the office photos and the architect's electrical plans)
-  | "frost" | "terrace" | "desk" | "chair" | "metal" | "panel" | "screen" | "leaf" | "pot" | "fabric" | "porcelain" | "cabinet" | "carpet" | "walnut";
+  | "frost" | "terrace" | "desk" | "chair" | "metal" | "panel" | "screen" | "leaf" | "pot" | "fabric" | "porcelain" | "cabinet" | "carpet" | "walnut"
+  // details after the later photos: lift doors, lobby, blinds
+  | "steel" | "led" | "marble" | "woodPanel" | "blackMarble" | "blind" | "ledStrip" | "blueLed" | "plaster";
 type Acc = { pos: number[]; nor: number[]; uv: number[]; idx: number[] };
 const TILE: Record<MbMat, number> = {
   // wall, column, partition: one texture = 4 m, its v measured from the floor (the skirting at the bottom)
   wall: 4, column: 4, partition: 4, glass: 2, frame: 1, door: 2.2, cubicle: 2.2, floor: 1.2, ceiling: 2.4, slabEdge: 1, lift: 1, roof: 4, groundWall: 2.4, stair: 1, rail: 1,
   frost: 2.8, terrace: 1.2, desk: 1, chair: 1, metal: 1, panel: 1, screen: 1, leaf: 1, pot: 1, fabric: 1, porcelain: 1, cabinet: 1, carpet: 1, walnut: 1,
+  steel: 1.2, led: 1, marble: 1.2, woodPanel: 2.4, blackMarble: 1.6, blind: 1, ledStrip: 1, blueLed: 1, plaster: 1,
 };
 
 class Bag {
@@ -128,6 +131,7 @@ function floorParts(f: MbFloor, plan: FloorPlan) {
     }
     prism(b, "wall", P, y, y + MB_H.sill, true, false, y); // sill, glass, lintel
     prism(b, "glass", pane(P, 0.03), y + MB_H.sill, y + MB_H.head, false);
+    prism(b, "blind", pane(P, 0.07), y + 1.85, y + MB_H.head - 0.02, true, true); // beige roller blind, half lowered (photos)
     prism(b, "frame", P, y + MB_H.head, y + MB_H.head + 0.06);
     prism(b, "wall", P, y + MB_H.head + 0.06, top, true, false, y);
   }
@@ -147,6 +151,7 @@ function floorParts(f: MbFloor, plan: FloorPlan) {
   for (const P of plan.cubicle) prism(b, "cubicle", P, y + 0.15, y + MB_H.cubicle);
   for (const P of plan.door) prism(b, "door", P, y, y + MB_H.door);
   for (const P of plan.lift) prism(b, "lift", P, y, top);
+  liftDoor(b, y);
   const S = clean(plan.slab[0]), inner = f === 1 ? clean(S2()) : S;
   // the stair well: open in this floor (the flights coming up from below) and in its ceiling (the flights going up), not above floor 3
   const well = [STAIR.well];
@@ -185,7 +190,7 @@ function furniture(b: Bag, y: number, items: FurnItem[]) {
       case K("desk"): {            // workstation: top + two panel legs
         box(b, "desk", x, z, L, T, a, y + 0.72, y + 0.75);
         for (const e of [-1, 1]) { const [px, pz] = at(e * (L / 2 - 0.03), 0); box(b, "metal", px, pz, 0.03, T - 0.1, a, y, y + 0.72); }
-        { const [px, pz] = at(L / 2 - 0.3, 0); box(b, "chair", px, pz, 0.42, 0.5, a, y + 0.03, y + 0.6); } // drawer unit (photos)
+        { const [px, pz] = at(L / 2 - 0.3, 0), h = Math.abs(Math.sin(x * 12.9898 + z * 78.233) * 43758.5) % 1; box(b, h > 0.3 ? "chair" : "cabinet", px, pz, 0.42, 0.5, a, y + 0.03, y + 0.6); } // drawer unit, black or white (photos)
         break;
       }
       case K("table"): {           // meeting / office table: top + four legs
@@ -367,8 +372,25 @@ function flights(b: Bag, y0: number, y1: number) {
   const L = STAIR.land;
   prism(b, "stair", [[L.x0, L.z0], [L.x1, L.z0], [L.x1, L.z1], [L.x0, L.z1]], y0 + n * rise - 0.2, y0 + n * rise, true, true);
   [...STAIR.north].reverse().forEach((r, i) => prism(b, "stair", [[r.x0, r.z0], [r.x1, r.z0], [r.x1, r.z1], [r.x0, r.z1]], y0 + n * rise, y0 + (n + i + 1) * rise));
-  // handrail between the flights (on the well's axis)
-  prism(b, "rail", [[STAIR.land.x1, STAIR.zMid - 0.02], [STAIR.x1, STAIR.zMid - 0.02], [STAIR.x1, STAIR.zMid + 0.02], [STAIR.land.x1, STAIR.zMid + 0.02]], y0, y1 + 0.9);
+  // railing between the flights (photos: black steel, vertical bars): a bar on every tread, a stepped top rail; each flight's
+  // on its own side of the well's axis
+  const railing = (r: { x0: number; x1: number }, yt: number, dz: number) => {
+    const xc = (r.x0 + r.x1) / 2, z = STAIR.zMid + dz;
+    box(b, "rail", xc, z, 0.022, 0.022, 0, yt, yt + 0.95);
+    box(b, "rail", xc, z, r.x1 - r.x0 + 0.012, 0.045, 0, yt + 0.93, yt + 0.98);
+  };
+  STAIR.south.forEach((r, i) => railing(r, y0 + (i + 1) * rise, 0.04));
+  [...STAIR.north].reverse().forEach((r, i) => railing(r, y0 + (n + i + 1) * rise, -0.04));
+}
+
+/** the lift's landing doors (photos: brushed stainless steel, two leaves in a frame, red floor indicator above), on the
+ *  shaft's east face — the side the lift lets the visitor out (walk/mibtechWalk.ts) */
+function liftDoor(b: Bag, y: number) {
+  const lb = MIBTECH_PLANS[1].stair_meta.lift, x = lb[1][0] + 0.03, cz = (lb[0][1] + lb[1][1]) / 2;
+  box(b, "steel", x, cz, 0.04, 1.2, 0, y, y + 2.25);                                 // frame
+  for (const s of [-1, 1]) box(b, "steel", x + 0.012, cz + s * 0.24, 0.03, 0.47, 0, y + 0.02, y + 2.12); // leaves
+  box(b, "frame", x + 0.03, cz, 0.012, 0.012, 0, y + 0.02, y + 2.12);                // the joint between the leaves
+  box(b, "led", x + 0.03, cz + 0.7, 0.02, 0.1, 0, y + 1.35, y + 1.5);                // call panel / indicator
 }
 /** the flights up to floor f (f = 1: from the ground floor) */
 function stairParts(f: MbFloor) {
@@ -411,6 +433,18 @@ export const MB_HALL = (() => {
   return { walls, rooms, H, x0: hx0, x1: hx1, z0: cz0, z1: P.zb };
 })();
 
+/** The entrance hall's fittings (lobby photo, the real hall: its layout is not on any plan, positions estimated): speed gates
+ *  across the hall (three stainless pedestals with black glass tops, glass flaps standing open, blue light at the foot), a
+ *  glass barrier from the west wall to the first pedestal, a wooden reception desk near the entrance. */
+export const MB_LOBBY = (() => {
+  const H = MB_HALL;
+  return {
+    gates: { z: -8, xs: [H.x0 + 0.55, (H.x0 + H.x1) / 2, H.x1 - 0.6], w: 0.26, len: 1.2, h: 1.0 },
+    barrier: [H.x0, H.x0 + 0.42] as [number, number],
+    desk: { x0: H.x1 - 1.0, x1: H.x1 - 0.1, z0: H.z1 - 2.6, z1: H.z1 - 1.2, h: 1.05 },
+  };
+})();
+
 /** Ground floor: the floor-1 footprint as a closed plinth up to the first floor (the street front is dressed separately from
  *  the photos: shops, office entrance), and the provisional entrance hall. */
 function groundParts() {
@@ -422,10 +456,37 @@ function groundParts() {
     sides(b, "groundWall", [p, q, q], 0, MB_H.ground - MB_H.slab); // degenerate [p, q, q]: the wall p → q, both faces
   }
   const H = MB_HALL;
-  for (const [x0, z0, x1, z1] of H.walls) sides(b, "wall", [[x0, z0], [x1, z1], [x1, z1]], 0, H.H);
+  // the hall's walls (lobby photo): wood panelling on the west wall, black marble by the lift, white elsewhere
+  const WALL_MAT: MbMat[] = ["wall", "wall", "wall", "wall", "blackMarble", "wall", "wall", "woodPanel", "wall"];
+  H.walls.forEach(([x0, z0, x1, z1], i) => sides(b, WALL_MAT[i] ?? "wall", [[x0, z0], [x1, z1], [x1, z1]], 0, H.H, 0));
   sides(b, "wall", [[MB_PORTAL.d0, MB_PORTAL.zb - 0.02], [MB_PORTAL.d1, MB_PORTAL.zb - 0.02], [MB_PORTAL.d1, MB_PORTAL.zb - 0.02]], MB_PORTAL.door, H.H);
-  for (const [x0, z0, x1, z1] of H.rooms) cap(b, "floor", [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], 0.012, true);
+  for (const [x0, z0, x1, z1] of H.rooms) cap(b, "marble", [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], 0.012, true);
   for (const P of MIBTECH_PLANS[1].lift) prism(b, "lift", P, 0, H.H);
+  liftDoor(b, 0);
+  // the hall's ceiling (lobby photo): plain white plaster, two black linear light slots along the hall
+  for (const [x0, z0, x1, z1] of H.rooms) cap(b, "plaster", [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], H.H - 0.02, false);
+  for (const sx of [0.32, 0.68]) box(b, "screen", H.x0 + (H.x1 - H.x0) * sx, (H.z0 + H.z1) / 2, 0.05, H.z1 - H.z0 - 1.2, Math.PI / 2, H.H - 0.03, H.H - 0.02);
+  // vertical light strips on the east wall
+  for (let z = H.z1 - 0.8; z > H.z0 + 0.5; z -= 1.5) box(b, "ledStrip", H.x1 - 0.02, z, 0.02, 0.035, 0, 0.12, H.H - 0.12);
+  // speed gates
+  const G = MB_LOBBY.gates;
+  G.xs.forEach((gx, i) => {
+    box(b, "steel", gx, G.z, G.w, G.len, 0, 0.02, G.h);
+    box(b, "screen", gx, G.z, G.w + 0.03, G.len + 0.03, 0, G.h, G.h + 0.03);
+    box(b, "blueLed", gx, G.z, G.w + 0.05, G.len + 0.05, 0, 0.0, 0.025);
+    box(b, "led", gx, G.z + G.len / 2 + 0.005, 0.1, 0.01, 0, 0.62, 0.72); // the red cross display, on the entrance side
+    // glass flaps, standing open (swung towards the lifts)
+    for (const sd of i === 0 ? [1] : i === 2 ? [-1] : [-1, 1]) {
+      const a = sd > 0 ? -1.0 : Math.PI + 1.0, fx = gx + sd * (G.w / 2 + 0.17 * Math.cos(1.0)), fz = G.z - 0.17 * Math.sin(1.0);
+      box(b, "glass", fx, fz, 0.36, 0.012, a, 0.42, 0.92);
+    }
+  });
+  box(b, "glass", (MB_LOBBY.barrier[0] + MB_LOBBY.barrier[1]) / 2, G.z, MB_LOBBY.barrier[1] - MB_LOBBY.barrier[0], 0.012, 0, 0.1, 1.0);
+  // reception desk: wood, dark stone top, a monitor
+  const D = MB_LOBBY.desk, dx = (D.x0 + D.x1) / 2, dz = (D.z0 + D.z1) / 2;
+  box(b, "woodPanel", dx, dz, D.x1 - D.x0, D.z1 - D.z0, 0, 0, D.h);
+  box(b, "blackMarble", dx, dz, D.x1 - D.x0 + 0.04, D.z1 - D.z0 + 0.04, 0, D.h, D.h + 0.04);
+  box(b, "screen", dx, dz - 0.2, 0.5, 0.03, 0, D.h + 0.04, D.h + 0.38);
   return b.build();
 }
 

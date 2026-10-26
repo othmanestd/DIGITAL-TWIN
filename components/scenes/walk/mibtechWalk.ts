@@ -12,7 +12,7 @@
 import { outdoorSolids } from "../city/collide";
 import { MIBTECH_PLANS, type PlanPoly } from "../city/landmarks/mibtech/mibtechPlanData";
 import { FURN_KINDS, MIBTECH_FURNITURE } from "../city/landmarks/mibtech/mibtechFurnitureData";
-import { MB_FLOORS, MB_H, MB_HALL, MB_OUTLINE, MB_PARAPET, MB_PORTAL, MB_STAIR, floorY, inOutline, onTerrace, type MbFloor } from "../city/landmarks/mibtech/mibtechGeo";
+import { MB_FLOORS, MB_H, MB_HALL, MB_LOBBY, MB_OUTLINE, MB_PARAPET, MB_PORTAL, MB_STAIR, floorY, inOutline, onTerrace, type MbFloor } from "../city/landmarks/mibtech/mibtechGeo";
 import { ORIGIN, THETA, planVec, vecPlan } from "../city/landmarks/mibtech/mibtechFrame";
 
 export const MB_ORIGIN = ORIGIN;
@@ -89,6 +89,11 @@ function build() {
   const H = MB_HALL.H, P = MB_PORTAL;
   for (const [x0, z0, x1, z1] of MB_HALL.walls) seg([x0, z0], [x1, z1], 0.12, 0, H, true);
   for (const L of MIBTECH_PLANS[1].lift) poly(L, 0, H, true);
+  // the lobby: speed gates (the flaps stand open), the glass barrier, the reception desk
+  const G = MB_LOBBY.gates, D = MB_LOBBY.desk;
+  for (const gx of G.xs) put(gx, G.z, G.len, G.w, Math.PI / 2, 0, G.h, false);
+  seg([MB_LOBBY.barrier[0], G.z], [MB_LOBBY.barrier[1], G.z], 0.04, 0, 1.0, false);
+  put((D.x0 + D.x1) / 2, (D.z0 + D.z1) / 2, D.x1 - D.x0, D.z1 - D.z0, 0, 0, D.h, false);
   seg([P.a, P.zb], [P.d0, P.zb], 0.2, 0, MB_H.ground, true);
   seg([P.d1, P.zb], [P.b, P.zb], 0.2, 0, MB_H.ground, true);
   seg([P.a, P.zs], [P.a, P.zb], 0.2, 0, MB_H.ground, true);
