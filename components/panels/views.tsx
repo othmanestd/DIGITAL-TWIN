@@ -12,6 +12,7 @@ import { placeById, REFERENTIAL_CHECKED } from "@/lib/geo/casaReferential";
 import { explorerPlace, hasPoint, COORD_LABEL, MODEL_LABEL } from "@/lib/geo/places";
 import { locatePlace, openInCasaReel } from "@/components/places/locate";
 import { MB_VIEW, mibtechShowFloor } from "@/components/scenes/city/landmarks/MibtechBuilding";
+import { walkRequest } from "@/components/scenes/walk/state";
 import { CASA_REEL, geoToScene } from "@/lib/geo/casaFrame";
 import { rig } from "@/lib/rig";
 import { DeptIcon, I } from "@/components/ui/icons";
@@ -656,9 +657,13 @@ function ExplorerPlaceView({ id }: { id: string }) {
               </button>
             ))}
           </div>
+          <button type="button" className={`${btn} mt-2.5 inline-flex items-center gap-2`} data-anchor="mibtech-walk" onClick={() => walkRequest("enter:mibtech")}>
+            Visiter à pied <span className="rounded-md bg-white/10 px-1.5 text-[11px]">B</span>
+          </button>
           <p className="mt-1.5 text-[11.5px] leading-snug text-[var(--mut)]">
-            Murs, cloisons, portes, fenêtres, poteaux, escalier et ascenseur d&apos;après les plans cotés (MB Interior Architects, APS du 16/10/2024).
-            Hauteurs, matériaux et usage des pièces : provisoires, à confirmer.
+            Murs, cloisons, portes, fenêtres, poteaux, escalier et ascenseur d&apos;après les plans cotés (MB Interior Architects, APS du 16/10/2024) ;
+            mobilier d&apos;après les plans électriques (20/10/2024), terrasse au 1er étage. Finitions d&apos;après les photos de bureau.
+            Hauteurs, hall du rez-de-chaussée, éclairage et usage des pièces : provisoires, à confirmer.
           </p>
         </div>
       )}

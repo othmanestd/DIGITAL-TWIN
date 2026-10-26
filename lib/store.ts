@@ -26,6 +26,11 @@ export type WalkUi = {
   near: string | null;
   /** use case E would open (the visitor stands near / looks at its spot), else the department view */
   nearCase: string | null;
+  /** site walked: the hospital campus or MIBTECH's offices (Casa réel) */
+  site?: "hospital" | "mibtech";
+  /** MIBTECH: where the visitor is ("hall", "escalier", "terrasse", "etage", "dehors"), and the floor the lift would go to (E) */
+  mb?: string | null;
+  lift?: number | null;
 };
 
 export type CursorState = { x: number; y: number; visible: boolean; clicking: boolean; label?: string };

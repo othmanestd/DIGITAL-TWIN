@@ -17,32 +17,21 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import { frame } from "@/lib/world";
 import { useApp } from "@/lib/store";
 import { rig } from "@/lib/rig";
-import { geoToScene } from "@/lib/geo/casaFrame";
 import type { Solid } from "../collide";
 import { ENV } from "./env";
 import { lmOpacity, setFade } from "./shared";
-import { MB_H, MB_OUTLINE, MB_TOP, buildMibtech, floorY, inOutline, type MbFloor, type MbMat } from "./mibtech/mibtechGeo";
+import { MB_CANT, MB_H, MB_OUTLINE, MB_PORTAL, MB_TOP, buildMibtech, floorY, inOutline, type MbFloor, type MbMat } from "./mibtech/mibtechGeo";
 import { MIBTECH_PLANS } from "./mibtech/mibtechPlanData";
+import { ORIGIN, THETA, fromPlan, toPlan } from "./mibtech/mibtechFrame";
+import { W } from "../../walk/state";
 
 export const MIBTECH_ID = "mibtech";
-const ROOF_PIN = geoToScene(33.5558823, -7.6435464);
-const THETA = (50 * Math.PI) / 180;                               // plan +x → along the boulevard (bearing 40°)
-const U: [number, number] = [Math.cos(THETA), -Math.sin(THETA)];  // plan +x in the scene
-const V: [number, number] = [Math.sin(THETA), Math.cos(THETA)];   // plan +z (towards the street) in the scene
-/** scene position of the plans' origin (middle of the street façade glass) */
-const ORIGIN: [number, number] = [ROOF_PIN.x + 4.9 + 7 * V[0], ROOF_PIN.z + 1.3 + 7 * V[1]];
-/** scene point → plan frame */
-export const toPlan = (x: number, z: number): [number, number] => {
-  const dx = x - ORIGIN[0], dz = z - ORIGIN[1];
-  return [dx * U[0] + dz * U[1], dx * V[0] + dz * V[1]];
-};
-/** plan frame → scene point */
-export const fromPlan = (x: number, z: number): [number, number] => [ORIGIN[0] + x * U[0] + z * V[0], ORIGIN[1] + x * U[1] + z * V[1]];
+export { toPlan, fromPlan };
 const GF = MB_H.ground, TOP = MB_TOP, FLOOR = MB_H.floor;
 // street front in the plan frame: the façade glass of the floors (curtain wall element of the plans) and the ground floor
 const FRONT = (() => { const c = MIBTECH_PLANS[2].curtain.reduce((a, P) => (P.length > a.length ? P : a), MIBTECH_PLANS[2].curtain[0]); const xs = c.map((q) => q[0]); return { x0: Math.min(...xs), x1: Math.max(...xs) }; })();
 const PLATE = (() => { const xs = MB_OUTLINE.map((q) => q[0]); return { x0: Math.min(...xs), x1: Math.max(...xs) }; })();
-const CANT = 1.4; // the ground floor's street wall, set back under the floors (photos; estimated)
+const CANT = MB_CANT; // the ground floor's street wall, set back under the floors (photos; estimated)
 
 // ---------------------------------------------------------------- procedural textures (canvas)
 function canvas(w: number, h: number, f: (g: CanvasRenderingContext2D) => void) {
@@ -161,7 +150,7 @@ function fins(): THREE.BufferGeometry {
 
 /** the street front from the photos (plan frame): curtain wall skin, cantilever, ground floor, office entrance, roof plant room */
 function front() {
-  const glass = acc(), stone = acc(), flute = acc(), shop = acc(), dark = acc(), render = acc(), door = acc();
+  const glass = acc(), stone = acc(), flute = acc(), shop = acc(), dark = acc(), render = acc(), door = acc(), entryDoor = acc(), entryGlass = acc();
   const zs = -CANT, X0 = PLATE.x0, X1 = PLATE.x1;
   wall(glass, FRONT.x0, 0.04, FRONT.x1, 0.04, GF, TOP, GLASS_TILE, -1);   // navy skin over the plans' glazed front (seen from outside)
   flat(dark, X0, zs, X1, 0.04, GF, false);                                // soffit of the cantilever
@@ -174,20 +163,23 @@ function front() {
   wall(shop, X0 + 12.6, zs, X1 - 8.5, zs, 0, GF, SHOP_TILE, -1);
   wall(flute, X1 - 8.5, zs, X1 - 7, zs, 0, GF, FLUTE_TILE, -1);
   // office entrance: portal recessed 2 m, fluted anthracite, glazed door + transom, granite step (photo 2)
-  const zb = zs - 2, a = X1 - 7, b = X1 - 2;
-  wall(flute, a, zb, b, zb, 0, GF, FLUTE_TILE, -1);
+  const { zb, a, b, d0, d1 } = MB_PORTAL;
+  wall(flute, a, zb, d0, zb, 0, GF, FLUTE_TILE, -1);                         // the back of the portal, round the door opening
+  wall(flute, d1, zb, b, zb, 0, GF, FLUTE_TILE, -1, d1 - a);
+  wall(flute, d0, zb, d1, zb, MB_PORTAL.door, GF, FLUTE_TILE, -1, d0 - a);
   wall(flute, a, zs, a, zb, 0, GF, FLUTE_TILE, -1);
   wall(flute, b, zb, b, zs, 0, GF, FLUTE_TILE, -1);
   flat(dark, a, zb, b, zs, GF - 0.32, false);
-  wall(door, a + 1.5, zb + 0.02, a + 3.5, zb + 0.02, 0.15, 4.0, [2, 4], -1);
-  wall(shop, a + 1.62, zb + 0.04, a + 3.38, zb + 0.04, 0.15, 2.75, [1.76, GF], -1);
-  wall(shop, a + 1.62, zb + 0.04, a + 3.38, zb + 0.04, 2.87, 3.88, [1.76, GF], -1, 0.3);
+  // the glazed door (hidden — open — while someone walks in MIBTECH)
+  wall(entryDoor, d0, zb + 0.02, d1, zb + 0.02, 0.15, MB_PORTAL.door, [2, 4], -1);
+  wall(entryGlass, d0 + 0.12, zb + 0.04, d1 - 0.12, zb + 0.04, 0.15, 2.75, [1.76, GF], -1);
+  wall(entryGlass, d0 + 0.12, zb + 0.04, d1 - 0.12, zb + 0.04, 2.87, 3.88, [1.76, GF], -1, 0.3);
   boxWalls(dark, a, zb, b, 0, 0, 0.15, [4, 4]);
   wall(stone, b, zs, X1, zs, 0, GF, STONE_TILE, -1);
   // roof: stair exit / plant room over the core
   const sb = MIBTECH_PLANS[2].stair_meta.box;
   boxWalls(render, sb[0][0], sb[0][1], sb[1][0], sb[1][1], TOP, TOP + 3, [4, 4]);
-  return { glass: geo(glass), stone: geo(stone), flute: geo(flute), shop: geo(shop), dark: geo(dark), render: geo(render), door: geo(door), fins: fins() };
+  return { glass: geo(glass), stone: geo(stone), flute: geo(flute), shop: geo(shop), dark: geo(dark), render: geo(render), door: geo(door), entryDoor: geo(entryDoor), entryGlass: geo(entryGlass), fins: fins() };
 }
 
 /** Walk-mode solids (world): the footprint as 2 m cells (each pushed as the AABB of its rotated square). */
@@ -220,23 +212,81 @@ export function mibtechShowFloor(f: 0 | MbFloor) {
   else rig.flyTo(new THREE.Vector3(c[0], 8, c[1]), 95, { polar: 0.98, azimuth: THETA + 0.4, duration: 1.4 });
 }
 
-/** provisional interior materials (no finish schedule, photo or render of the interior yet: neutral, to be replaced) */
-function plainMats(): Record<MbMat, THREE.MeshStandardMaterial> {
-  const m = (color: string, o: Partial<THREE.MeshStandardMaterialParameters> = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, ...o });
+// ---------------------------------------------------------------- interior finishes (office photos supplied by the user)
+// The photos are REFERENCES only (nothing traced, no photo texture): large light-grey floor tiles (≈ 60 × 120 cm), white walls,
+// a 60 × 60 suspended ceiling with LED panels, wood-veneer doors (WC), frosted glass partitions in black frames, black aluminium
+// window frames, beige desk tops and black mesh chairs (meeting rooms), grey tiles and white render on the terrace.
+// Where they apply on each floor (which room has which finish) is not documented: the corridor / office finish is used
+// everywhere (WC marble and micro-cement walls not placed).
+/** floor tiles, one texture = 1.2 m: two 0.6 × 1.2 m tiles, thin joints, a slight variation per tile */
+function tileTex(base: [number, number, number], cols: number, rows: number, joint: string, seed: number) {
+  return canvas(256, 256, (g) => {
+    const w = 256 / cols, h = 256 / rows;
+    for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+      const v = (rnd(seed + i * 7 + j * 13) - 0.5) * 10;
+      g.fillStyle = `rgb(${base[0] + v},${base[1] + v},${base[2] + v})`; g.fillRect(i * w, j * h, w, h);
+      for (let n = 0; n < 60; n++) { // faint veining / speckle
+        g.fillStyle = `rgba(255,255,255,${rnd(seed + n + i * 31 + j * 57) * 0.05})`;
+        g.fillRect(i * w + rnd(n * 3 + seed + i) * w, j * h + rnd(n * 5 + seed + j) * h, 6 + rnd(n) * 14, 1.5);
+      }
+    }
+    g.strokeStyle = joint; g.lineWidth = 1.6;
+    for (let i = 0; i <= cols; i++) { g.beginPath(); g.moveTo(i * w, 0); g.lineTo(i * w, 256); g.stroke(); }
+    for (let j = 0; j <= rows; j++) { g.beginPath(); g.moveTo(0, j * h); g.lineTo(256, j * h); g.stroke(); }
+  });
+}
+/** suspended ceiling, one texture = 2.4 m: 4 × 4 tiles of 0.6 m, two LED panels and an air-conditioning diffuser */
+function ceilingTex(emit: boolean) {
+  return canvas(256, 256, (g) => {
+    const t = 64;
+    // emissive map: the tiles glow softly (a ceiling is lit from below, the sun never reaches it), the LED panels fully
+    g.fillStyle = emit ? "#BDBCB9" : "#F3F2EE"; g.fillRect(0, 0, 256, 256);
+    g.strokeStyle = emit ? "#8A8884" : "#CFCBC3"; g.lineWidth = 2;
+    for (let i = 0; i <= 4; i++) { g.beginPath(); g.moveTo(i * t, 0); g.lineTo(i * t, 256); g.stroke(); g.beginPath(); g.moveTo(0, i * t); g.lineTo(256, i * t); g.stroke(); }
+    for (const [i, j] of [[0, 1], [2, 3]]) { g.fillStyle = emit ? "#FFFFFF" : "#FBFBF6"; g.fillRect(i * t + 4, j * t + 4, t - 8, t - 8); }
+    if (!emit) { g.fillStyle = "#DAD7D0"; g.fillRect(2 * t + 14, 1 * t + 14, t - 28, t - 28); g.strokeStyle = "#B9B5AC"; g.lineWidth = 1; for (let k = 0; k < 4; k++) g.strokeRect(2 * t + 18 + k * 4, t + 18 + k * 4, t - 36 - k * 8, t - 36 - k * 8); }
+  });
+}
+/** wood veneer (doors, WC cubicles), one texture = 2.2 m: vertical grain */
+function veneerTex() {
+  return canvas(128, 256, (g) => {
+    g.fillStyle = "#A9825C"; g.fillRect(0, 0, 128, 256);
+    for (let x = 0; x < 128; x++) { g.fillStyle = `rgba(${rnd(x) > 0.5 ? "70,45,25" : "235,205,165"},${0.05 + rnd(x * 3) * 0.12})`; g.fillRect(x, 0, 1, 256); }
+  });
+}
+function interiorMats(T: { floor: THREE.Texture; terrace: THREE.Texture; ceiling: THREE.Texture; ceilingE: THREE.Texture; veneer: THREE.Texture }): Record<MbMat, THREE.MeshStandardMaterial> {
+  const m = (color: string, o: Partial<THREE.MeshStandardMaterialParameters> = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, emissive: color, emissiveIntensity: 0, ...o });
   return {
-    wall: m("#E9E6DF"), column: m("#D8D6D1"), partition: m("#F1EFEA"), cubicle: m("#C9CCD1", { roughness: 0.5 }),
-    glass: m("#A9C4D6", { transparent: true, opacity: 0.22, roughness: 0.05, metalness: 0.1, depthWrite: false }),
-    frame: m("#3B4048", { roughness: 0.45, metalness: 0.5 }), door: m("#B08A62", { roughness: 0.6 }),
-    floor: m("#C9C4BA", { roughness: 0.7 }), ceiling: m("#F4F3EF", { roughness: 0.95 }), slabEdge: m("#DAD7D0"),
+    wall: m("#F2F1EE"), column: m("#E4E2DD"), partition: m("#F4F3F0"), cubicle: m("#FFFFFF", { map: T.veneer, emissive: "#A9825C", roughness: 0.5 }),
+    glass: m("#A9C4D6", { transparent: true, opacity: 0.22, roughness: 0.05, metalness: 0.1, depthWrite: false, emissiveIntensity: 0 }),
+    frost: m("#EEF2F4", { transparent: true, opacity: 0.6, roughness: 0.3, depthWrite: false }),
+    frame: m("#1E2125", { roughness: 0.45, metalness: 0.5 }), door: m("#FFFFFF", { map: T.veneer, emissive: "#A9825C", roughness: 0.55 }),
+    floor: m("#FFFFFF", { map: T.floor, emissive: "#C9C9C6", roughness: 0.32 }), terrace: m("#FFFFFF", { map: T.terrace, emissive: "#9C9C99", roughness: 0.9 }),
+    ceiling: m("#FFFFFF", { map: T.ceiling, emissiveMap: T.ceilingE, emissive: "#FFFFFF", roughness: 0.95 }), slabEdge: m("#DAD7D0"),
     lift: m("#9DA3A8", { roughness: 0.35, metalness: 0.6 }), roof: m("#C8C4BC", { roughness: 0.95 }), groundWall: m("#BDB8AE", { roughness: 0.82 }),
-    stair: m("#B9B6AF", { roughness: 0.7 }), rail: m("#4A4F57", { roughness: 0.4, metalness: 0.6 }),
+    stair: m("#B9B6AF", { roughness: 0.7 }), rail: m("#2A2E33", { roughness: 0.4, metalness: 0.6 }),
+    desk: m("#D9C6A5", { roughness: 0.6 }), chair: m("#1C1E21", { roughness: 0.75 }), metal: m("#3A3D42", { roughness: 0.4, metalness: 0.6 }),
+    panel: m("#8E959C", { roughness: 0.95 }), screen: m("#141518", { roughness: 0.25, metalness: 0.3 }), leaf: m("#4E7A3C", { roughness: 0.9 }),
+    pot: m("#E6E3DD", { roughness: 0.6 }), fabric: m("#8A8580", { roughness: 0.95 }), porcelain: m("#F7F7F5", { roughness: 0.15 }), cabinet: m("#E2D9CB", { roughness: 0.55 }),
   };
+}
+/** interior light (provisional: the lighting plan is not supplied): the finishes glow a little, more at night; LED panels */
+function lightInterior(P: Record<MbMat, THREE.MeshStandardMaterial>, night: number) {
+  const k = 0.13 + night * 0.2;
+  for (const [key, mat] of Object.entries(P) as [MbMat, THREE.MeshStandardMaterial][]) {
+    if (key === "glass" || key === "roof" || key === "groundWall" || key === "terrace" || key === "slabEdge") continue;
+    mat.emissiveIntensity = key === "ceiling" ? 0.75 + night * 0.25 : key === "frost" ? k * 1.5 : k;
+  }
 }
 
 export function MibtechBuilding() {
   const res = useMemo(() => {
     const F = front(), B = buildMibtech();
-    const T = { glass: glassTex(false), glassN: glassTex(true), stone: stoneTex(), flute: fluteTex(), shop: shopTex(false), shopN: shopTex(true) };
+    const T = {
+      glass: glassTex(false), glassN: glassTex(true), stone: stoneTex(), flute: fluteTex(), shop: shopTex(false), shopN: shopTex(true),
+      floor: tileTex([214, 213, 209], 2, 1, "rgba(150,148,142,0.55)", 3), terrace: tileTex([168, 168, 165], 2, 2, "rgba(90,90,88,0.6)", 9),
+      ceiling: ceilingTex(false), ceilingE: ceilingTex(true), veneer: veneerTex(),
+    };
     const M = {
       glass: new THREE.MeshStandardMaterial({ map: T.glass, emissiveMap: T.glassN, emissive: "#FFFFFF", emissiveIntensity: 0, roughness: 0.14, metalness: 0.2, envMapIntensity: 1.2 }),
       stone: new THREE.MeshStandardMaterial({ map: T.stone, roughness: 0.82 }),
@@ -247,8 +297,11 @@ export function MibtechBuilding() {
       door: new THREE.MeshStandardMaterial({ color: "#14181D", roughness: 0.2, metalness: 0.5 }),
       fin: new THREE.MeshStandardMaterial({ color: "#D6DADF", roughness: 0.38, metalness: 0.45, envMapIntensity: 1.1 }),
     };
-    const P = plainMats();
-    return { F, B, T, M, P };
+    const P = interiorMats(T);
+    // walk mode cut-away (third person): the visitor's floor is clipped at the cut height (walls, partitions, ceiling)
+    const clip = new THREE.Plane(new THREE.Vector3(0, -1, 0), 1e6);
+    for (const m of Object.values(P)) { m.clippingPlanes = [clip]; m.clipShadows = true; }
+    return { F, B, T, M, P, clip };
   }, []);
   const list = useMemo(() => [...Object.values(res.M), ...Object.values(res.P)] as THREE.Material[], [res]);
   useEffect(() => () => {
@@ -274,7 +327,7 @@ export function MibtechBuilding() {
     };
   }, []);
   const shown = useRef(-1);
-  useFrame(() => {
+  useFrame((state) => {
     const g = root.current;
     if (!g) return;
     const op = lmOpacity(frame.alt);
@@ -282,17 +335,25 @@ export function MibtechBuilding() {
     if (!g.visible) return;
     const sel = useApp.getState().sel;
     if (MB_VIEW.floor && !(sel?.kind === "landmark" && sel.id === MIBTECH_ID)) MB_VIEW.floor = 0;
-    if (shown.current !== MB_VIEW.floor) {
-      const f = MB_VIEW.floor;
-      shown.current = f;
+    // walk mode inside MIBTECH (third person): the floors above the visitor cut away, like the floor view; the entrance
+    // door open while walking there. Key = what is shown: floor view f (1…3), walk cut 10 + level, or 0 (whole building).
+    const walking = W.phase !== "off" && W.site === "mibtech";
+    const key = walking && W.mbCut < 99 ? 10 + W.mbCut : walking ? 20 : MB_VIEW.floor;
+    res.clip.constant = walking && W.mbCut < 99 && W.cutY < 1e5 ? W.cutY : 1e6;
+    if (walking) state.gl.localClippingEnabled = true;
+    if (shown.current !== key) {
+      shown.current = key;
+      const f = key >= 10 && key < 20 ? key - 10 : key === 20 ? 0 : key, cut = key >= 10 && key < 20;
       for (const o of g.children) {
         const m = /^mibtech\.(f|s)(\d)$/.exec(o.name);
-        if (m) o.visible = !f || Number(m[2]) <= f;
-        else if (o.name === "mibtech.roof") o.visible = !f;
-        else if (o.name !== "mibtech.ground") o.visible = !f; // the street-front dressing (photos)
+        if (m) o.visible = cut ? Number(m[2]) <= f || (m[1] === "s" && Number(m[2]) === f + 1) : !f || Number(m[2]) <= f;
+        else if (o.name === "mibtech.roof") o.visible = !f && !cut;
+        else if (o.name === "mibtech.entry") o.visible = !walking && !f;
+        else if (o.name !== "mibtech.ground") o.visible = !cut && !f; // the street-front dressing (photos)
       }
     }
-    setFade(list.filter((m) => m !== res.P.glass), op, fade.current);
+    setFade(list.filter((m) => m !== res.P.glass && m !== res.P.frost), op, fade.current);
+    lightInterior(res.P, ENV.night);
     res.M.glass.emissiveIntensity = ENV.night * 0.9; res.M.shop.emissiveIntensity = 0.28 + ENV.night * 0.6; // shops lit by day too (photos)
   });
   const onClick = (e: ThreeEvent<MouseEvent>) => { if (e.delta > 6) return; e.stopPropagation(); useApp.getState().select({ kind: "landmark", id: MIBTECH_ID }); };
@@ -305,12 +366,18 @@ export function MibtechBuilding() {
         </group>
       ))}
       <mesh geometry={F.glass} material={M.glass} />
-      <mesh geometry={F.stone} material={M.stone} castShadow receiveShadow />
-      <mesh geometry={F.flute} material={M.flute} />
-      <mesh geometry={F.shop} material={M.shop} />
+      <group name="mibtech.plinth">
+        <mesh geometry={F.stone} material={M.stone} castShadow receiveShadow />
+        <mesh geometry={F.flute} material={M.flute} />
+        <mesh geometry={F.shop} material={M.shop} />
+        <mesh geometry={F.door} material={M.door} />
+      </group>
       <mesh geometry={F.dark} material={M.dark} castShadow />
       <mesh geometry={F.render} material={M.render} castShadow />
-      <mesh geometry={F.door} material={M.door} />
+      <group name="mibtech.entry">
+        <mesh geometry={F.entryDoor} material={M.door} />
+        <mesh geometry={F.entryGlass} material={M.shop} />
+      </group>
       <mesh geometry={F.fins} material={M.fin} castShadow />
     </group>
   );

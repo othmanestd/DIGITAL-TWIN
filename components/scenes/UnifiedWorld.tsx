@@ -19,7 +19,7 @@ import { MoroccoContent, MAP_UNITS_PER_KM, MOROCCO_CENTER_LONLAT, mapProject } f
 import { GlobeContent, GLOBE_RADIUS, GLOBE_VIEW_LONLAT, globePoint } from "./geo/GlobeContent";
 import { CASA_LONLAT } from "@/lib/geo/projection";
 import WalkWorld from "./walk/WalkWorld";
-import { walkBusy, WALK_API } from "./walk/state";
+import { W, walkBusy, WALK_API } from "./walk/state";
 import { CASA_REEL } from "@/lib/geo/casaFrame";
 import { CasaReel } from "./city/CasaReel";
 import { ANFA_PRIME } from "./city/geography";
@@ -379,7 +379,7 @@ export default function UnifiedWorld() {
       app.setZoom(altToG(alt));
       // below 2.5 km the level is the hospital only over a hospital (the typical one, Anfa Prime), elsewhere the city
       const T = c.getTarget(tmp.t), r = (app.level === "hospital" ? 1.3 : 1) * (450 + 0.5 * alt);
-      const onHospital = walkBusy() || Math.hypot(T.x, T.z) < r || Math.hypot(T.x - ANFA_PRIME.x, T.z - ANFA_PRIME.z) < r;
+      const onHospital = (walkBusy() && W.site === "hospital") || Math.hypot(T.x, T.z) < r || Math.hypot(T.x - ANFA_PRIME.x, T.z - ANFA_PRIME.z) < r;
       app.syncLevel(levelForAlt(alt, onHospital), alt);
     }
   });

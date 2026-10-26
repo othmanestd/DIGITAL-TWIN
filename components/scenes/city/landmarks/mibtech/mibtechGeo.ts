@@ -8,6 +8,7 @@
 //     at 2.80 m, window sill 0.90 m / head 2.60 m, WC cubicles 2.10 m, doors 2.10 m.
 import * as THREE from "three";
 import { MIBTECH_PLANS, type FloorPlan, type PlanPoly } from "./mibtechPlanData";
+import { FURN_KINDS, MIBTECH_FURNITURE, type FurnItem } from "./mibtechFurnitureData";
 
 export const MB_H = {
   ground: 4.6, floor: 3.8, slab: 0.3, ceiling: 2.8, sill: 0.9, head: 2.6, cubicle: 2.1, door: 2.1,
@@ -19,9 +20,14 @@ export const floorY = (f: MbFloor) => MB_H.ground + (f - 1) * MB_H.floor;
 /** top of the roof slab */
 export const MB_TOP = floorY(3) + MB_H.floor;
 
-export type MbMat = "wall" | "column" | "partition" | "glass" | "frame" | "door" | "cubicle" | "floor" | "ceiling" | "slabEdge" | "lift" | "roof" | "groundWall" | "stair" | "rail";
+export type MbMat = "wall" | "column" | "partition" | "glass" | "frame" | "door" | "cubicle" | "floor" | "ceiling" | "slabEdge" | "lift" | "roof" | "groundWall" | "stair" | "rail"
+  // interior finishes and furniture (lot 5: from the office photos and the architect's electrical plans)
+  | "frost" | "terrace" | "desk" | "chair" | "metal" | "panel" | "screen" | "leaf" | "pot" | "fabric" | "porcelain" | "cabinet";
 type Acc = { pos: number[]; nor: number[]; uv: number[]; idx: number[] };
-const TILE: Record<MbMat, number> = { wall: 2, column: 1, partition: 2, glass: 2, frame: 1, door: 1, cubicle: 1, floor: 1.2, ceiling: 0.6, slabEdge: 1, lift: 1, roof: 4, groundWall: 2.4, stair: 1, rail: 1 };
+const TILE: Record<MbMat, number> = {
+  wall: 2, column: 1, partition: 2, glass: 2, frame: 1, door: 2.2, cubicle: 2.2, floor: 1.2, ceiling: 2.4, slabEdge: 1, lift: 1, roof: 4, groundWall: 2.4, stair: 1, rail: 1,
+  frost: 2, terrace: 1.2, desk: 1, chair: 1, metal: 1, panel: 1, screen: 1, leaf: 1, pot: 1, fabric: 1, porcelain: 1, cabinet: 1,
+};
 
 class Bag {
   m = new Map<MbMat, Acc>();
@@ -96,13 +102,29 @@ function prism(b: Bag, k: MbMat, P0: PlanPoly, y0: number, y1: number, top = tru
   if (bottom) cap(b, k, P, y0, false);
 }
 
-/** One office floor: structure, envelope, partitions, joinery, slab and ceiling (stair flights: see the stair builder). */
+// ---------------------------------------------------------------- 1st-floor terrace
+// The architect's electrical plans (« PLAN ELEC », 20/10/2024) furnish the outer ring of the 1st floor with outdoor round
+// tables, lounge chairs and plants, outside the windowed wall of the offices: a TERRACE on the ground floor's roof. Its outer
+// wall is a parapet (height 1.10 m, provisional) and it has no ceiling. The offices' own outline is the 2nd floor's slab.
+const S2 = () => MIBTECH_PLANS[2].slab[0];
+const centroid = (P: PlanPoly): [number, number] => [P.reduce((s, q) => s + q[0], 0) / P.length, P.reduce((s, q) => s + q[1], 0) / P.length];
+/** a 1st-floor element of the terrace (outside the offices' outline) */
+export const onTerrace = (f: MbFloor, P: PlanPoly) => f === 1 && !inOutline(S2(), ...centroid(P));
+export const MB_PARAPET = 1.1;
+
+/** One office floor: structure, envelope, partitions, joinery, slab and ceiling, furniture (stair flights: see the stair builder). */
 function floorParts(f: MbFloor, plan: FloorPlan) {
   const b = new Bag(), y = floorY(f), top = y + MB_H.floor - MB_H.slab;
-  for (const P of plan.masonry) prism(b, "wall", P, y, top);
+  for (const P of plan.masonry) prism(b, "wall", P, y, onTerrace(f, P) ? y + MB_PARAPET : top);
   for (const P of plan.concrete) prism(b, "column", P, y, top);
-  for (const P of plan.window) {        // sill, glass, lintel
-    prism(b, "wall", P, y, y + MB_H.sill);
+  for (const P of plan.window) {
+    if (onTerrace(f, P)) {              // terrace: glass balustrade on a low kerb
+      prism(b, "wall", P, y, y + 0.1);
+      prism(b, "glass", pane(P, 0.02), y + 0.1, y + MB_PARAPET - 0.05, false);
+      prism(b, "frame", pane(P, 0.06), y + MB_PARAPET - 0.05, y + MB_PARAPET);
+      continue;
+    }
+    prism(b, "wall", P, y, y + MB_H.sill); // sill, glass, lintel
     prism(b, "glass", pane(P, 0.03), y + MB_H.sill, y + MB_H.head, false);
     prism(b, "frame", P, y + MB_H.head, y + MB_H.head + 0.06);
     prism(b, "wall", P, y + MB_H.head + 0.06, top);
@@ -112,21 +134,113 @@ function floorParts(f: MbFloor, plan: FloorPlan) {
     prism(b, "frame", P, y, y + 0.05);
     prism(b, "frame", P, y + MB_H.ceiling - 0.05, y + MB_H.ceiling);
   }
-  for (const P of plan.glass) prism(b, "glass", P, y, y + MB_H.ceiling, false);
+  // glazed partitions: frosted glass in black frames (office photos)
+  for (const P of plan.glass) {
+    prism(b, "frost", P, y + 0.05, y + MB_H.ceiling - 0.05, false);
+    prism(b, "frame", P, y, y + 0.05);
+    prism(b, "frame", P, y + MB_H.ceiling - 0.05, y + MB_H.ceiling);
+  }
   for (const P of plan.partition) prism(b, "partition", P, y, y + MB_H.ceiling);
   for (const P of plan.cubicle) prism(b, "cubicle", P, y + 0.15, y + MB_H.cubicle);
   for (const P of plan.door) prism(b, "door", P, y, y + MB_H.door);
   for (const P of plan.lift) prism(b, "lift", P, y, top);
-  const S = clean(plan.slab[0]);
+  const S = clean(plan.slab[0]), inner = f === 1 ? clean(S2()) : S;
   // the stair well: open in this floor (the flights coming up from below) and in its ceiling (the flights going up), not above floor 3
   const well = [STAIR.well];
-  cap(b, "floor", S, y + 0.01, true, well);
-  cap(b, "ceiling", S, y + MB_H.ceiling, false, f < 3 ? well : []);
+  if (f === 1) cap(b, "terrace", S, y + 0.004, true, well);  // terrace tiles, under the offices' floor
+  cap(b, "floor", inner, y + 0.03, true, well);
+  cap(b, "ceiling", inner, y + MB_H.ceiling, false, f < 3 ? well : []);
   sides(b, "slabEdge", S, y - MB_H.slab, y);                  // slab edge, seen between the floors
   cap(b, "ceiling", S, y - MB_H.slab, false, well);            // soffit of this floor's slab
-  sides(b, "rail", railAt(), y, y + 1.0);                      // guard rail round the well on the floor landing side
+  // top floor: the well has no flight going up — guard rail over the drop of the flight coming up (south half, floor side)
+  if (f === 3) sides(b, "rail", [[STAIR.x1 + 0.02, STAIR.zMid + 0.05], [STAIR.x1 + 0.02, STAIR.z1], [STAIR.x1 + 0.02, STAIR.z1]], y, y + 1.0);
+  furniture(b, y, MIBTECH_FURNITURE[f]);
   return b.build();
 }
+
+// ---------------------------------------------------------------- furniture (architect's electrical plans, 20/10/2024)
+// Footprints and positions as drawn (mibtechFurnitureData.ts, generated); heights and shapes are standard office furniture
+// (desk 0.75 m, seat 0.46 m…), simplified. Finishes after the office photos: beige desk tops, black mesh chairs.
+/** box of footprint L × T (plan frame) centred on (x, z), long side at angle a, from y0 to y1 */
+function box(b: Bag, k: MbMat, x: number, z: number, L: number, T: number, a: number, y0: number, y1: number) {
+  const ux = Math.cos(a) * L / 2, uz = Math.sin(a) * L / 2, vx = -Math.sin(a) * T / 2, vz = Math.cos(a) * T / 2;
+  prism(b, k, [[x - ux - vx, z - uz - vz], [x + ux - vx, z + uz - vz], [x + ux + vx, z + uz + vz], [x - ux + vx, z - uz + vz]], y0, y1, true, false);
+}
+/** n-gon prism of radius r */
+function disc(b: Bag, k: MbMat, x: number, z: number, r: number, y0: number, y1: number, n = 10) {
+  const P: PlanPoly = [];
+  for (let i = 0; i < n; i++) { const t = (i / n) * Math.PI * 2; P.push([x + Math.cos(t) * r, z + Math.sin(t) * r]); }
+  prism(b, k, P, y0, y1, true, false);
+}
+const K = (n: (typeof FURN_KINDS)[number]) => FURN_KINDS.indexOf(n);
+function furniture(b: Bag, y: number, items: FurnItem[]) {
+  for (const [k, x, z, L, T, a] of items) {
+    const ca = Math.cos(a), sa = Math.sin(a);
+    const at = (u: number, v: number): [number, number] => [x + ca * u - sa * v, z + sa * u + ca * v]; // local (u along a, v across)
+    switch (k) {
+      case K("desk"): {            // workstation: top + two panel legs
+        box(b, "desk", x, z, L, T, a, y + 0.72, y + 0.75);
+        for (const e of [-1, 1]) { const [px, pz] = at(e * (L / 2 - 0.03), 0); box(b, "metal", px, pz, 0.03, T - 0.1, a, y, y + 0.72); }
+        break;
+      }
+      case K("table"): {           // meeting / office table: top + four legs
+        box(b, "desk", x, z, L, T, a, y + 0.72, y + 0.75);
+        for (const [eu, ev] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { const [px, pz] = at(eu * (L / 2 - 0.08), ev * (T / 2 - 0.08)); box(b, "metal", px, pz, 0.05, 0.05, a, y, y + 0.72); }
+        break;
+      }
+      case K("screen"):            // desk divider, on the desk tops
+        box(b, "panel", x, z, L, Math.max(T, 0.025), a, y + 0.75, y + 1.12);
+        break;
+      case K("monitor"): {
+        box(b, "screen", x, z, L * 0.9, 0.025, a, y + 0.92, y + 1.2);
+        box(b, "metal", x, z, 0.05, 0.05, a, y + 0.75, y + 0.92);
+        break;
+      }
+      case K("chair"): {           // office chair, black mesh (a = the direction it faces)
+        const [bx, bz] = at(-0.23, 0);
+        box(b, "chair", x, z, 0.46, 0.48, a, y + 0.42, y + 0.49);
+        box(b, "chair", bx, bz, 0.05, 0.46, a, y + 0.52, y + 1.02);
+        box(b, "metal", x, z, 0.05, 0.05, a, y + 0.08, y + 0.42);
+        box(b, "metal", x, z, 0.56, 0.04, a, y + 0.03, y + 0.08);
+        box(b, "metal", x, z, 0.04, 0.56, a, y + 0.03, y + 0.08);
+        break;
+      }
+      case K("round"):             // terrace table
+        disc(b, "metal", x, z, Math.min(L, T) / 2, y + 0.7, y + 0.73, 16);
+        disc(b, "metal", x, z, 0.04, y, y + 0.7, 6);
+        break;
+      case K("lounge"):            // terrace lounge chair
+        box(b, "fabric", x, z, L * 0.9, T * 0.9, a, y + 0.05, y + 0.4);
+        break;
+      case K("armchair"): case K("sofa"): {
+        box(b, "fabric", x, z, L, T, a, y + 0.05, y + 0.42);
+        for (const e of [-1, 1]) { const [px, pz] = at(e * (L / 2 - 0.08), 0); box(b, "fabric", px, pz, 0.16, T, a, y + 0.42, y + 0.62); }
+        break;
+      }
+      case K("cabinet"):           // storage units, vanity and kitchen counters
+        box(b, "cabinet", x, z, L, T, a, y, y + 0.85);
+        break;
+      case K("low"):               // low tables, shower trays
+        box(b, "cabinet", x, z, L, T, a, y, y + 0.4);
+        break;
+      case K("plant"): {
+        const r = Math.min(L, T) / 2;
+        disc(b, "pot", x, z, 0.2, y, y + 0.45);
+        disc(b, "leaf", x, z, r * 0.7, y + 0.45, y + 0.85);
+        disc(b, "leaf", x, z, r * 0.85, y + 0.85, y + 1.2);
+        disc(b, "leaf", x, z, r * 0.5, y + 1.2, y + 1.5);
+        break;
+      }
+      case K("wc"):
+        box(b, "porcelain", x, z, L * 0.9, T * 0.85, a, y, y + 0.4);
+        break;
+      case K("rug"):
+        box(b, "fabric", x, z, L, T, a, y + 0.03, y + 0.045);
+        break;
+    }
+  }
+}
+
 /** the glass of a window: a thin pane (thickness t) along the window's long axis, through its middle */
 function pane(P: PlanPoly, t: number): PlanPoly {
   let best = 0, ux = 1, uz = 0;
@@ -156,8 +270,6 @@ const STAIR = (() => {
   return { north, south, land, well: [[x0, z0], [x1, z0], [x1, z1], [x0, z1]] as PlanPoly, x1, zMid, z0, z1 };
 })();
 export const MB_STAIR = STAIR;
-/** the guard rail on the floor landing, along the east edge of the well (a degenerate polygon = one wall, both faces) */
-const railAt = (): PlanPoly => [[STAIR.x1 + 0.02, STAIR.z0], [STAIR.x1 + 0.02, STAIR.zMid - 0.05], [STAIR.x1 + 0.02, STAIR.zMid - 0.05]];
 /** flights and landing between level y0 and y1 (ground → 1st, 1st → 2nd, 2nd → 3rd): solid steps */
 function flights(b: Bag, y0: number, y1: number) {
   const n = STAIR.south.length + 1, rise = (y1 - y0) / (2 * n);
@@ -175,18 +287,42 @@ function stairParts(f: MbFloor) {
   return b.build();
 }
 
-/** Roofs: the top of floor 3, and the part of floor 1 that floors 2–3 do not cover (just below their floor, never seen through). */
+/** Roof: the top of floor 3 (the 1st floor's ring is a terrace, open to the sky). */
 function roofParts() {
   const b = new Bag();
-  const S3 = clean(MIBTECH_PLANS[3].slab[0]), S1 = clean(MIBTECH_PLANS[1].slab[0]);
+  const S3 = clean(MIBTECH_PLANS[3].slab[0]);
   cap(b, "roof", S3, MB_TOP, true);
   sides(b, "slabEdge", S3, MB_TOP - MB_H.slab, MB_TOP + 0.6);    // roof slab and parapet
-  cap(b, "roof", S1, floorY(2) - 0.02, true);
-  sides(b, "slabEdge", S1, floorY(2) - MB_H.slab, floorY(2) + 0.5);
   return b.build();
 }
-/** Ground floor (no plan): the floor-1 footprint as a closed plinth up to the first floor (the street front is dressed
- *  separately from the photos: shops, office entrance). */
+
+// ---------------------------------------------------------------- ground floor: street front and office entrance hall
+// No plan of the ground floor. Street front after the photos (MibtechBuilding front()): the floors overhang the pavement by
+// MB_CANT; the office entrance is a portal recessed 2 m at the north-east end, with a glazed door. Behind it, a PROVISIONAL
+// entrance hall (walls and finishes estimated) leads straight to the stair and the lift, whose cores are drawn on the plans.
+export const MB_CANT = 1.4;
+const SLAB1_X1 = Math.max(...MIBTECH_PLANS[1].slab[0].map((q) => q[0]));
+export const MB_PORTAL = (() => {
+  const zs = -MB_CANT, a = SLAB1_X1 - 7, b = SLAB1_X1 - 2;
+  return { a, b, zs, zb: zs - 2, d0: a + 1.5, d1: a + 3.5, door: 4.0 };
+})();
+export const MB_HALL = (() => {
+  const sb = MIBTECH_PLANS[1].stair_meta.box, lb = MIBTECH_PLANS[1].stair_meta.lift, P = MB_PORTAL;
+  const hx0 = P.d0 - 0.05, hx1 = P.b, cx0 = sb[0][0], cz0 = sb[0][1], cz1 = sb[1][1], lx1 = lb[1][0], lz0 = lb[0][1], lz1 = lb[1][1];
+  const H = MB_H.ground - MB_H.slab;
+  /** walls [x0, z0, x1, z1] (both faces), from 0 to H */
+  const walls: [number, number, number, number][] = [
+    [hx1, P.zb, hx1, cz0], [hx1, cz0, cx0, cz0], [cx0, cz0, cx0, cz1], [cx0, cz1, hx0, cz1],   // east, north, stair core
+    [hx0, cz1, hx0, lz0], [hx0, lz0, lx1, lz0], [lx1, lz1, hx0, lz1], [hx0, lz1, hx0, P.zb],     // west, lift vestibule
+    [P.d1, P.zb - 0.02, hx1, P.zb - 0.02],                                                      // inner face of the portal
+  ];
+  /** walkable rectangles [x0, z0, x1, z1] at y = 0: hall, stair core, lift vestibule */
+  const rooms: [number, number, number, number][] = [[hx0, cz0, hx1, P.zb], [cx0, cz0, hx0, cz1], [lx1, lz0, hx0, lz1]];
+  return { walls, rooms, H, x0: hx0, x1: hx1, z0: cz0, z1: P.zb };
+})();
+
+/** Ground floor: the floor-1 footprint as a closed plinth up to the first floor (the street front is dressed separately from
+ *  the photos: shops, office entrance), and the provisional entrance hall. */
 function groundParts() {
   const b = new Bag(), S1 = clean(MIBTECH_PLANS[1].slab[0]);
   // every edge but the street front (z ≈ 0): there the ground floor is set back under the floors (MibtechBuilding front())
@@ -195,6 +331,11 @@ function groundParts() {
     if (p[1] > -1.5 && q[1] > -1.5) continue;
     sides(b, "groundWall", [p, q, q], 0, MB_H.ground - MB_H.slab); // degenerate [p, q, q]: the wall p → q, both faces
   }
+  const H = MB_HALL;
+  for (const [x0, z0, x1, z1] of H.walls) sides(b, "wall", [[x0, z0], [x1, z1], [x1, z1]], 0, H.H);
+  sides(b, "wall", [[MB_PORTAL.d0, MB_PORTAL.zb - 0.02], [MB_PORTAL.d1, MB_PORTAL.zb - 0.02], [MB_PORTAL.d1, MB_PORTAL.zb - 0.02]], MB_PORTAL.door, H.H);
+  for (const [x0, z0, x1, z1] of H.rooms) cap(b, "floor", [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], 0.012, true);
+  for (const P of MIBTECH_PLANS[1].lift) prism(b, "lift", P, 0, H.H);
   return b.build();
 }
 

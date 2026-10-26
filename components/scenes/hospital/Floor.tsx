@@ -198,7 +198,7 @@ export default function Floor({ fl, openKey, focusDept, walkKey = null, walking 
     mats.glass.emissiveIntensity = (1 - rt.day) * 0.55;
     // level of detail: the furnished interior is drawn for the open floor, or when the camera is close
     if (content.current) {
-      if (walkOn) {
+      if (walkOn && W.site === "hospital") {
         // walk mode LOD: furnished interiors near the visitor only (distance to the plate's box)
         const dx = Math.max(0, Math.abs(W.x - fl.ox) - fl.w / 2), dz = Math.max(0, Math.abs(W.z - fl.oz) - fl.d / 2);
         const dy = Math.max(0, baseY - (W.y + 1.2), W.y + 1.2 - (baseY + FLOOR_H));

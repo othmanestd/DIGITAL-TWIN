@@ -8,7 +8,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { CAMPUS_OFFSET } from "../hospital/nav";
 import { BONE, chestFront, newPose, poseWalk, type HumanLook } from "../people/human";
 import { useHumanCrowd } from "../people/useHumans";
 import { W } from "./state";
@@ -131,7 +130,7 @@ export default function Visitor({ api }: { api: React.MutableRefObject<VisitorAp
         // visual height follows the feet with a short damp (hides the small steps at the ends of the flights)
         if (st.first) { st.y = W.y; st.first = false; }
         st.y += (W.y - st.y) * (W.grounded ? 1 - Math.exp(-dt * 22) : 1);
-        g.position.set(W.x + CAMPUS_OFFSET.x, st.y, W.z + CAMPUS_OFFSET.z);
+        g.position.set(W.x + W.ox, st.y, W.z + W.oz);
         g.rotation.y = W.heading;
         const k = 1 - Math.exp(-dt * 10);
         st.run += (smooth((sp - 2.2) / 1.8) - st.run) * k;
