@@ -58,3 +58,21 @@ Date : 26/10/2026 · branche `feat/anfa-prime-hospital` (propre, 3 commits locau
 9. **Contrôles** : TypeScript, build, tests navigateur (chargement, étages, marche, collisions, escalier, transitions ville ↔ bâtiment, performances).
 
 Livraison par lots, chacun testé et committé localement : (1) extraction + vérification des trois plans ; (2) coque et étages vides ; (3) escalier, portes, coupe et sélecteur ; (4) marche à pied ; (5) mobilier, matériaux, éclairage.
+
+## 4. Avancement (26/10/2026) et questions ouvertes
+
+| Lot | État |
+|---|---|
+| 1 · Extraction des 3 plans | fait — échelle 4,346 cm/pt ; 384 cotes sur 387 à moins de 2 cm (médiane 1 mm) ; noyau escalier/ascenseur superposé à ±1 mm ; dalles 837,5 m² (1er) et 660,5 m² (2e, 3e) ; l'emprise coïncide avec le toit vu sur la vue aérienne |
+| 2 · Coque et étages | fait — murs, fenêtres, vitrages, cloisons, cabines WC, portes, poteaux, ascenseur, dalles, plafonds, toitures ; façade sur rue d'après photos |
+| 3 · Escalier, sélecteur, coupe | fait — escalier tel que dessiné, trémie, sélecteur « Bâtiment · 1er · 2e · 3e » avec coupe |
+| 4 · Marche à pied | à faire — généraliser le contrôleur de l'hôpital |
+| 5 · Mobilier, matériaux, éclairage | à faire — en attente de références intérieures |
+
+**Questions pour l'architecte / le maître d'ouvrage**
+1. Hauteurs : rez-de-chaussée, entre planchers, sous plafond (provisoire 4,6 / 3,8 / 2,8 m). L'escalier dessiné (28,2 cm de giron) suggère plutôt ≈ 3,5 m entre planchers.
+2. Escalier : 2 volées de 7 marches par étage donnent des contremarches de 23,75 cm avec 3,8 m (21,9 cm avec 3,5 m) : le dessin APS est-il schématique ?
+3. 1er étage : la couronne extérieure (pointe nord-ouest, triangle est) est fermée par des murs avec fenêtres : espace de bureau, terrasse couverte ou autre ?
+4. Rez-de-chaussée : plan du hall des bureaux (accès depuis le portail jusqu'au noyau).
+5. Finitions intérieures : photos, rendus ou carnet de finitions (sols, murs, plafonds, menuiseries, mobilier).
+6. Usage des pièces (aucun nom sur les plans cotés).
