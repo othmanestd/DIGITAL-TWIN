@@ -299,6 +299,24 @@ function carpet(b: Bag, f: MbFloor, plan: FloorPlan, y: number) {
       room.push(...next); front = next;
     }
     for (const k of room) carpetCells[k] = 1;
+    // wall display at one end of the table (photos: interactive screen in a white frame, soundbar below), on the end wall
+    // farther from the table; skipped when no wall is found within 4 m
+    const ux = Math.cos(t[5]), uz = Math.sin(t[5]);
+    const reach = (sg: number) => {
+      for (let d = Math.max(t[3], t[4]) / 2; d < 4; d += R / 2) {
+        const i = Math.round((t[1] + ux * sg * d - X0) / R), j = Math.round((t[2] + uz * sg * d - Z0) / R);
+        if (i < 0 || j < 0 || i >= NX || j >= NZ || wall[j * NX + i]) return d;
+      }
+      return Infinity;
+    };
+    const ends = [[1, reach(1)], [-1, reach(-1)]].filter((e) => e[1] < Infinity).sort((p, q) => q[1] - p[1]);
+    if (ends.length) {
+      const [sg, dw] = ends[0];
+      const cx = t[1] + ux * sg * (dw - 0.1), cz = t[2] + uz * sg * (dw - 0.1), ang = t[5] + Math.PI / 2;
+      box(b, "porcelain", cx, cz, 1.5, 0.05, ang, y + 1.08, y + 1.96);                                   // white frame
+      box(b, "screen", cx - ux * sg * 0.03, cz - uz * sg * 0.03, 1.4, 0.02, ang, y + 1.16, y + 1.92);    // the screen, in front
+      box(b, "chair", cx - ux * sg * 0.02, cz - uz * sg * 0.02, 0.9, 0.08, ang, y + 0.94, y + 1.02);     // soundbar
+    }
   }
   // one quad per run of carpet cells in each row
   for (let j = 0; j < NZ; j++) {

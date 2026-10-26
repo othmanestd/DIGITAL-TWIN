@@ -8,7 +8,8 @@ at the same sheet coordinates (checked: identical drawings), so the building fra
 Furniture = the white fills of the electrical sheet that the dimensioned sheet does not have, classified by shape:
   · chair: seat (two halves ≈ 0.6 × 0.3 m, 29 path items each, 0.3 m apart); its back (≈ 0.2 × 0.1 m, 14 items) gives the direction it faces
   · desk: 1.2 × 0.7 m top (workstations); monitor: ≈ 0.4 × 0.1 m (14 items); screen: thin desk dividers (< 6 cm)
-  · chair (other symbol): one outline ≈ 0.5–0.7 m, 14 items, facing the nearest table or desk
+  · chair (other symbol): one outline ≈ 0.5–0.7 m, 14 items
+  · every chair within 1 m of a desk or table top faces the nearest point of that top
   · plant: ≈ 1 m, ≥ 80 items; WC pan: ≈ 0.5 × 0.4 m, 20 items; armchair / sofa: 8 items (sofa when longer than 1.2 m)
   · round table: ≈ 0.6 m, 18 items; lounge chair: ≈ 0.6 m square next to a round table (terrace)
   · other rectangles: rug when it holds ≥ 2 chair seats, table when a chair seat is within 0.7 m, else cabinet (≤ 0.65 m deep)
@@ -137,6 +138,24 @@ def floor(cot_pdf, elec_pdf):
                 put("cabinet", i)
             else:
                 put("low", i)
+    # a chair faces its desk or table: the nearest point of the nearest top within 1 m (the drawn symbols' own direction
+    # is not reliable for every chair family); chairs away from any top keep the direction read from the symbol
+    tops_out = [o for o in out if o[0] in (KINDS.index("desk"), KINDS.index("table"))]
+    for o in out:
+        if o[0] != KINDS.index("chair"):
+            continue
+        best = None
+        for t in tops_out:
+            ux, uz = math.cos(t[5]), math.sin(t[5])
+            dx, dz = o[1] - t[1], o[2] - t[2]
+            u, v = dx * ux + dz * uz, -dx * uz + dz * ux
+            cu, cv = max(-t[3] / 2, min(t[3] / 2, u)), max(-t[4] / 2, min(t[4] / 2, v))
+            px, pz = t[1] + cu * ux - cv * uz, t[2] + cu * uz + cv * ux
+            d = math.hypot(px - o[1], pz - o[2])
+            if d < 1.0 and (best is None or d < best[0]):
+                best = (d, px, pz)
+        if best and best[0] > 0.02:
+            o[5] = round(math.atan2(best[2] - o[2], best[1] - o[1]), 3)
     count = {k: sum(1 for o in out if o[0] == j) for j, k in enumerate(KINDS)}
     return out, count, meta["scale_cm_per_pt"]
 

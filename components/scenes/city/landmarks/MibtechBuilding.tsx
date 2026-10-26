@@ -24,6 +24,7 @@ import { MB_CANT, MB_H, MB_OUTLINE, MB_PORTAL, MB_TOP, buildMibtech, floorY, inO
 import { MIBTECH_PLANS } from "./mibtech/mibtechPlanData";
 import { ORIGIN, THETA, fromPlan, toPlan } from "./mibtech/mibtechFrame";
 import { W } from "../../walk/state";
+import MibtechPeople from "./mibtech/MibtechPeople";
 
 export const MIBTECH_ID = "mibtech";
 export { toPlan, fromPlan };
@@ -428,6 +429,7 @@ export function MibtechBuilding() {
       {Object.entries(B).map(([grp, parts]) => (
         <group key={grp} name={`mibtech.${grp}`}>
           {parts.map((p) => <mesh key={p.key} geometry={p.geo} material={P[p.key]} castShadow={p.key === "wall" || p.key === "slabEdge" || p.key === "roof"} />)}
+          {/^f\d$/.test(grp) && <MibtechPeople floor={Number(grp[1]) as MbFloor} />}
         </group>
       ))}
       <mesh geometry={F.glass} material={M.glass} />

@@ -146,6 +146,8 @@ function refreshNear(x: number, z: number) {
 
 // ---------------------------------------------------------------- body collisions
 export const STEP = 0.35;
+/** MIBTECH's staff (city/landmarks/mibtech/MibtechPeople.tsx), this frame: soft circles the visitor steps round */
+export const MB_PEOPLE: { x: number; z: number; y: number; on: boolean }[] = [];
 const BODY_LO = 0.32, BODY_HI = 1.75;
 let bx = 0, bz = 0, bnx = 0, bnz = 0, bLo = 0, bHi = 0, bR = 0, bHit = false;
 function bPush(dx: number, dz: number) { bx += dx; bz += dz; bnx += dx; bnz += dz; bHit = true; }
@@ -162,12 +164,18 @@ function bTest(c: Box) {
   bPush(ex * c.c + ez * c.s, -ex * c.s + ez * c.c);
 }
 /** Push the circle (p.x, p.z, radius r) out of every collider overlapping the body [feet + 0.32, feet + 1.75]. */
-export function mbResolveBody(p: { x: number; z: number }, feet: number, r: number, n: { x: number; z: number }): boolean {
+export function mbResolveBody(p: { x: number; z: number }, feet: number, r: number, n: { x: number; z: number }, people = true): boolean {
   bx = p.x; bz = p.z; bnx = 0; bnz = 0; bHit = false; bLo = feet + BODY_LO; bHi = feet + BODY_HI; bR = r;
   const ci = Math.floor(bx - GX0), cj = Math.floor(bz - GZ0);
   if (ci >= 0 && ci < NX && cj >= 0 && cj < NZ) {
     const k = cj * NX + ci;
     for (let q = cellStart[k]; q < cellStart[k + 1]; q++) bTest(BODY[cellItems[q]]);
+  }
+  if (people) for (let i = 0; i < MB_PEOPLE.length; i++) {
+    const pp = MB_PEOPLE[i];
+    if (!pp.on || Math.abs(pp.y - feet) > 1.2) continue;
+    const dx = bx - pp.x, dz = bz - pp.z, rr = r + 0.22, d2 = dx * dx + dz * dz;
+    if (d2 < rr * rr && d2 > 1e-8) { const d = Math.sqrt(d2), k = (rr - d) / d; bPush(dx * k, dz * k); }
   }
   refreshNear(bx, bz);
   for (let q = 0; q < near.length; q++) {
