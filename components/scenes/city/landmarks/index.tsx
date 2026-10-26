@@ -7,6 +7,7 @@ import { Mosque, mosqueSolids } from "./Mosque";
 import { CfcDistrict, cfcDistrictSolids } from "./CfcDistrict";
 import { Trams } from "./Tram";
 import { AnfaPrime, anfaPrimeSolids } from "./AnfaPrime";
+import { MibtechBuilding, mibtechSolids } from "./MibtechBuilding";
 import { TwinCenter, twinCenterSolids } from "./TwinCenter";
 import { MaarifDistrict, maarifSolids } from "./MaarifDistrict";
 import { AnfaPrimeDistrict, anfaDistrictSolids } from "./AnfaPrimeDistrict";
@@ -25,7 +26,7 @@ export function CityLandmarks() {
   useEffect(() => {
     // "Casa réel" (casaFrame): the OSM Hassan II replaces the procedural mosque, the procedural tram line is not drawn
     const own = CASA_REEL ? hassanSolids() : mosqueSolids();
-    registerSolids("landmarks", [...own, ...cfcDistrictSolids(), ...anfaPrimeSolids(), ...twinCenterSolids(), ...maarifSolids(), ...anfaDistrictSolids()]);
+    registerSolids("landmarks", [...own, ...cfcDistrictSolids(), ...anfaPrimeSolids(), ...twinCenterSolids(), ...maarifSolids(), ...anfaDistrictSolids(), ...(CASA_REEL ? mibtechSolids() : [])]);
     return () => registerSolids("landmarks", []);
   }, []);
   return (
@@ -34,6 +35,7 @@ export function CityLandmarks() {
       <CfcDistrict />
       {!CASA_REEL && <Trams />}
       <AnfaPrime />
+      {CASA_REEL && <MibtechBuilding />}
       <TwinCenter />
       <MaarifDistrict />
       <AnfaPrimeDistrict />

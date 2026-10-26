@@ -6,6 +6,7 @@
 // detail: near tiles (< 3 km) get the district façades (typologies, not surveyed), parapets and lit windows at night; far
 // tiles are plain coloured volumes in one draw call each. The OSM districts drawn in detail (CFC, Maârif, Anfa Prime,
 // Hassan II) and the typical hospital's campus keep their own buildings: the tiles skip theirs.
+import { MIBTECH_SKIP } from "./landmarks/MibtechBuilding";
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -34,6 +35,7 @@ function skipRects() {
     CFC_DISTRICT, MAARIF_DISTRICT, ANFA_DISTRICT,
     { x0: H.ox + hb.x0, x1: H.ox + hb.x1, z0: H.oz + hb.z0, z1: H.oz + hb.z1 },
     { x0: -190, x1: 190, z0: -190, z1: 190 },
+    MIBTECH_SKIP, // the older OSM villas under Mibtech's building (landmarks/MibtechBuilding)
   ];
 }
 

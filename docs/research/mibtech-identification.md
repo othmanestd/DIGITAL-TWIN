@@ -44,3 +44,22 @@ Aucune photo de façade ni vue satellite n'a pu être examinée : le dossier n'e
 - l'indication du bâtiment : lequel des candidats, ou un bâtiment absent d'OSM.
 
 Les photos servent de référence d'analyse seulement : le modèle sera reconstruit en géométrie et matériaux procéduraux, à la position issue de la chaîne `casaFrame.geoToScene`.
+
+## D. Modélisation (26/10/2026) — volume estimé
+
+Identification retenue : **les deux repères Google de la fiche « MIBTECH »** (lien fourni et lien du site officiel) tombent sur un **bâtiment récent absent d'OpenStreetMap**, visible sur une vue aérienne Esri World Imagery (z19, ≈ 25 cm/pixel, consultée le 26/10/2026, **observation seulement : rien n'est tracé ni utilisé comme texture**). OSM y montre encore deux anciennes villas (ways 419748653 et 419748511), que la couche de ville ne dessine plus à cet endroit.
+
+| Caractéristique | Valeur | Statut |
+|---|---|---|
+| Position | ancrée sur le repère du site officiel (33.5558823, −7.6435464), chaîne `casaFrame.geoToScene` | vérifié (repère Google), pied du bâtiment estimé |
+| Emprise | aile principale ≈ 26 × 14 m le long du boulevard (orientation ≈ 40°) + annexe nord-ouest ≈ 11 × 9 m | **estimé** (cotes arrondies au mètre) |
+| Hauteur | ≈ 25,5 m, 7 niveaux (RDC 4,5 m + 6 × 3,5 m) | **estimé ±1 niveau** (inclinaison et ombre comparées aux villas R+1 voisines) |
+| Toiture | plate, acrotère blanc, local technique | observé (vue aérienne) |
+| Façade sur rue (sud-est) | mur-rideau vitré gris-bleu | observé (vue aérienne oblique) |
+| Façades latérales | enduit blanc | observé (vue aérienne oblique) |
+| Façade arrière (nord-ouest) | non visible : panneau de bureau neutre | **simplification** |
+| Entrée, enseigne, menuiseries | non documentées | inconnu |
+
+Le volume touche d'environ 1 m un angle de l'empreinte OSM (2016) de la maison voisine au nord-est : dans la précision des sources (sur l'image les deux bâtiments sont mitoyens ou presque).
+
+Pour un modèle fidèle : photo de la façade, nombre d'étages réel, ou plans ; idéalement ajout de l'emprise dans OpenStreetMap par un contributeur autorisé.

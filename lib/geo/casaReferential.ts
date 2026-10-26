@@ -55,8 +55,8 @@ export const AKDITAL_CASA: Place[] = [
  *  listing the official site mibtech.ma links to as well); the exact building is not identified yet
  *  (docs/research/mibtech-identification.md), so it stays a marker. */
 export const PARTNERS_CASA: Place[] = [
-  { id: "mibtech", type: "Bâtiment partenaire", r: 900, name: "Mibtech", lat: 33.5557132, lon: -7.643536, status: "fiche", scene: "marker",
-    note: "repère de la fiche Google « MIBTECH » ; siège officiel « 24 Rue des Papillons » (ancien nom du boulevard Mahdi Elmandjra dans OSM) ; aucun bâtiment OSM sous le repère : bâtiment exact à confirmer" },
+  { id: "mibtech", type: "Bâtiment partenaire", r: 900, name: "Mibtech", lat: 33.5557132, lon: -7.643536, status: "fiche", scene: "modelled",
+    note: "les deux repères de la fiche Google « MIBTECH » (lien fourni, lien du site officiel) tombent sur un bâtiment récent absent d'OpenStreetMap ; siège officiel « 24 Rue des Papillons » (ancien nom du boulevard Mahdi Elmandjra) ; volume estimé d'après une vue aérienne (≈ 26 × 14 m + annexe, ≈ 25 m, 7 niveaux ±1) : à confirmer" },
 ];
 
 /** Every place of the referential by id (monuments, public places, the Akdital establishments, partners). */

@@ -11,7 +11,7 @@ export type PlaceCategory = "Hôpital" | "Clinique" | "Centre d'oncologie" | "B�
 /** osm / osm-probable / fiche: a point (building-level) with its source; city: only the city is known; none: no position */
 export type CoordStatus = "osm" | "osm-probable" | "fiche" | "city" | "none";
 /** detailed: a dedicated model; osm-volume: its OpenStreetMap footprint drawn as a volume of the city; marker: a marker only */
-export type ModelStatus = "detailed" | "osm-volume" | "marker" | "none";
+export type ModelStatus = "detailed" | "estimated" | "osm-volume" | "marker" | "none";
 
 export type ExplorerPlace = {
   id: string; name: string; officialName: string; brand: "Akdital" | "Mibtech";
@@ -68,7 +68,7 @@ const MIBTECH: ExplorerPlace = {
   id: "mibtech", name: "Mibtech", officialName: "Mibtech", brand: "Mibtech", category: "Bâtiment partenaire", city: "Casablanca", district: "L'Oasis",
   address: "24 Rue des Papillons, Casablanca, Maroc", addressSource: "site officiel mibtech.ma (siège social)",
   latitude: mib.lat, longitude: mib.lon, coordinateStatus: "fiche", coordinateSource: "repère de la fiche Google « MIBTECH » (lien fourni)", coordinateVerified: false,
-  officialUrl: "https://mibtech.ma/", mapUrl: "https://maps.app.goo.gl/Y2qYWsH8rJ2mDBLz9", model3D: "marker",
+  officialUrl: "https://mibtech.ma/", mapUrl: "https://maps.app.goo.gl/Y2qYWsH8rJ2mDBLz9", model3D: "estimated", model3DId: "mibtech",
   description: mib.note, dataSource: "Lien Google Maps fourni ; site officiel mibtech.ma ; OpenStreetMap (26/10/2026)", lastVerifiedAt: CHECKED, r: mib.r ?? 900,
 };
 
@@ -111,5 +111,5 @@ export const COORD_LABEL: Record<CoordStatus, string> = {
   osm: "Position vérifiée (OSM)", "osm-probable": "Position probable (OSM)", fiche: "Repère Google · à vérifier", city: "Ville seulement", none: "Localisation à vérifier",
 };
 export const MODEL_LABEL: Record<ModelStatus, string> = {
-  detailed: "Modèle 3D détaillé", "osm-volume": "Volume OSM", marker: "Marqueur", none: "Pas de 3D",
+  detailed: "Modèle 3D détaillé", estimated: "Volume 3D estimé", "osm-volume": "Volume OSM", marker: "Marqueur", none: "Pas de 3D",
 };
