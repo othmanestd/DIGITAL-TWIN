@@ -14,13 +14,14 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { frame } from "@/lib/world";
 import { BONE, dress, newPose, poseCounter, poseIdle, poseSit, poseType, poseWalk, type Garb, type HumanLook, type Pose } from "../../../people/human";
 import { useHumanCrowd } from "../../../people/useHumans";
 import { FURN_KINDS, MIBTECH_FURNITURE } from "./mibtechFurnitureData";
 import { floorY, type MbFloor } from "./mibtechGeo";
-import { planVec } from "./mibtechFrame";
+import { CENTER, MB_PEOPLE_NEAR, MB_VIEW, planVec } from "./mibtechFrame";
 import { MB_PEOPLE, mbGroundAt, mbResolveBody } from "../../../walk/mibtechWalk";
+import { W } from "../../../walk/state";
+
 
 type Npc = {
   kind: "type" | "sit" | "stand" | "walk"; x: number; z: number; yaw: number; sd: number; look: HumanLook; glasses?: boolean;
@@ -129,7 +130,7 @@ const P = newPose(), _m = new THREE.Matrix4();
 /** Walk mode reads MB_PEOPLE in its own frame (scene offset from the plans' origin), floor height included. */
 export default function MibtechPeople({ floor }: { floor: MbFloor }) {
   const npcs = useMemo(() => cast(floor), [floor]);
-  const crowd = useHumanCrowd(npcs.length);
+  const crowd = useHumanCrowd(npcs.length, { shadow: false }); // indoors: no sun shadow to cast
   const glasses = useMemo(() => ({ geo: glassesGeo(), mat: new THREE.MeshStandardMaterial({ color: "#121316", roughness: 0.4, metalness: 0.4 }) }), []);
   const nGl = Math.max(1, npcs.filter((n) => n.glasses).length);
   const gl = useRef<THREE.InstancedMesh>(null);
@@ -141,8 +142,15 @@ export default function MibtechPeople({ floor }: { floor: MbFloor }) {
   }, [npcs, crowd]);
   useEffect(() => () => { glasses.geo.dispose(); glasses.mat.dispose(); }, [glasses]);
   const y = floorY(floor);
-  useFrame((_, dt) => {
+  useFrame((state, dt) => {
     const s = st.current, g = crowd.mesh;
+    // level of detail: on foot in MIBTECH, the visitor's floor only (and the next one from the stair); otherwise the staff
+    // only when the camera is near the building, and in the floor view only on the open floor
+    const cam = state.camera.position;
+    const near = W.phase !== "off" && W.site === "mibtech"
+      ? W.level === floor || (W.mbStair && Math.abs(W.level - floor) <= 1)
+      : Math.hypot(cam.x - CENTER[0], cam.y, cam.z - CENTER[1]) < MB_PEOPLE_NEAR && (!MB_VIEW.floor || MB_VIEW.floor === floor);
+    g.visible = near; if (gl.current) gl.current.visible = near;
     // only while the floor is shown and the camera is near the building
     let o: THREE.Object3D | null = g, shown = true;
     while (o) { if (!o.visible) { shown = false; break; } o = o.parent; }
@@ -151,7 +159,7 @@ export default function MibtechPeople({ floor }: { floor: MbFloor }) {
       s.base = MB_PEOPLE.length; s.n = npcs.length;
       for (let i = 0; i < npcs.length; i++) MB_PEOPLE.push({ x: 0, z: 0, y, on: false });
     }
-    if (!shown || frame.alt > 600) { for (let i = 0; i < npcs.length; i++) MB_PEOPLE[s.base + i].on = false; return; }
+    if (!shown || !near) { for (let i = 0; i < npcs.length; i++) MB_PEOPLE[s.base + i].on = false; return; }
     s.t += Math.min(dt, 0.1);
     const t = s.t;
     let gi = 0;

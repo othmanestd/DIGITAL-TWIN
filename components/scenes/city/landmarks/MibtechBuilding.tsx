@@ -22,7 +22,7 @@ import { ENV } from "./env";
 import { lmOpacity, setFade } from "./shared";
 import { MB_CANT, MB_H, MB_OUTLINE, MB_PORTAL, MB_TOP, buildMibtech, floorY, inOutline, type MbFloor, type MbMat } from "./mibtech/mibtechGeo";
 import { MIBTECH_PLANS } from "./mibtech/mibtechPlanData";
-import { ORIGIN, THETA, fromPlan, toPlan } from "./mibtech/mibtechFrame";
+import { CENTER, MB_NEAR, MB_VIEW, ORIGIN, THETA, fromPlan, toPlan } from "./mibtech/mibtechFrame";
 import { W } from "../../walk/state";
 import MibtechPeople from "./mibtech/MibtechPeople";
 
@@ -205,7 +205,7 @@ export const MIBTECH_TOP = TOP;
 
 /** Floor view (explore mode): 0 = the whole building; 1 … 3 = that floor open, the floors above, the roof and the street-front
  *  dressing hidden (no geometry duplicated: groups shown / hidden). Reset when MIBTECH is no longer selected. */
-export const MB_VIEW = { floor: 0 as 0 | MbFloor };
+export { MB_VIEW };
 export function mibtechShowFloor(f: 0 | MbFloor) {
   MB_VIEW.floor = f;
   const c = fromPlan(0, -14.5);
@@ -404,15 +404,21 @@ export function MibtechBuilding() {
     // walk mode inside MIBTECH (third person): the floors above the visitor cut away, like the floor view; the entrance
     // door open while walking there. Key = what is shown: floor view f (1…3), walk cut 10 + level, or 0 (whole building).
     const walking = W.phase !== "off" && W.site === "mibtech";
-    const key = walking && W.mbCut < 99 ? 10 + W.mbCut : walking ? 20 : MB_VIEW.floor;
+    // level of detail: the furnished floors only near the building (through its glass), in the floor view or on foot; far
+    // away, a plain shell (key 30)
+    const cam = state.camera.position, near = walking || MB_VIEW.floor > 0 || Math.hypot(cam.x - CENTER[0], cam.y, cam.z - CENTER[1]) < MB_NEAR;
+    const key = walking && W.mbCut < 99 ? 10 + W.mbCut : walking ? 20 : !near ? 30 : MB_VIEW.floor;
     res.clip.constant = walking && W.mbCut < 99 && W.cutY < 1e5 ? W.cutY : 1e6;
     if (walking) state.gl.localClippingEnabled = true;
     if (shown.current !== key) {
       shown.current = key;
-      const f = key >= 10 && key < 20 ? key - 10 : key === 20 ? 0 : key, cut = key >= 10 && key < 20;
+      const f = key >= 10 && key < 20 ? key - 10 : key >= 20 ? 0 : key, cut = key >= 10 && key < 20, far = key === 30;
       for (const o of g.children) {
         const m = /^mibtech\.(f|s)(\d)$/.exec(o.name);
-        if (m) o.visible = cut ? Number(m[2]) <= f || (m[1] === "s" && Number(m[2]) === f + 1) : !f || Number(m[2]) <= f;
+        if (o.name === "mibtech.shell") o.visible = far;
+        else if (far && m) o.visible = false;
+        else if (o.name === "mibtech.ground") o.visible = true;
+        else if (m) o.visible = cut ? Number(m[2]) <= f || (m[1] === "s" && Number(m[2]) === f + 1) : !f || Number(m[2]) <= f;
         else if (o.name === "mibtech.roof") o.visible = !f && !cut;
         else if (o.name === "mibtech.entry") o.visible = !walking && !f;
         else if (o.name !== "mibtech.ground") o.visible = !cut && !f; // the street-front dressing (photos)

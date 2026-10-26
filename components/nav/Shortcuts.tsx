@@ -84,8 +84,6 @@ export default function Shortcuts() {
         case "+": case "=": e.preventDefault(); s.requestZoom({ delta: -step }); return;
         case "-": case "_": e.preventDefault(); s.requestZoom({ delta: step }); return;
         case "0": e.preventDefault(); s.select({ kind: "overview", id: s.level }); return;
-        case "h": case "H": s.setLevel("hospital"); return;
-        case "m": case "M": s.setLevel("morocco"); return;
         case "c": case "C": s.setLevel("city"); return;
         case "w": case "W": case "g": case "G": if (k.toLowerCase() === "g") { s.setPerSite(!s.perSite); return; } s.setLevel("world"); return;
         case "p": case "P": s.setPanelOpen(!s.panelOpen); return;
@@ -146,10 +144,10 @@ export const ROWS: [string, [string, string][]][] = [
     ["A D Z S · flèches du pavé", "Déplacer la vue"],
     ["Boussole", "Remettre le nord en haut"],
     ["0", "Recadrer la vue d'ensemble"],
-    ["Continuer à dézoomer", "Hôpital → Casablanca → Maroc → Monde"],
+    ["Continuer à dézoomer", "Casablanca → Monde → logo Akdital"],
   ]],
   ["Navigation", [
-    ["H / C / M / W", "Hôpital / Casablanca / Maroc / Monde"],
+    ["C / W", "Casablanca / Monde"],
     ["↑ / ↓", "Étage supérieur / inférieur"],
     ["← / →", "Service précédent / suivant"],
     ["Échap · Retour", "Remonter d'un niveau"],

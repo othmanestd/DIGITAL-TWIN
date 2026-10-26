@@ -19,6 +19,7 @@ import { MoroccoContent, MAP_UNITS_PER_KM, MOROCCO_CENTER_LONLAT, mapProject } f
 import { GlobeContent, GLOBE_RADIUS, GLOBE_VIEW_LONLAT, globePoint } from "./geo/GlobeContent";
 import { CASA_LONLAT } from "@/lib/geo/projection";
 import WalkWorld from "./walk/WalkWorld";
+import PerfProbe from "./PerfProbe";
 import { W, walkBusy, WALK_API } from "./walk/state";
 import { CASA_REEL } from "@/lib/geo/casaFrame";
 import { CasaReel } from "./city/CasaReel";
@@ -147,13 +148,14 @@ export default function UnifiedWorld() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusNonce]);
 
-  // intro: from space, dive into Morocco, then land on the typical hospital
+  // intro: the Akdital logo, the globe coming out of it, then down to Casablanca (across Morocco without stopping), and
+  // there it stops: the visitor chooses the establishment (a clinic or MIBTECH's building) in the explorer
   useLayoutEffect(() => {
-    rig.flyTo(EARTH_CENTER, R_TOP + 2.6e7, { polar: shots.worldPolar, azimuth: shots.worldAz, transition: false });
+    rig.flyTo(EARTH_CENTER, R_TOP + MAX_ALT, { transition: false });
     const s = st.current;
-    const t1 = setTimeout(() => { if (s.intro) go("morocco", { duration: 3.2 }); }, 1200);
-    const t2 = setTimeout(() => { if (s.intro) go("hospital", { duration: 3.6 }); }, 4700);
-    const t3 = setTimeout(() => { s.intro = false; }, 8600);
+    const t1 = setTimeout(() => { if (s.intro) rig.flyTo(EARTH_CENTER, R_TOP + 2.1e7, { polar: shots.worldPolar, azimuth: shots.worldAz, duration: 2.6 }); }, 1400);
+    const t2 = setTimeout(() => { if (s.intro && !travel("city")) go("city", { duration: 3.2 }); }, 4600);
+    const t3 = setTimeout(() => { s.intro = false; }, 9800);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -388,6 +390,7 @@ export default function UnifiedWorld() {
     <>
       <CameraControls ref={controls} makeDefault />
       <WalkWorld />
+      {process.env.NODE_ENV !== "production" && <PerfProbe />}
       <Lights />
       <Environment resolution={128} frames={1} environmentIntensity={0.3}>
         <Lightformer form="rect" intensity={2.2} color="#FFFFFF" position={[0, 12, 0]} rotation-x={Math.PI / 2} scale={[24, 24, 1]} />

@@ -29,7 +29,7 @@ export function WalkButton() {
     <style>{"@media (max-width: 1499px) { .jb-walk { width: 46px; padding: 0 !important; justify-content: center; } .jb-walk .lbl, .jb-walk .jb-kbd { display: none; } }"}</style>
     <button className="jb-btn glass jb-walk" data-anchor="ai:walk" data-active={on}
       onClick={(e) => { e.currentTarget.blur(); walkRequest("toggle"); }}
-      title={on ? "Revenir à la vue d'ensemble (Échap)" : "Se promener à pied (B)"}>
+      title={on ? "Revenir à la vue d'ensemble (Échap)" : "Se promener à pied dans le site le plus proche : clinique ou MIBTECH (B)"}>
       <span className="ico blue"><WalkIcon size={16} /></span>
       <span className="lbl">{on ? "Vue d'ensemble" : "À pied"}</span>
       <span className="jb-kbd">B</span>

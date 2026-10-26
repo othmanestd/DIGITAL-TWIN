@@ -429,10 +429,29 @@ function groundParts() {
   return b.build();
 }
 
+/** Far level of detail: the outside of the floors as plain volumes — the offices' walls up to the roof, the 1st-floor terrace
+ *  (floor and parapet). The street front is left to the façade dressing (the photos' curtain wall), the ground floor to its
+ *  own group. Drawn instead of the three furnished floors when the camera is far (MibtechBuilding). */
+function shellParts() {
+  const b = new Bag(), S2 = clean(MIBTECH_PLANS[2].slab[0]), S1 = clean(MIBTECH_PLANS[1].slab[0]), y1 = floorY(1);
+  const outer = (P: PlanPoly, y0: number, yt: number, k: MbMat) => {
+    for (let i = 0; i < P.length; i++) {
+      const p = P[i], q = P[(i + 1) % P.length];
+      if (p[1] > -1.5 && q[1] > -1.5) continue;                      // street front: the façade dressing
+      sides(b, k, [p, q, q], y0, yt);
+    }
+  };
+  outer(S2, y1 - MB_H.slab, MB_TOP, "wall");
+  outer(S1, y1 - MB_H.slab, y1 + MB_PARAPET, "wall");
+  cap(b, "terrace", S1, y1 + 0.004, true);
+  return b.build();
+}
+
 export type MbParts = { key: MbMat; geo: THREE.BufferGeometry }[];
-/** every part of the building, keyed by group: "f1" … "f3" (each floor), "s1" … "s3" (the flights up to it), "roof", "ground" */
+/** every part of the building, keyed by group: "f1" … "f3" (each floor), "s1" … "s3" (the flights up to it), "roof", "ground",
+ *  "shell" (far level of detail) */
 export function buildMibtech(): Record<string, MbParts> {
-  const out: Record<string, MbParts> = { roof: roofParts(), ground: groundParts() };
+  const out: Record<string, MbParts> = { roof: roofParts(), ground: groundParts(), shell: shellParts() };
   for (const f of MB_FLOORS) { out[`f${f}`] = floorParts(f, MIBTECH_PLANS[f]); out[`s${f}`] = stairParts(f); }
   return out;
 }

@@ -123,7 +123,7 @@ export default function TopBar() {
       <div className="absolute inset-0 border-b border-white/[0.06]" style={{ background: "linear-gradient(180deg, rgba(8,12,27,.86) 0%, rgba(8,12,27,.74) 100%)", backdropFilter: "blur(20px) saturate(160%)", WebkitBackdropFilter: "blur(20px) saturate(160%)" }} />
       <div className="relative grid h-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-5 px-5">
         <div className={`pointer-events-auto flex min-w-0 items-center gap-5 overflow-hidden transition-opacity duration-300 ${searchOpen ? "opacity-30" : ""}`}>
-          <button type="button" className="shrink-0" onClick={() => useApp.getState().home()} title="Retour à l'hôpital type" data-anchor="home"><Brand compact={compactBrand} /></button>
+          <button type="button" className="shrink-0" onClick={() => useApp.getState().setLevel("city")} title="Retour à Casablanca" data-anchor="home"><Brand compact={compactBrand} /></button>
           <Tip content={<>Jeu de données : <b className="text-[var(--txt)]">{DATASET_LABEL[DATASET].name}</b> ({DATASET_LABEL[DATASET].short}). Cliquez pour changer.</>} side="bottom">
             <a href="/choisir" data-anchor="dataset" className={`shrink-0 rounded-full px-2 py-[3px] text-[10px] font-semibold tracking-[0.02em] ring-1 transition-colors ${V23 ? "bg-[rgba(76,199,154,.14)] text-[var(--green)] ring-[rgba(76,199,154,.35)] hover:bg-[rgba(76,199,154,.22)]" : "bg-white/[0.06] text-[var(--txt-2)] ring-white/[0.1] hover:bg-white/[0.1]"}`}>
               {DATASET_LABEL[DATASET].short}

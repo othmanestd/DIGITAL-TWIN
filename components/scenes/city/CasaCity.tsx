@@ -2,10 +2,15 @@
 // <CasaCity/>: the whole of Casablanca in "Casa réel" mode, from OpenStreetMap (docs/research/casa-city-extract.py →
 // public/casa/tiles/*.json, 1 km tiles on the single geographic chain of lib/geo/casaFrame): every mapped building on its
 // footprint (height from OSM, else storeys × 3.2 m, else an estimate by type, flagged in the data), every street, the
-// railways and the tram, parks, beaches, water. Tiles stream in around the camera and drop out behind it. Two levels of
-// detail: near tiles (< 3 km) get the district façades (typologies, not surveyed), parapets and lit windows at night; far
-// tiles are plain coloured volumes in one draw call each. The OSM districts drawn in detail (CFC, Maârif, Anfa Prime,
-// Hassan II) and the typical hospital's campus keep their own buildings: the tiles skip theirs.
+// railways and the tram, parks, beaches, water. Tiles stream in around the camera, the nearest first, and drop out behind
+// it. Three levels of detail, by the camera's 3D distance to the tile (with a margin each way so tiles do not flicker
+// between two levels):
+//   · near (< 1.6 km, low views): the district façades (typologies, not surveyed), parapets and lit windows at night;
+//   · mid (< 6 km): every building as a plain coloured volume, one draw call a tile;
+//   · far: the skyline only — buildings of 14 m and more, or 600 m² and more on the ground — one draw call a tile.
+// A level's geometry is built when first needed (a few milliseconds a frame, nearest tiles first) and freed when the tile
+// is well past it. The OSM districts drawn in detail (CFC, Maârif, Anfa Prime, Hassan II) and the typical hospital's
+// campus keep their own buildings: the tiles skip theirs.
 import { mibtechCovers } from "./landmarks/MibtechBuilding";
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
@@ -25,7 +30,10 @@ type TL = { p: number[]; c: string };
 type TileData = { b: TB[]; r: TR[]; a: TA[]; l: TL[] };
 type Index = { tile: number; tiles: [number, number, number, number][] };
 
-const NEAR = 3000;                 // detailed façades within this distance (m)
+// levels of detail (camera distance to the tile centre, m): [enter, leave]
+const NEAR: [number, number] = [1600, 2100];
+const MID: [number, number] = [6000, 7000];
+const SKYLINE_H = 14, SKYLINE_AREA = 600;
 const hash = (x: number, z: number) => { const s = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453; return s - Math.floor(s); };
 
 /** rectangles (world) whose buildings are drawn by a detailed district or the campus */
@@ -92,11 +100,13 @@ function groundOf(t: TileData, ox: number, oz: number) {
   return flatGeo(pos, col);
 }
 
-/** far LOD: the buildings of a tile as coloured volumes (walls + roof) */
-function coarseOf(t: TileData, ox: number, oz: number, skip: (x: number, z: number) => boolean) {
+const areaOf = (P: Pt[]) => { let a = 0; for (let i = 0; i < P.length; i++) { const p = P[i], q = P[(i + 1) % P.length]; a += p[0] * q[1] - q[0] * p[1]; } return Math.abs(a / 2); };
+/** mid / far LOD: the buildings of a tile as coloured volumes (walls + roof); `skyline`: the tall or large ones only */
+function coarseOf(t: TileData, ox: number, oz: number, skip: (x: number, z: number) => boolean, skyline = false) {
   const pos: number[] = [], col: number[] = [], c = new THREE.Color(), roofC = new THREE.Color();
   for (const b of t.b) {
     const P: Pt[] = []; for (let i = 0; i < b.p.length; i += 2) P.push([ox + b.p[i] / 10, oz + b.p[i + 1] / 10]);
+    if (skyline && b.h < SKYLINE_H && areaOf(P) < SKYLINE_AREA) continue;
     const cx = P.reduce((s, q) => s + q[0], 0) / P.length, cz = P.reduce((s, q) => s + q[1], 0) / P.length;
     if (skip(cx, cz)) continue;
     const pal = BLD_COL[b.k] ?? BLD_COL.r; c.set(pal[Math.floor(hash(cx, cz) * pal.length)]);
@@ -130,7 +140,8 @@ function detailedOf(t: TileData, ox: number, oz: number, skip: (x: number, z: nu
   return B.build();
 }
 
-type Live = { key: string; dist: number; ground?: THREE.Mesh; coarse?: THREE.Mesh; detail?: THREE.Group; data?: TileData; loading?: boolean };
+type Lod = 0 | 1 | 2; // near, mid, far
+type Live = { key: string; dist: number; lod: Lod; ground?: THREE.Mesh; coarse?: THREE.Mesh; sky?: THREE.Mesh; detail?: THREE.Group; data?: TileData; loading?: boolean };
 
 export function CasaCity() {
   const root = useRef<THREE.Group>(null);
@@ -153,10 +164,14 @@ export function CasaCity() {
   }, [state]);
   // the districts' boxes, and MIBTECH's footprint from its plans (the older OSM villas there are gone)
   const skip = (x: number, z: number) => state.rects.some((r) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1) || mibtechCovers(x, z);
-  function drop(l: Live) {
-    for (const m of [l.ground, l.coarse]) if (m) { m.geometry.dispose(); m.removeFromParent(); }
+  const dropMesh = (m?: THREE.Mesh) => { if (m) { m.geometry.dispose(); m.removeFromParent(); } };
+  const dropDetail = (l: Live) => {
     if (l.detail) { l.detail.traverse((o) => { if ((o as THREE.Mesh).isMesh) (o as THREE.Mesh).geometry.dispose(); }); l.detail.removeFromParent(); }
-    l.ground = l.coarse = l.detail = undefined;
+    l.detail = undefined;
+  };
+  function drop(l: Live) {
+    dropMesh(l.ground); dropMesh(l.coarse); dropMesh(l.sky); dropDetail(l);
+    l.ground = l.coarse = l.sky = undefined;
   }
   useFrame(({ camera, clock }) => {
     const g = root.current, I = state.index;
@@ -167,9 +182,9 @@ export function CasaCity() {
     const n = ENV.night;
     for (const [k, v] of Object.entries(NIGHT) as [CfcKey, number][]) { const m = state.M[k]; if (m) m.emissiveIntensity = n * v; }
     if (!g.visible) return;
-    const T = I.tile, cx = camera.position.x, cz = camera.position.z;
+    const T = I.tile, cx = camera.position.x, cz = camera.position.z, cy = Math.max(0, camera.position.y);
     const radius = Math.min(20000, Math.max(3500, frame.alt * 2.6));
-    if (clock.elapsedTime - state.last >= 0.2) { state.last = clock.elapsedTime; scan(I, cx, cz, radius); }
+    if (clock.elapsedTime - state.last >= 0.2) { state.last = clock.elapsedTime; scan(I, cx, cy, cz, radius); }
     // build / switch LOD within a few milliseconds a frame (nearest first), so zooming never stalls on a burst of tiles
     const t0 = performance.now();
     for (const l of state.order) {
@@ -177,32 +192,47 @@ export function CasaCity() {
       if (!state.want.has(l.key) || !l.data) continue;
       const [i, j] = l.key.split("_").map(Number), ox = i * T, oz = j * T;
       if (!l.ground) { l.ground = new THREE.Mesh(groundOf(l.data, ox, oz), state.groundMat); l.ground.raycast = () => {}; l.ground.renderOrder = -1; g.add(l.ground); continue; }
-      const near = l.dist < NEAR && frame.alt < 1800;
-      if (near && !l.detail) {
+      // the level this tile wants (hysteresis: a tile leaves a level only past its "leave" distance)
+      const d = l.dist, lowView = frame.alt < 1500;
+      const lod: Lod = (l.lod === 0 ? d < NEAR[1] : d < NEAR[0]) && lowView ? 0 : (l.lod <= 1 ? d < MID[1] : d < MID[0]) ? 1 : 2;
+      l.lod = lod;
+      if (lod === 0 && !l.detail) {
         const grp = new THREE.Group();
         for (const p of detailedOf(l.data, ox, oz, skip)) { const m = new THREE.Mesh(p.geo, state.M[p.key]); m.raycast = () => {}; grp.add(m); }
         l.detail = grp; g.add(grp);
-      } else if (!near && !l.coarse) { l.coarse = new THREE.Mesh(coarseOf(l.data, ox, oz, skip), state.coarseMat); l.coarse.raycast = () => {}; g.add(l.coarse); }
-      if (l.detail) l.detail.visible = near;
-      if (l.coarse) l.coarse.visible = !near || !l.detail;
+      } else if (lod === 1 && !l.coarse) { l.coarse = new THREE.Mesh(coarseOf(l.data, ox, oz, skip), state.coarseMat); l.coarse.raycast = () => {}; g.add(l.coarse); }
+      else if (lod === 2 && !l.sky) { l.sky = new THREE.Mesh(coarseOf(l.data, ox, oz, skip, true), state.coarseMat); l.sky.raycast = () => {}; g.add(l.sky); }
+      // show the wanted level; while it is being built, the level that is ready stands in (no hole)
+      const ready = lod === 0 ? !!l.detail : lod === 1 ? !!l.coarse : !!l.sky;
+      if (l.detail) l.detail.visible = lod === 0 || (!ready && lod === 1);
+      if (l.coarse) l.coarse.visible = lod === 1 || (!ready && lod === 0);
+      if (l.sky) l.sky.visible = lod === 2 || (!ready && !l.coarse);
+      // free what is well out of use (façades past twice the near distance, volumes past the far one)
+      if (l.detail && d > NEAR[1] * 2) dropDetail(l);
+      if (l.coarse && d > MID[1] * 1.6) { dropMesh(l.coarse); l.coarse = undefined; }
     }
   });
-  /** which tiles the view wants (fetching the missing ones), nearest first; drops the far ones */
-  function scan(I: Index, cx: number, cz: number, radius: number) {
+  /** which tiles the view wants (fetching the missing ones, nearest first); drops the far ones. Distances are 3D (from the
+   *  camera, its height included) for the levels of detail, horizontal for the streaming radius. */
+  function scan(I: Index, cx: number, cy: number, cz: number, radius: number) {
     const T = I.tile, want = state.want;
     want.clear();
+    const missing: Live[] = [];
     for (const [i, j] of I.tiles) {
-      const d = Math.hypot((i + 0.5) * T - cx, (j + 0.5) * T - cz);
-      if (d > radius) continue;
+      const dh = Math.hypot((i + 0.5) * T - cx, (j + 0.5) * T - cz);
+      if (dh > radius) continue;
       const key = `${i}_${j}`;
       want.add(key);
       let l = state.live.get(key);
-      if (!l) state.live.set(key, (l = { key, dist: d }));
-      l.dist = d;
-      if (!l.data && !l.loading && state.queue < 10) {
-        l.loading = true; state.queue++;
-        fetch(`/casa/tiles/${key}.json`).then((r) => r.json()).then((t: TileData) => { l!.data = t; }).catch(() => {}).finally(() => { l!.loading = false; state.queue--; });
-      }
+      if (!l) state.live.set(key, (l = { key, dist: 0, lod: 1 }));
+      l.dist = Math.hypot(dh, cy);
+      if (!l.data && !l.loading) missing.push(l);
+    }
+    missing.sort((a, b) => a.dist - b.dist);
+    for (const l of missing) {
+      if (state.queue >= 8) break;
+      l.loading = true; state.queue++;
+      fetch(`/casa/tiles/${l.key}.json`).then((r) => r.json()).then((t: TileData) => { l.data = t; }).catch(() => {}).finally(() => { l.loading = false; state.queue--; });
     }
     for (const l of state.live.values()) if (!want.has(l.key) && l.dist > radius * 1.3) { drop(l); state.live.delete(l.key); }
     state.order = [...state.live.values()].sort((a, b) => a.dist - b.dist);

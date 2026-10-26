@@ -278,8 +278,18 @@ export default function WalkWorld() {
 
     WALK_API.enter = () => enter(siteNow()); WALK_API.exit = exit; WALK_API.stop = stop;
 
-    // "enter" / "toggle" walk the site on screen: MIBTECH when its card is open, else the hospital
-    const siteNow = () => { const sel = useApp.getState().sel; return sel?.kind === "landmark" && sel.id === MIBTECH_ID ? "mibtech" : "hospital"; };
+    // "enter" / "toggle" walk the site on screen: MIBTECH when its card is open; otherwise the site nearest to the point the
+    // camera looks at (the hospital campus or MIBTECH's building, Casa réel)
+    const siteNow = (): "hospital" | "mibtech" => {
+      if (!CASA_REEL) return "hospital";
+      const sel = useApp.getState().sel;
+      if (sel?.kind === "landmark" && sel.id === MIBTECH_ID) return "mibtech";
+      const c = rig.controls;
+      if (!c) return "hospital";
+      const t = c.getTarget(vTmp);
+      const dH = Math.hypot(t.x - CAMPUS_OFFSET.x, t.z - CAMPUS_OFFSET.z), dM = Math.hypot(t.x - MB_ORIGIN[0], t.z - MB_ORIGIN[1]);
+      return dM < dH ? "mibtech" : "hospital";
+    };
     const onReq = (e: Event) => {
       const what = (e as CustomEvent<string>).detail;
       if (what === "enter:mibtech") enter("mibtech");

@@ -15,11 +15,10 @@ import s from "./styles";
 
 const TOP = 76, BOTTOM_FREE = 88;
 
+// the zoom path is Monde → Casablanca; an establishment (clinic, MIBTECH) is chosen in the explorer, not as a level
 const LEVELS: { id: Level; label: string; icon: (p: { size?: number }) => React.ReactNode }[] = [
   { id: "world", label: "Monde", icon: (p) => <I.globe {...p} /> },
-  { id: "morocco", label: "Maroc", icon: (p) => <I.pin {...p} /> },
   { id: "city", label: "Casablanca", icon: (p) => <I.city {...p} /> },
-  { id: "hospital", label: "Hôpital", icon: (p) => <I.hospital {...p} /> },
 ];
 
 type Group = { key: string; floorId: string; caption: string; label: string; depts: Dept[] };

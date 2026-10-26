@@ -18,5 +18,11 @@ export const toPlan = (x: number, z: number): [number, number] => {
 export const fromPlan = (x: number, z: number): [number, number] => [ORIGIN[0] + x * U[0] + z * V[0], ORIGIN[1] + x * U[1] + z * V[1]];
 /** plan frame → scene offset from ORIGIN (no translation: directions, or walk mode's frame centred on ORIGIN) */
 export const planVec = (x: number, z: number): [number, number] => [x * U[0] + z * V[0], x * U[1] + z * V[1]];
+/** scene position (x, z) of the middle of the building, for the levels of detail */
+export const CENTER = fromPlan(0, -14.5);
+/** level of detail: the furnished floors within MB_NEAR (m) of the building's middle, the staff within MB_PEOPLE_NEAR */
+export const MB_NEAR = 280, MB_PEOPLE_NEAR = 120;
+/** Floor view (explore mode): 0 = the whole building; 1 … 3 = that floor open (MibtechBuilding mibtechShowFloor) */
+export const MB_VIEW = { floor: 0 as 0 | 1 | 2 | 3 };
 /** scene offset from ORIGIN → plan frame */
 export const vecPlan = (x: number, z: number): [number, number] => [x * U[0] + z * U[1], x * V[0] + z * V[1]];
