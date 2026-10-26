@@ -68,7 +68,7 @@ const MIBTECH: ExplorerPlace = {
   id: "mibtech", name: "Mibtech", officialName: "Mibtech", brand: "Mibtech", category: "Bâtiment partenaire", city: "Casablanca", district: "L'Oasis",
   address: "24 Rue des Papillons, Casablanca, Maroc", addressSource: "site officiel mibtech.ma (siège social)",
   latitude: mib.lat, longitude: mib.lon, coordinateStatus: "fiche", coordinateSource: "repère de la fiche Google « MIBTECH » (lien fourni)", coordinateVerified: false,
-  officialUrl: "https://mibtech.ma/", mapUrl: "https://maps.app.goo.gl/Y2qYWsH8rJ2mDBLz9", model3D: "estimated", model3DId: "mibtech",
+  officialUrl: "https://mibtech.ma/", mapUrl: "https://maps.app.goo.gl/Y2qYWsH8rJ2mDBLz9", model3D: "detailed", model3DId: "mibtech",
   description: mib.note, dataSource: "Lien Google Maps fourni ; site officiel mibtech.ma ; OpenStreetMap (26/10/2026)", lastVerifiedAt: CHECKED, r: mib.r ?? 900,
 };
 

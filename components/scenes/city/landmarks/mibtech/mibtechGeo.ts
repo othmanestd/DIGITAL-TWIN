@@ -19,9 +19,9 @@ export const floorY = (f: MbFloor) => MB_H.ground + (f - 1) * MB_H.floor;
 /** top of the roof slab */
 export const MB_TOP = floorY(3) + MB_H.floor;
 
-export type MbMat = "wall" | "column" | "partition" | "glass" | "frame" | "door" | "cubicle" | "floor" | "ceiling" | "slabEdge" | "lift" | "roof" | "groundWall";
+export type MbMat = "wall" | "column" | "partition" | "glass" | "frame" | "door" | "cubicle" | "floor" | "ceiling" | "slabEdge" | "lift" | "roof" | "groundWall" | "stair" | "rail";
 type Acc = { pos: number[]; nor: number[]; uv: number[]; idx: number[] };
-const TILE: Record<MbMat, number> = { wall: 2, column: 1, partition: 2, glass: 2, frame: 1, door: 1, cubicle: 1, floor: 1.2, ceiling: 0.6, slabEdge: 1, lift: 1, roof: 4, groundWall: 2.4 };
+const TILE: Record<MbMat, number> = { wall: 2, column: 1, partition: 2, glass: 2, frame: 1, door: 1, cubicle: 1, floor: 1.2, ceiling: 0.6, slabEdge: 1, lift: 1, roof: 4, groundWall: 2.4, stair: 1, rail: 1 };
 
 class Bag {
   m = new Map<MbMat, Acc>();
@@ -74,14 +74,15 @@ function sides(b: Bag, k: MbMat, P: PlanPoly, y0: number, y1: number) {
     if (fx * nx + fz * nz > 0) a.idx.push(o, o + 2, o + 1, o, o + 3, o + 2); else a.idx.push(o, o + 1, o + 2, o, o + 2, o + 3);
   }
 }
-/** horizontal cap of a polygon at y, facing up or down */
-function cap(b: Bag, k: MbMat, P: PlanPoly, y: number, up: boolean) {
+/** horizontal cap of a polygon (with optional holes) at y, facing up or down */
+function cap(b: Bag, k: MbMat, P: PlanPoly, y: number, up: boolean, holes: PlanPoly[] = []) {
   const a = b.get(k), t = TILE[k];
-  const tris = THREE.ShapeUtils.triangulateShape(P.map((q) => new THREE.Vector2(q[0], q[1])), []);
+  const tris = THREE.ShapeUtils.triangulateShape(P.map((q) => new THREE.Vector2(q[0], q[1])), holes.map((h) => h.map((q) => new THREE.Vector2(q[0], q[1]))));
+  const all = [...P, ...holes.flat()];
   const o = a.pos.length / 3;
-  for (const q of P) { a.pos.push(q[0], y, q[1]); a.nor.push(0, up ? 1 : -1, 0); a.uv.push(q[0] / t, q[1] / t); }
+  for (const q of all) { a.pos.push(q[0], y, q[1]); a.nor.push(0, up ? 1 : -1, 0); a.uv.push(q[0] / t, q[1] / t); }
   for (const [i, j, l] of tris) {
-    const A = P[i], B = P[j], C = P[l];
+    const A = all[i], B = all[j], C = all[l];
     // y-up normal of (A, B, C) in x/z: (B − A) × (C − A) · ŷ = (Bz − Az)(Cx − Ax) − (Bx − Ax)(Cz − Az)
     const ny = (B[1] - A[1]) * (C[0] - A[0]) - (B[0] - A[0]) * (C[1] - A[1]);
     if ((ny > 0) === up) a.idx.push(o + i, o + j, o + l); else a.idx.push(o + i, o + l, o + j);
@@ -117,10 +118,13 @@ function floorParts(f: MbFloor, plan: FloorPlan) {
   for (const P of plan.door) prism(b, "door", P, y, y + MB_H.door);
   for (const P of plan.lift) prism(b, "lift", P, y, top);
   const S = clean(plan.slab[0]);
-  cap(b, "floor", S, y + 0.01, true);
-  cap(b, "ceiling", S, y + MB_H.ceiling, false);
+  // the stair well: open in this floor (the flights coming up from below) and in its ceiling (the flights going up), not above floor 3
+  const well = [STAIR.well];
+  cap(b, "floor", S, y + 0.01, true, well);
+  cap(b, "ceiling", S, y + MB_H.ceiling, false, f < 3 ? well : []);
   sides(b, "slabEdge", S, y - MB_H.slab, y);                  // slab edge, seen between the floors
-  cap(b, "ceiling", S, y - MB_H.slab, false);                  // soffit of this floor's slab
+  cap(b, "ceiling", S, y - MB_H.slab, false, well);            // soffit of this floor's slab
+  sides(b, "rail", railAt(), y, y + 1.0);                      // guard rail round the well on the floor landing side
   return b.build();
 }
 /** the glass of a window: a thin pane (thickness t) along the window's long axis, through its middle */
@@ -134,6 +138,41 @@ function pane(P: PlanPoly, t: number): PlanPoly {
   const us = P.map((q) => (q[0] - cx) * ux + (q[1] - cz) * uz), u0 = Math.min(...us), u1 = Math.max(...us);
   const vx = -uz * t / 2, vz = ux * t / 2;
   return [[cx + ux * u0 - vx, cz + uz * u0 - vz], [cx + ux * u1 - vx, cz + uz * u1 - vz], [cx + ux * u1 + vx, cz + uz * u1 + vz], [cx + ux * u0 + vx, cz + uz * u0 + vz]];
+}
+
+// ---------------------------------------------------------------- stair (the core drawn on the three plans)
+// Switchback, as drawn: floor landing to the east (door side), two flights of 7 treads (≈ 0.29 m × 1.21 m) running west,
+// half landing to the west. The flight and landing outlines are read from the plans (class "stair", floor 2).
+// Riser height = floor-to-floor / 16 (8 risers a flight): 0.2375 m with the provisional 3.8 m — STEEPER than usual, the
+// plans' stair being schematic at this stage (APS); an open question for the architect (docs: phase A).
+const STAIR = (() => {
+  const P = MIBTECH_PLANS[2].stair.map((Q) => { const xs = Q.map((q) => q[0]), zs = Q.map((q) => q[1]); return { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) }; });
+  const treads = P.filter((r) => r.x1 - r.x0 < 0.4 && r.z1 - r.z0 > 1);
+  const land = P.reduce((a, r) => ((r.x1 - r.x0) * (r.z1 - r.z0) > (a.x1 - a.x0) * (a.z1 - a.z0) ? r : a), P[0]);
+  const zMid = (Math.min(...treads.map((r) => r.z0)) + Math.max(...treads.map((r) => r.z1))) / 2;
+  const north = treads.filter((r) => (r.z0 + r.z1) / 2 < zMid).sort((a, b) => b.x0 - a.x0);   // rising back to the east
+  const south = treads.filter((r) => (r.z0 + r.z1) / 2 >= zMid).sort((a, b) => b.x0 - a.x0); // rising to the west
+  const x0 = land.x0, x1 = Math.max(...treads.map((r) => r.x1)), z0 = land.z0, z1 = land.z1;
+  return { north, south, land, well: [[x0, z0], [x1, z0], [x1, z1], [x0, z1]] as PlanPoly, x1, zMid, z0, z1 };
+})();
+export const MB_STAIR = STAIR;
+/** the guard rail on the floor landing, along the east edge of the well (a degenerate polygon = one wall, both faces) */
+const railAt = (): PlanPoly => [[STAIR.x1 + 0.02, STAIR.z0], [STAIR.x1 + 0.02, STAIR.zMid - 0.05], [STAIR.x1 + 0.02, STAIR.zMid - 0.05]];
+/** flights and landing between level y0 and y1 (ground → 1st, 1st → 2nd, 2nd → 3rd): solid steps */
+function flights(b: Bag, y0: number, y1: number) {
+  const n = STAIR.south.length + 1, rise = (y1 - y0) / (2 * n);
+  STAIR.south.forEach((r, i) => prism(b, "stair", [[r.x0, r.z0], [r.x1, r.z0], [r.x1, r.z1], [r.x0, r.z1]], y0, y0 + (i + 1) * rise));
+  const L = STAIR.land;
+  prism(b, "stair", [[L.x0, L.z0], [L.x1, L.z0], [L.x1, L.z1], [L.x0, L.z1]], y0 + n * rise - 0.2, y0 + n * rise, true, true);
+  [...STAIR.north].reverse().forEach((r, i) => prism(b, "stair", [[r.x0, r.z0], [r.x1, r.z0], [r.x1, r.z1], [r.x0, r.z1]], y0 + n * rise, y0 + (n + i + 1) * rise));
+  // handrail between the flights (on the well's axis)
+  prism(b, "rail", [[STAIR.land.x1, STAIR.zMid - 0.02], [STAIR.x1, STAIR.zMid - 0.02], [STAIR.x1, STAIR.zMid + 0.02], [STAIR.land.x1, STAIR.zMid + 0.02]], y0, y1 + 0.9);
+}
+/** the flights up to floor f (f = 1: from the ground floor) */
+function stairParts(f: MbFloor) {
+  const b = new Bag();
+  flights(b, f === 1 ? 0 : floorY((f - 1) as MbFloor), floorY(f));
+  return b.build();
 }
 
 /** Roofs: the top of floor 3, and the part of floor 1 that floors 2–3 do not cover (just below their floor, never seen through). */
@@ -160,10 +199,10 @@ function groundParts() {
 }
 
 export type MbParts = { key: MbMat; geo: THREE.BufferGeometry }[];
-/** every part of the building, keyed by group: "f1" … "f3" (each floor), "roof", "ground" */
+/** every part of the building, keyed by group: "f1" … "f3" (each floor), "s1" … "s3" (the flights up to it), "roof", "ground" */
 export function buildMibtech(): Record<string, MbParts> {
   const out: Record<string, MbParts> = { roof: roofParts(), ground: groundParts() };
-  for (const f of MB_FLOORS) out[`f${f}`] = floorParts(f, MIBTECH_PLANS[f]);
+  for (const f of MB_FLOORS) { out[`f${f}`] = floorParts(f, MIBTECH_PLANS[f]); out[`s${f}`] = stairParts(f); }
   return out;
 }
 /** the floor-1 outline (largest), building frame — for the city layer's skip test and the walk solids */

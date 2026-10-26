@@ -1,7 +1,7 @@
 "use client";
 // Side panel contents, one per selection kind. Verdict first, every unit explained. Departments, people and places fit the panel;
 // a use case opens as a scrollable dossier (dossier.tsx).
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import * as THREE from "three";
 import { useApp } from "@/lib/store";
 import { agg, fr, verdict, MODE_LABEL, CASE, CASES, DATA, FAM, META, YEAR_LABEL, YEARS, FINAL_YEAR, HEAD, V23, etabIn, share, yearTotals, type UseCase } from "@/lib/model";
@@ -11,6 +11,7 @@ import { facilityBySlug, facilitySites } from "@/lib/facilities";
 import { placeById, REFERENTIAL_CHECKED } from "@/lib/geo/casaReferential";
 import { explorerPlace, hasPoint, COORD_LABEL, MODEL_LABEL } from "@/lib/geo/places";
 import { locatePlace, openInCasaReel } from "@/components/places/locate";
+import { MB_VIEW, mibtechShowFloor } from "@/components/scenes/city/landmarks/MibtechBuilding";
 import { CASA_REEL, geoToScene } from "@/lib/geo/casaFrame";
 import { rig } from "@/lib/rig";
 import { DeptIcon, I } from "@/components/ui/icons";
@@ -626,6 +627,7 @@ export function LandmarkView({ id }: { id: string }) {
  *  services or equipment that the sources do not give. */
 function ExplorerPlaceView({ id }: { id: string }) {
   const select = useApp((st) => st.select);
+  const [mbFloor, setMbFloor] = useState<number>(MB_VIEW.floor);
   const p = explorerPlace(id)!;
   const ak = p.brand === "Akdital";
   const row = (k: string, v: ReactNode) => (
@@ -642,6 +644,24 @@ function ExplorerPlaceView({ id }: { id: string }) {
         {hasPoint(p) && !CASA_REEL && <button type="button" className={btn} onClick={() => openInCasaReel(id)}>Ouvrir en Casa réel</button>}
         {p.networkSlug && ak && <button type="button" className={btn} onClick={() => select({ kind: "site", id: p.networkSlug! })}>Voir sur la carte du Maroc</button>}
       </div>
+      {id === "mibtech" && CASA_REEL && (
+        <div>
+          <SectionTitle>Étages · plans de l&apos;architecte</SectionTitle>
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Étages de MIBTECH">
+            {([[0, "Bâtiment"], [1, "1er étage"], [2, "2e étage"], [3, "3e étage"]] as const).map(([f, label]) => (
+              <button key={f} type="button" data-anchor={`mibtech-floor:${f}`} aria-pressed={mbFloor === f}
+                onClick={() => { mibtechShowFloor(f); setMbFloor(f); }}
+                className={`rounded-full px-3 py-1.5 text-[12.5px] font-medium ring-1 transition-colors ${mbFloor === f ? "bg-[#8B7BFF] text-white ring-[#8B7BFF]" : "bg-white/[0.06] text-[var(--txt-2)] ring-white/[0.1] hover:bg-white/[0.14] hover:text-white"}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-[11.5px] leading-snug text-[var(--mut)]">
+            Murs, cloisons, portes, fenêtres, poteaux, escalier et ascenseur d&apos;après les plans cotés (MB Interior Architects, APS du 16/10/2024).
+            Hauteurs, matériaux et usage des pièces : provisoires, à confirmer.
+          </p>
+        </div>
+      )}
       {p.model3D === "marker" && hasPoint(p) && (
         <p className="rounded-[12px] bg-[#F2B84B]/10 px-3 py-2 text-[12px] leading-snug text-[#F2D38B] ring-1 ring-[#F2B84B]/25">Modèle 3D pas encore disponible : un marqueur indique la position.</p>
       )}

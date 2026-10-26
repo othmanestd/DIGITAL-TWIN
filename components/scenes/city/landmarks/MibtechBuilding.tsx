@@ -16,11 +16,12 @@ import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { frame } from "@/lib/world";
 import { useApp } from "@/lib/store";
+import { rig } from "@/lib/rig";
 import { geoToScene } from "@/lib/geo/casaFrame";
 import type { Solid } from "../collide";
 import { ENV } from "./env";
 import { lmOpacity, setFade } from "./shared";
-import { MB_H, MB_OUTLINE, MB_TOP, buildMibtech, inOutline, type MbMat } from "./mibtech/mibtechGeo";
+import { MB_H, MB_OUTLINE, MB_TOP, buildMibtech, floorY, inOutline, type MbFloor, type MbMat } from "./mibtech/mibtechGeo";
 import { MIBTECH_PLANS } from "./mibtech/mibtechPlanData";
 
 export const MIBTECH_ID = "mibtech";
@@ -209,6 +210,16 @@ export function mibtechCovers(x: number, z: number) {
 /** label height above the ground */
 export const MIBTECH_TOP = TOP;
 
+/** Floor view (explore mode): 0 = the whole building; 1 … 3 = that floor open, the floors above, the roof and the street-front
+ *  dressing hidden (no geometry duplicated: groups shown / hidden). Reset when MIBTECH is no longer selected. */
+export const MB_VIEW = { floor: 0 as 0 | MbFloor };
+export function mibtechShowFloor(f: 0 | MbFloor) {
+  MB_VIEW.floor = f;
+  const c = fromPlan(0, -14.5);
+  if (f) rig.flyTo(new THREE.Vector3(c[0], floorY(f) + 1.2, c[1]), 46, { polar: 0.78, azimuth: THETA + 0.35, duration: 1.4 });
+  else rig.flyTo(new THREE.Vector3(c[0], 8, c[1]), 95, { polar: 0.98, azimuth: THETA + 0.4, duration: 1.4 });
+}
+
 /** provisional interior materials (no finish schedule, photo or render of the interior yet: neutral, to be replaced) */
 function plainMats(): Record<MbMat, THREE.MeshStandardMaterial> {
   const m = (color: string, o: Partial<THREE.MeshStandardMaterialParameters> = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, ...o });
@@ -218,6 +229,7 @@ function plainMats(): Record<MbMat, THREE.MeshStandardMaterial> {
     frame: m("#3B4048", { roughness: 0.45, metalness: 0.5 }), door: m("#B08A62", { roughness: 0.6 }),
     floor: m("#C9C4BA", { roughness: 0.7 }), ceiling: m("#F4F3EF", { roughness: 0.95 }), slabEdge: m("#DAD7D0"),
     lift: m("#9DA3A8", { roughness: 0.35, metalness: 0.6 }), roof: m("#C8C4BC", { roughness: 0.95 }), groundWall: m("#BDB8AE", { roughness: 0.82 }),
+    stair: m("#B9B6AF", { roughness: 0.7 }), rail: m("#4A4F57", { roughness: 0.4, metalness: 0.6 }),
   };
 }
 
@@ -261,12 +273,25 @@ export function MibtechBuilding() {
       origin: ORIGIN, theta: THETA,
     };
   }, []);
+  const shown = useRef(-1);
   useFrame(() => {
     const g = root.current;
     if (!g) return;
     const op = lmOpacity(frame.alt);
     g.visible = op > 0.004;
     if (!g.visible) return;
+    const sel = useApp.getState().sel;
+    if (MB_VIEW.floor && !(sel?.kind === "landmark" && sel.id === MIBTECH_ID)) MB_VIEW.floor = 0;
+    if (shown.current !== MB_VIEW.floor) {
+      const f = MB_VIEW.floor;
+      shown.current = f;
+      for (const o of g.children) {
+        const m = /^mibtech\.(f|s)(\d)$/.exec(o.name);
+        if (m) o.visible = !f || Number(m[2]) <= f;
+        else if (o.name === "mibtech.roof") o.visible = !f;
+        else if (o.name !== "mibtech.ground") o.visible = !f; // the street-front dressing (photos)
+      }
+    }
     setFade(list.filter((m) => m !== res.P.glass), op, fade.current);
     res.M.glass.emissiveIntensity = ENV.night * 0.9; res.M.shop.emissiveIntensity = 0.28 + ENV.night * 0.6; // shops lit by day too (photos)
   });
