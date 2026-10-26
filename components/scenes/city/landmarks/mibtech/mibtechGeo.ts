@@ -22,11 +22,12 @@ export const MB_TOP = floorY(3) + MB_H.floor;
 
 export type MbMat = "wall" | "column" | "partition" | "glass" | "frame" | "door" | "cubicle" | "floor" | "ceiling" | "slabEdge" | "lift" | "roof" | "groundWall" | "stair" | "rail"
   // interior finishes and furniture (lot 5: from the office photos and the architect's electrical plans)
-  | "frost" | "terrace" | "desk" | "chair" | "metal" | "panel" | "screen" | "leaf" | "pot" | "fabric" | "porcelain" | "cabinet";
+  | "frost" | "terrace" | "desk" | "chair" | "metal" | "panel" | "screen" | "leaf" | "pot" | "fabric" | "porcelain" | "cabinet" | "carpet" | "walnut";
 type Acc = { pos: number[]; nor: number[]; uv: number[]; idx: number[] };
 const TILE: Record<MbMat, number> = {
-  wall: 2, column: 1, partition: 2, glass: 2, frame: 1, door: 2.2, cubicle: 2.2, floor: 1.2, ceiling: 2.4, slabEdge: 1, lift: 1, roof: 4, groundWall: 2.4, stair: 1, rail: 1,
-  frost: 2, terrace: 1.2, desk: 1, chair: 1, metal: 1, panel: 1, screen: 1, leaf: 1, pot: 1, fabric: 1, porcelain: 1, cabinet: 1,
+  // wall, column, partition: one texture = 4 m, its v measured from the floor (the skirting at the bottom)
+  wall: 4, column: 4, partition: 4, glass: 2, frame: 1, door: 2.2, cubicle: 2.2, floor: 1.2, ceiling: 2.4, slabEdge: 1, lift: 1, roof: 4, groundWall: 2.4, stair: 1, rail: 1,
+  frost: 2.8, terrace: 1.2, desk: 1, chair: 1, metal: 1, panel: 1, screen: 1, leaf: 1, pot: 1, fabric: 1, porcelain: 1, cabinet: 1, carpet: 1, walnut: 1,
 };
 
 class Bag {
@@ -61,8 +62,8 @@ function clean(P: PlanPoly): PlanPoly {
   return out;
 }
 
-/** vertical walls of a polygon prism y0 → y1, normals outward (x/z plan frame: x right, z down) */
-function sides(b: Bag, k: MbMat, P: PlanPoly, y0: number, y1: number) {
+/** vertical walls of a polygon prism y0 → y1, normals outward (x/z plan frame: x right, z down); texture v from `base` */
+function sides(b: Bag, k: MbMat, P: PlanPoly, y0: number, y1: number, base = 0) {
   const a = b.get(k), t = TILE[k], ccw = area(P) > 0; // area > 0: clockwise on screen (z down) → outward = left of a→b
   let u = 0;
   for (let i = 0; i < P.length; i++) {
@@ -73,7 +74,8 @@ function sides(b: Bag, k: MbMat, P: PlanPoly, y0: number, y1: number) {
     const o = a.pos.length / 3;
     a.pos.push(p[0], y0, p[1], q[0], y0, q[1], q[0], y1, q[1], p[0], y1, p[1]);
     for (let j = 0; j < 4; j++) a.nor.push(nx, 0, nz);
-    a.uv.push(u / t, y0 / t, (u + L) / t, y0 / t, (u + L) / t, y1 / t, u / t, y1 / t);
+    const v0 = (y0 - base) / t, v1 = (y1 - base) / t;
+    a.uv.push(u / t, v0, (u + L) / t, v0, (u + L) / t, v1, u / t, v1);
     u += L;
     // front face where the normal points: (q − p) × up gives (dz, −dx)… pick the winding that faces (nx, nz)
     const fx = (q[1] - p[1]), fz = -(q[0] - p[0]);
@@ -94,10 +96,10 @@ function cap(b: Bag, k: MbMat, P: PlanPoly, y: number, up: boolean, holes: PlanP
     if ((ny > 0) === up) a.idx.push(o + i, o + j, o + l); else a.idx.push(o + i, o + l, o + j);
   }
 }
-function prism(b: Bag, k: MbMat, P0: PlanPoly, y0: number, y1: number, top = true, bottom = false) {
+function prism(b: Bag, k: MbMat, P0: PlanPoly, y0: number, y1: number, top = true, bottom = false, base = 0) {
   const P = clean(P0);
   if (P.length < 3 || Math.abs(area(P)) < 1e-4) return;
-  sides(b, k, P, y0, y1);
+  sides(b, k, P, y0, y1, base);
   if (top) cap(b, k, P, y1, true);
   if (bottom) cap(b, k, P, y0, false);
 }
@@ -115,8 +117,8 @@ export const MB_PARAPET = 1.1;
 /** One office floor: structure, envelope, partitions, joinery, slab and ceiling, furniture (stair flights: see the stair builder). */
 function floorParts(f: MbFloor, plan: FloorPlan) {
   const b = new Bag(), y = floorY(f), top = y + MB_H.floor - MB_H.slab;
-  for (const P of plan.masonry) prism(b, "wall", P, y, onTerrace(f, P) ? y + MB_PARAPET : top);
-  for (const P of plan.concrete) prism(b, "column", P, y, top);
+  for (const P of plan.masonry) prism(b, "wall", P, y, onTerrace(f, P) ? y + MB_PARAPET : top, true, false, y);
+  for (const P of plan.concrete) prism(b, "column", P, y, top, true, false, y);
   for (const P of plan.window) {
     if (onTerrace(f, P)) {              // terrace: glass balustrade on a low kerb
       prism(b, "wall", P, y, y + 0.1);
@@ -124,23 +126,24 @@ function floorParts(f: MbFloor, plan: FloorPlan) {
       prism(b, "frame", pane(P, 0.06), y + MB_PARAPET - 0.05, y + MB_PARAPET);
       continue;
     }
-    prism(b, "wall", P, y, y + MB_H.sill); // sill, glass, lintel
+    prism(b, "wall", P, y, y + MB_H.sill, true, false, y); // sill, glass, lintel
     prism(b, "glass", pane(P, 0.03), y + MB_H.sill, y + MB_H.head, false);
     prism(b, "frame", P, y + MB_H.head, y + MB_H.head + 0.06);
-    prism(b, "wall", P, y + MB_H.head + 0.06, top);
+    prism(b, "wall", P, y + MB_H.head + 0.06, top, true, false, y);
   }
-  for (const P of plan.curtain) {       // glazed walls (the street front is dressed by the façade from the photos)
-    prism(b, "glass", P, y + 0.05, y + MB_H.ceiling - 0.05, false);
+  for (const P of plan.curtain) {       // glazed walls: the street front (dressed by the façade from the photos), and inside the
+    const inside = centroid(P)[1] < -1; // glazed partitions of rooms and offices, with the frosted film of the photos
+    prism(b, inside ? "frost" : "glass", P, y + 0.05, y + MB_H.ceiling - 0.05, false, false, y);
     prism(b, "frame", P, y, y + 0.05);
     prism(b, "frame", P, y + MB_H.ceiling - 0.05, y + MB_H.ceiling);
   }
   // glazed partitions: frosted glass in black frames (office photos)
   for (const P of plan.glass) {
-    prism(b, "frost", P, y + 0.05, y + MB_H.ceiling - 0.05, false);
+    prism(b, "frost", P, y + 0.05, y + MB_H.ceiling - 0.05, false, false, y);
     prism(b, "frame", P, y, y + 0.05);
     prism(b, "frame", P, y + MB_H.ceiling - 0.05, y + MB_H.ceiling);
   }
-  for (const P of plan.partition) prism(b, "partition", P, y, y + MB_H.ceiling);
+  for (const P of plan.partition) prism(b, "partition", P, y, y + MB_H.ceiling, true, false, y);
   for (const P of plan.cubicle) prism(b, "cubicle", P, y + 0.15, y + MB_H.cubicle);
   for (const P of plan.door) prism(b, "door", P, y, y + MB_H.door);
   for (const P of plan.lift) prism(b, "lift", P, y, top);
@@ -155,6 +158,7 @@ function floorParts(f: MbFloor, plan: FloorPlan) {
   // top floor: the well has no flight going up — guard rail over the drop of the flight coming up (south half, floor side)
   if (f === 3) sides(b, "rail", [[STAIR.x1 + 0.02, STAIR.zMid + 0.05], [STAIR.x1 + 0.02, STAIR.z1], [STAIR.x1 + 0.02, STAIR.z1]], y, y + 1.0);
   furniture(b, y, MIBTECH_FURNITURE[f]);
+  carpet(b, f, plan, y);
   return b.build();
 }
 
@@ -181,6 +185,7 @@ function furniture(b: Bag, y: number, items: FurnItem[]) {
       case K("desk"): {            // workstation: top + two panel legs
         box(b, "desk", x, z, L, T, a, y + 0.72, y + 0.75);
         for (const e of [-1, 1]) { const [px, pz] = at(e * (L / 2 - 0.03), 0); box(b, "metal", px, pz, 0.03, T - 0.1, a, y, y + 0.72); }
+        { const [px, pz] = at(L / 2 - 0.3, 0); box(b, "chair", px, pz, 0.42, 0.5, a, y + 0.03, y + 0.6); } // drawer unit (photos)
         break;
       }
       case K("table"): {           // meeting / office table: top + four legs
@@ -217,8 +222,9 @@ function furniture(b: Bag, y: number, items: FurnItem[]) {
         for (const e of [-1, 1]) { const [px, pz] = at(e * (L / 2 - 0.08), 0); box(b, "fabric", px, pz, 0.16, T, a, y + 0.42, y + 0.62); }
         break;
       }
-      case K("cabinet"):           // storage units, vanity and kitchen counters
-        box(b, "cabinet", x, z, L, T, a, y, y + 0.85);
+      case K("cabinet"):           // storage units; counters (kitchenette, vanity): white gloss with a walnut worktop (photos)
+        if (L >= 1.5 && T <= 0.75) { box(b, "cabinet", x, z, L, T, a, y + 0.08, y + 0.86); box(b, "walnut", x, z, L + 0.02, T + 0.02, a, y + 0.86, y + 0.9); }
+        else box(b, "cabinet", x, z, L, T, a, y, y + 0.85);
         break;
       case K("low"):               // low tables, shower trays
         box(b, "cabinet", x, z, L, T, a, y, y + 0.4);
@@ -237,6 +243,72 @@ function furniture(b: Bag, y: number, items: FurnItem[]) {
       case K("rug"):
         box(b, "fabric", x, z, L, T, a, y + 0.03, y + 0.045);
         break;
+    }
+  }
+}
+
+// ---------------------------------------------------------------- carpet in the closed meeting rooms (photos)
+// The room of each table drawn with ≥ 4 chairs around it: flood fill on a 10 cm grid of the floor, the walls, partitions,
+// glazed walls, cubicles and cores as barriers, doorways closed by a 0.5 m dilation; a room larger than 45 m² is open space
+// (no carpet). The carpet then grows back to the walls.
+function carpet(b: Bag, f: MbFloor, plan: FloorPlan, y: number) {
+  const R = 0.1, S = plan.slab[0], xs = S.map((q) => q[0]), zs = S.map((q) => q[1]);
+  const X0 = Math.min(...xs), Z0 = Math.min(...zs), NX = Math.ceil((Math.max(...xs) - X0) / R) + 1, NZ = Math.ceil((Math.max(...zs) - Z0) / R) + 1;
+  const wall = new Uint8Array(NX * NZ);
+  for (const P of [...plan.masonry, ...plan.concrete, ...plan.partition, ...plan.glass, ...plan.cubicle, ...plan.window, ...plan.curtain, ...plan.lift, ...plan.stair]) {
+    const px = P.map((q) => q[0]), pz = P.map((q) => q[1]);
+    const i0 = Math.max(0, Math.floor((Math.min(...px) - X0) / R) - 1), i1 = Math.min(NX - 1, Math.ceil((Math.max(...px) - X0) / R) + 1);
+    const j0 = Math.max(0, Math.floor((Math.min(...pz) - Z0) / R) - 1), j1 = Math.min(NZ - 1, Math.ceil((Math.max(...pz) - Z0) / R) + 1);
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const cx = X0 + i * R, cz = Z0 + j * R;
+      if (inOutline(P, cx, cz) || (i1 - i0 <= 2 || j1 - j0 <= 2)) wall[j * NX + i] = 1; // thin elements: their whole bounding cells
+    }
+  }
+  for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) if (!inOutline(S, X0 + i * R, Z0 + j * R)) wall[j * NX + i] = 1;
+  const D = 5, closed = new Uint8Array(NX * NZ);
+  for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) if (wall[j * NX + i])
+    for (let dj = -D; dj <= D; dj++) for (let di = -D; di <= D; di++) {
+      const a = i + di, c = j + dj;
+      if (a >= 0 && c >= 0 && a < NX && c < NZ && di * di + dj * dj <= D * D) closed[c * NX + a] = 1;
+    }
+  const carpetCells = new Uint8Array(NX * NZ), items = MIBTECH_FURNITURE[f];
+  for (const t of items) {
+    if (t[0] !== K("table")) continue;
+    const chairs = items.filter((c) => c[0] === K("chair") && Math.hypot(c[1] - t[1], c[2] - t[2]) < Math.max(t[3], t[4]) / 2 + 1).length;
+    if (chairs < 4) continue;
+    const si = Math.round((t[1] - X0) / R), sj = Math.round((t[2] - Z0) / R);
+    if (si < 0 || sj < 0 || si >= NX || sj >= NZ || closed[sj * NX + si]) continue;
+    const seen = new Uint8Array(NX * NZ), st = [sj * NX + si], room: number[] = [];
+    seen[st[0]] = 1;
+    while (st.length && room.length < 4600) {
+      const k = st.pop()!; room.push(k);
+      const i = k % NX, j = (k - i) / NX;
+      for (const n of [i > 0 ? k - 1 : -1, i < NX - 1 ? k + 1 : -1, j > 0 ? k - NX : -1, j < NZ - 1 ? k + NX : -1])
+        if (n >= 0 && !seen[n] && !closed[n]) { seen[n] = 1; st.push(n); }
+    }
+    if (room.length >= 4600) continue;                         // open space: no carpet
+    // grow back to the walls (the dilation's width), never through a wall
+    let front = room;
+    for (let g = 0; g < D + 1; g++) {
+      const next: number[] = [];
+      for (const k of front) {
+        const i = k % NX, j = (k - i) / NX;
+        for (const n of [i > 0 ? k - 1 : -1, i < NX - 1 ? k + 1 : -1, j > 0 ? k - NX : -1, j < NZ - 1 ? k + NX : -1])
+          if (n >= 0 && !seen[n] && !wall[n]) { seen[n] = 1; next.push(n); }
+      }
+      room.push(...next); front = next;
+    }
+    for (const k of room) carpetCells[k] = 1;
+  }
+  // one quad per run of carpet cells in each row
+  for (let j = 0; j < NZ; j++) {
+    let i = 0;
+    while (i < NX) {
+      if (!carpetCells[j * NX + i]) { i++; continue; }
+      const i0 = i;
+      while (i < NX && carpetCells[j * NX + i]) i++;
+      const x0 = X0 + (i0 - 0.5) * R, x1 = X0 + (i - 0.5) * R, z0 = Z0 + (j - 0.5) * R, z1 = Z0 + (j + 0.5) * R;
+      cap(b, "carpet", [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], y + 0.036, true);
     }
   }
 }

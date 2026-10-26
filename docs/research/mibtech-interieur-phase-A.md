@@ -66,13 +66,22 @@ Livraison par lots, chacun testé et committé localement : (1) extraction + vé
 | 1 · Extraction des 3 plans | fait — échelle 4,346 cm/pt ; 384 cotes sur 387 à moins de 2 cm (médiane 1 mm) ; noyau escalier/ascenseur superposé à ±1 mm ; dalles 837,5 m² (1er) et 660,5 m² (2e, 3e) ; l'emprise coïncide avec le toit vu sur la vue aérienne |
 | 2 · Coque et étages | fait — murs, fenêtres, vitrages, cloisons, cabines WC, portes, poteaux, ascenseur, dalles, plafonds, toitures ; façade sur rue d'après photos |
 | 3 · Escalier, sélecteur, coupe | fait — escalier tel que dessiné, trémie, sélecteur « Bâtiment · 1er · 2e · 3e » avec coupe |
-| 4 · Marche à pied | à faire — généraliser le contrôleur de l'hôpital |
-| 5 · Mobilier, matériaux, éclairage | à faire — en attente de références intérieures |
+| 4 · Marche à pied | fait — contrôleur de l'hôpital généralisé à un second site (`walk/mibtechWalk.ts`) : entrée par le portail sur le boulevard, hall provisoire, escalier (montée et descente vérifiées), ascenseur (E), coupe des étages supérieurs et des murs à 2,30 m en 3e personne, bouton « Visiter à pied » sur la fiche ; marche de l'hôpital inchangée |
+| 5 · Mobilier, matériaux, éclairage | fait (provisoire pour l'éclairage) — mobilier des plans électriques (20/10/2024, `docs/research/mibtech-furniture-extract.py`) ; finitions d'après les photos de bureau (procédurales, sans marque) |
+
+### Plans électriques (« PLAN ELEC », APS du 20/10/2024)
+
+Même mise en page que les plans cotés (noyaux, murs et hachures aux mêmes coordonnées, vérifié) avec deux calques en plus : mobilier (traits gris + aplats blancs) et électricité (prises de sol RJ45 / HDMI, en bleu). Mobilier lu : 1er étage 140 postes, 168 sièges, 5 tables, 7 tables de terrasse et 21 assises, 9 plantes, 7 WC ; 2e étage 128 postes, 168 sièges, 12 tables ; 3e étage 42 postes, 103 sièges, 23 tables, 11 fauteuils, 1 canapé. Les silhouettes humaines dessinées ne sont pas reprises.
+**Terrasse** : la couronne extérieure du 1er étage porte des tables rondes, des assises d'extérieur et des plantes, à l'extérieur du mur fenêtré des bureaux → terrasse sur le toit du rez-de-chaussée (garde-corps 1,10 m provisoire, sans plafond). Aucune porte vers la terrasse n'est identifiée sur les plans : elle n'est pas accessible à pied pour l'instant.
+
+### Finitions (photos de bureau fournies, références seulement)
+
+Sol en grands carreaux gris clair veinés (≈ 60 × 120 cm) ; murs blancs, plinthe gris clair ; faux plafond 60 × 60 avec dalles LED et diffuseurs ; portes en placage bois foncé ; cloisons vitrées à cadre noir fin et film dépoli à lignes ondulées verticales ; postes à plateau grège, piètement noir, écrans de séparation et caissons noirs ; sièges résille noire ; moquette gris-vert dans les salles de réunion (pièce de chaque table entourée d'au moins 4 sièges, calculée sur le plan) ; kitchenette blanc brillant et plan de travail noyer ; terrasse en carrelage gris. Non placés faute de savoir où : marbre et micro-béton des sanitaires, écrans muraux des salles, signalétique.
 
 **Questions pour l'architecte / le maître d'ouvrage**
 1. Hauteurs : rez-de-chaussée, entre planchers, sous plafond (provisoire 4,6 / 3,8 / 2,8 m). L'escalier dessiné (28,2 cm de giron) suggère plutôt ≈ 3,5 m entre planchers.
 2. Escalier : 2 volées de 7 marches par étage donnent des contremarches de 23,75 cm avec 3,8 m (21,9 cm avec 3,5 m) : le dessin APS est-il schématique ?
-3. 1er étage : la couronne extérieure (pointe nord-ouest, triangle est) est fermée par des murs avec fenêtres : espace de bureau, terrasse couverte ou autre ?
-4. Rez-de-chaussée : plan du hall des bureaux (accès depuis le portail jusqu'au noyau).
-5. Finitions intérieures : photos, rendus ou carnet de finitions (sols, murs, plafonds, menuiseries, mobilier).
+3. 1er étage : la couronne extérieure est une terrasse d'après le mobilier des plans électriques ; par où y accède-t-on (porte-fenêtre) ? Hauteur et type du garde-corps ?
+4. Rez-de-chaussée : plan du hall des bureaux (accès depuis le portail jusqu'au noyau) — un hall provisoire est modélisé.
+5. Finitions intérieures : photos reçues ; reste à savoir quelles pièces ont quelles finitions (sanitaires, bureaux fermés) et le plan d'éclairage.
 6. Usage des pièces (aucun nom sur les plans cotés).

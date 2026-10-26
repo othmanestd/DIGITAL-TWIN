@@ -93,6 +93,8 @@ def floor(cot_pdf, elec_pdf):
         else:
             put("chair", s, a=facing(s))
     tops = [i for i in items if i["n"] == 4 and i["L"] >= 0.7 and i["T"] >= 0.5]
+    # every chair symbol (seat halves and single outlines), for the table / rug tests
+    sitters = seats + [i for i in items if i["n"] == 14 and 0.45 <= i["L"] <= 0.7 and i["T"] >= 0.35]
     for i in items:
         if i in seats or i in backs:
             continue
@@ -123,8 +125,8 @@ def floor(cot_pdf, elec_pdf):
             def rel(s):
                 dx, dy = (s["c"][0] - i["c"][0]) * K, (s["c"][1] - i["c"][1]) * K
                 return abs(dx * ux + dy * uy) - L / 2, abs(-dx * uy + dy * ux) - T / 2
-            inner = sum(1 for s in seats if max(rel(s)) < 0)
-            close = any(max(rel(s)) < 0.7 for s in seats)
+            inner = sum(1 for s in sitters if max(rel(s)) < 0)
+            close = any(max(rel(s)) < 0.7 for s in sitters)
             if inner >= 2:
                 put("rug", i)
             elif T <= 0.7 and L <= 0.7 and any(near(i, r) < 0.9 for r in rounds):

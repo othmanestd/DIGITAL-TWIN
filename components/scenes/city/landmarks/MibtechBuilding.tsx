@@ -213,21 +213,32 @@ export function mibtechShowFloor(f: 0 | MbFloor) {
 }
 
 // ---------------------------------------------------------------- interior finishes (office photos supplied by the user)
-// The photos are REFERENCES only (nothing traced, no photo texture): large light-grey floor tiles (≈ 60 × 120 cm), white walls,
-// a 60 × 60 suspended ceiling with LED panels, wood-veneer doors (WC), frosted glass partitions in black frames, black aluminium
-// window frames, beige desk tops and black mesh chairs (meeting rooms), grey tiles and white render on the terrace.
-// Where they apply on each floor (which room has which finish) is not documented: the corridor / office finish is used
-// everywhere (WC marble and micro-cement walls not placed).
+// The photos are REFERENCES only (nothing traced, no photo texture, no brand): large light-grey veined marble-look floor tiles
+// (≈ 60 × 120 cm), white walls with a slim light-grey skirting, a 60 × 60 suspended ceiling with LED panels and air diffusers,
+// dark wood-veneer doors, glazed partitions in thin black frames with a frosted film of wavy vertical lines, greige desk tops on
+// black legs with black screens and drawer units, black mesh chairs, a grey-green carpet in the meeting rooms, white gloss
+// kitchenette with a walnut worktop, grey tiles and white render on the terrace.
+// Where each finish applies is not documented room by room: carpet in the rooms of the meeting tables (mibtechGeo carpet()),
+// the corridor / office finish everywhere else (WC marble and micro-cement walls not placed).
 /** floor tiles, one texture = 1.2 m: two 0.6 × 1.2 m tiles, thin joints, a slight variation per tile */
-function tileTex(base: [number, number, number], cols: number, rows: number, joint: string, seed: number) {
+function tileTex(base: [number, number, number], cols: number, rows: number, joint: string, seed: number, veins = false) {
   return canvas(256, 256, (g) => {
     const w = 256 / cols, h = 256 / rows;
     for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
       const v = (rnd(seed + i * 7 + j * 13) - 0.5) * 10;
       g.fillStyle = `rgb(${base[0] + v},${base[1] + v},${base[2] + v})`; g.fillRect(i * w, j * h, w, h);
-      for (let n = 0; n < 60; n++) { // faint veining / speckle
+      for (let n = 0; n < 60; n++) { // speckle
         g.fillStyle = `rgba(255,255,255,${rnd(seed + n + i * 31 + j * 57) * 0.05})`;
         g.fillRect(i * w + rnd(n * 3 + seed + i) * w, j * h + rnd(n * 5 + seed + j) * h, 6 + rnd(n) * 14, 1.5);
+      }
+      if (veins) for (let n = 0; n < 3; n++) { // marble-look veining (photos): thin grey meanders
+        const r0 = rnd(seed * 3 + i * 11 + j * 17 + n * 5);
+        g.strokeStyle = `rgba(120,118,112,${0.18 + r0 * 0.2})`; g.lineWidth = 0.6 + r0 * 1.1;
+        g.beginPath();
+        let px = i * w + rnd(n + i * 7 + seed) * w, py = j * h;
+        g.moveTo(px, py);
+        for (let k = 1; k <= 6; k++) { px += (rnd(n * 13 + k * 3 + i + seed) - 0.5) * w * 0.5; g.lineTo(Math.min(i * w + w, Math.max(i * w, px)), j * h + (h * k) / 6); }
+        g.stroke();
       }
     }
     g.strokeStyle = joint; g.lineWidth = 1.6;
@@ -240,34 +251,88 @@ function ceilingTex(emit: boolean) {
   return canvas(256, 256, (g) => {
     const t = 64;
     // emissive map: the tiles glow softly (a ceiling is lit from below, the sun never reaches it), the LED panels fully
-    g.fillStyle = emit ? "#BDBCB9" : "#F3F2EE"; g.fillRect(0, 0, 256, 256);
+    g.fillStyle = emit ? "#C9C8C5" : "#F6F6F4"; g.fillRect(0, 0, 256, 256);
     g.strokeStyle = emit ? "#8A8884" : "#CFCBC3"; g.lineWidth = 2;
     for (let i = 0; i <= 4; i++) { g.beginPath(); g.moveTo(i * t, 0); g.lineTo(i * t, 256); g.stroke(); g.beginPath(); g.moveTo(0, i * t); g.lineTo(256, i * t); g.stroke(); }
     for (const [i, j] of [[0, 1], [2, 3]]) { g.fillStyle = emit ? "#FFFFFF" : "#FBFBF6"; g.fillRect(i * t + 4, j * t + 4, t - 8, t - 8); }
     if (!emit) { g.fillStyle = "#DAD7D0"; g.fillRect(2 * t + 14, 1 * t + 14, t - 28, t - 28); g.strokeStyle = "#B9B5AC"; g.lineWidth = 1; for (let k = 0; k < 4; k++) g.strokeRect(2 * t + 18 + k * 4, t + 18 + k * 4, t - 36 - k * 8, t - 36 - k * 8); }
   });
 }
-/** wood veneer (doors, WC cubicles), one texture = 2.2 m: vertical grain */
+/** wood veneer (doors, WC cubicles), one texture = 2.2 m: vertical grain, dark warm brown (photos) */
 function veneerTex() {
   return canvas(128, 256, (g) => {
-    g.fillStyle = "#A9825C"; g.fillRect(0, 0, 128, 256);
-    for (let x = 0; x < 128; x++) { g.fillStyle = `rgba(${rnd(x) > 0.5 ? "70,45,25" : "235,205,165"},${0.05 + rnd(x * 3) * 0.12})`; g.fillRect(x, 0, 1, 256); }
+    g.fillStyle = "#7B4F33"; g.fillRect(0, 0, 128, 256);
+    for (let x = 0; x < 128; x++) { g.fillStyle = `rgba(${rnd(x) > 0.5 ? "45,25,12" : "190,140,100"},${0.05 + rnd(x * 3) * 0.12})`; g.fillRect(x, 0, 1, 256); }
   });
 }
-function interiorMats(T: { floor: THREE.Texture; terrace: THREE.Texture; ceiling: THREE.Texture; ceilingE: THREE.Texture; veneer: THREE.Texture }): Record<MbMat, THREE.MeshStandardMaterial> {
-  const m = (color: string, o: Partial<THREE.MeshStandardMaterialParameters> = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, emissive: color, emissiveIntensity: 0, ...o });
+/** painted wall, one texture = 4 m high measured from the floor: white, slim light-grey skirting (≈ 9 cm) */
+function wallTex() {
+  const t = canvas(16, 512, (g) => {
+    g.fillStyle = "#EEEEEC"; g.fillRect(0, 0, 16, 512);
+    const k = Math.round((0.09 / 4) * 512);
+    g.fillStyle = "#BEBDB8"; g.fillRect(0, 512 - k, 16, k);
+    g.fillStyle = "#A9A8A3"; g.fillRect(0, 512 - k, 16, 1);
+  });
+  t.wrapT = THREE.ClampToEdgeWrapping;
+  return t;
+}
+/** frosted film on the glazed partitions (photos): frosted band of wavy vertical lines, clear glass at the foot and the head;
+ *  one texture = 2.8 m along the wall × 2.8 m high from the floor (alpha: frosted ≈ 0.8, clear ≈ 0.1) */
+function frostTex() {
+  return canvas(256, 256, (g) => {
+    g.clearRect(0, 0, 256, 256);
+    g.fillStyle = "rgba(225,232,234,0.12)"; g.fillRect(0, 0, 256, 256);
+    const top = 256 * (1 - 2.45 / 2.8), bot = 256 * (1 - 0.15 / 2.8);
+    g.fillStyle = "rgba(240,245,246,0.95)"; g.fillRect(0, top, 256, bot - top);
+    // clear wavy lines through the film: each a vertical line with one or two soft S-bends
+    g.globalCompositeOperation = "destination-out";
+    for (let n = 0; n < 22; n++) {
+      let x = rnd(n * 7.3) * 256;
+      const wdt = 0.8 + rnd(n * 3.1) * (rnd(n * 5.7) > 0.8 ? 6 : 1.6);
+      g.lineWidth = wdt; g.strokeStyle = "rgba(0,0,0,0.7)";
+      g.beginPath(); g.moveTo(x, top);
+      const bends = 1 + Math.floor(rnd(n * 9.1) * 2);
+      for (let k = 1; k <= bends; k++) {
+        const y = top + ((bot - top) * k) / (bends + 1), dx = (rnd(n * 2.2 + k) - 0.5) * 22;
+        g.lineTo(x, y - 14); g.bezierCurveTo(x, y, x + dx, y, x + dx, y + 14); x += dx;
+      }
+      g.lineTo(x, bot); g.stroke();
+    }
+    g.globalCompositeOperation = "source-over";
+  });
+}
+/** carpet tiles (meeting room photo): mottled grey-green, one texture = 1 m */
+function carpetTex() {
+  return canvas(256, 256, (g) => {
+    g.fillStyle = "#5D6056"; g.fillRect(0, 0, 256, 256);
+    for (let n = 0; n < 5000; n++) {
+      const v = rnd(n * 1.7);
+      g.fillStyle = v > 0.5 ? `rgba(150,150,138,${(v - 0.5) * 0.5})` : `rgba(35,37,32,${v * 0.5})`;
+      g.fillRect(rnd(n * 2.9) * 256, rnd(n * 4.3) * 256, 2 + rnd(n) * 3, 1 + rnd(n * 6.1) * 2);
+    }
+    g.strokeStyle = "rgba(40,42,36,0.35)"; g.lineWidth = 1; g.strokeRect(0.5, 0.5, 127, 127); g.strokeRect(128.5, 128.5, 127, 127); // 50 cm tiles
+  });
+}
+function interiorMats(T: { floor: THREE.Texture; terrace: THREE.Texture; ceiling: THREE.Texture; ceilingE: THREE.Texture; veneer: THREE.Texture; wall: THREE.Texture; frost: THREE.Texture; carpet: THREE.Texture }): Record<MbMat, THREE.MeshStandardMaterial> {
+  const m = (color: string, o: Partial<THREE.MeshStandardMaterialParameters> = {}) => {
+    const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.85, emissive: color, emissiveIntensity: 0, ...o });
+    if (mat.map && !mat.emissiveMap) { mat.emissiveMap = mat.map; mat.emissive.set("#FFFFFF"); } // the glow keeps the pattern
+    return mat;
+  };
   return {
-    wall: m("#F2F1EE"), column: m("#E4E2DD"), partition: m("#F4F3F0"), cubicle: m("#FFFFFF", { map: T.veneer, emissive: "#A9825C", roughness: 0.5 }),
+    wall: m("#FFFFFF", { map: T.wall, emissive: "#E6E6E4" }), column: m("#FFFFFF", { map: T.wall, emissive: "#E6E6E4" }), partition: m("#FFFFFF", { map: T.wall, emissive: "#E6E6E4" }),
+    cubicle: m("#FFFFFF", { map: T.veneer, emissive: "#7B4F33", roughness: 0.5 }),
     glass: m("#A9C4D6", { transparent: true, opacity: 0.22, roughness: 0.05, metalness: 0.1, depthWrite: false, emissiveIntensity: 0 }),
-    frost: m("#EEF2F4", { transparent: true, opacity: 0.6, roughness: 0.3, depthWrite: false }),
-    frame: m("#1E2125", { roughness: 0.45, metalness: 0.5 }), door: m("#FFFFFF", { map: T.veneer, emissive: "#A9825C", roughness: 0.55 }),
-    floor: m("#FFFFFF", { map: T.floor, emissive: "#C9C9C6", roughness: 0.32 }), terrace: m("#FFFFFF", { map: T.terrace, emissive: "#9C9C99", roughness: 0.9 }),
+    frost: m("#FFFFFF", { map: T.frost, transparent: true, roughness: 0.3, depthWrite: false }),
+    frame: m("#16181B", { roughness: 0.45, metalness: 0.5 }), door: m("#FFFFFF", { map: T.veneer, emissive: "#7B4F33", roughness: 0.55 }),
+    floor: m("#FFFFFF", { map: T.floor, emissive: "#C9C8C4", roughness: 0.3 }), terrace: m("#FFFFFF", { map: T.terrace, emissive: "#9C9C99", roughness: 0.9 }),
+    carpet: m("#FFFFFF", { map: T.carpet, emissive: "#5D6056", roughness: 1 }), walnut: m("#5C3A22", { roughness: 0.45 }),
     ceiling: m("#FFFFFF", { map: T.ceiling, emissiveMap: T.ceilingE, emissive: "#FFFFFF", roughness: 0.95 }), slabEdge: m("#DAD7D0"),
     lift: m("#9DA3A8", { roughness: 0.35, metalness: 0.6 }), roof: m("#C8C4BC", { roughness: 0.95 }), groundWall: m("#BDB8AE", { roughness: 0.82 }),
     stair: m("#B9B6AF", { roughness: 0.7 }), rail: m("#2A2E33", { roughness: 0.4, metalness: 0.6 }),
-    desk: m("#D9C6A5", { roughness: 0.6 }), chair: m("#1C1E21", { roughness: 0.75 }), metal: m("#3A3D42", { roughness: 0.4, metalness: 0.6 }),
-    panel: m("#8E959C", { roughness: 0.95 }), screen: m("#141518", { roughness: 0.25, metalness: 0.3 }), leaf: m("#4E7A3C", { roughness: 0.9 }),
-    pot: m("#E6E3DD", { roughness: 0.6 }), fabric: m("#8A8580", { roughness: 0.95 }), porcelain: m("#F7F7F5", { roughness: 0.15 }), cabinet: m("#E2D9CB", { roughness: 0.55 }),
+    desk: m("#D7D0C5", { roughness: 0.5 }), chair: m("#1A1B1E", { roughness: 0.75 }), metal: m("#1E1F22", { roughness: 0.4, metalness: 0.5 }),
+    panel: m("#26272A", { roughness: 0.95 }), screen: m("#141518", { roughness: 0.25, metalness: 0.3 }), leaf: m("#4E7A3C", { roughness: 0.9 }),
+    pot: m("#B8B7B2", { roughness: 0.6 }), fabric: m("#8A8580", { roughness: 0.95 }), porcelain: m("#F7F7F5", { roughness: 0.15 }), cabinet: m("#EFECE6", { roughness: 0.2 }),
   };
 }
 /** interior light (provisional: the lighting plan is not supplied): the finishes glow a little, more at night; LED panels */
@@ -284,8 +349,8 @@ export function MibtechBuilding() {
     const F = front(), B = buildMibtech();
     const T = {
       glass: glassTex(false), glassN: glassTex(true), stone: stoneTex(), flute: fluteTex(), shop: shopTex(false), shopN: shopTex(true),
-      floor: tileTex([214, 213, 209], 2, 1, "rgba(150,148,142,0.55)", 3), terrace: tileTex([168, 168, 165], 2, 2, "rgba(90,90,88,0.6)", 9),
-      ceiling: ceilingTex(false), ceilingE: ceilingTex(true), veneer: veneerTex(),
+      floor: tileTex([208, 207, 202], 2, 1, "rgba(150,148,142,0.55)", 3, true), terrace: tileTex([168, 168, 165], 2, 2, "rgba(90,90,88,0.6)", 9),
+      ceiling: ceilingTex(false), ceilingE: ceilingTex(true), veneer: veneerTex(), wall: wallTex(), frost: frostTex(), carpet: carpetTex(),
     };
     const M = {
       glass: new THREE.MeshStandardMaterial({ map: T.glass, emissiveMap: T.glassN, emissive: "#FFFFFF", emissiveIntensity: 0, roughness: 0.14, metalness: 0.2, envMapIntensity: 1.2 }),
