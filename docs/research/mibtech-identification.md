@@ -63,3 +63,19 @@ Identification retenue : **les deux repères Google de la fiche « MIBTECH »** 
 Le volume touche d'environ 1 m un angle de l'empreinte OSM (2016) de la maison voisine au nord-est : dans la précision des sources (sur l'image les deux bâtiments sont mitoyens ou presque).
 
 Pour un modèle fidèle : photo de la façade, nombre d'étages réel, ou plans ; idéalement ajout de l'emprise dans OpenStreetMap par un contributeur autorisé.
+
+## D bis. Architecture d'après les photos fournies (26/10/2026)
+
+Trois photos de rue fournies par l'utilisateur (Google Maps, févr. et juil. 2025, dont une publiée sur la fiche « MIBTECH ») : **références d'analyse seulement**, aucune n'est utilisée comme texture ; toutes les surfaces sont procédurales. Les enseignes et affiches des commerces du rez-de-chaussée ne sont pas reproduites (pas de publicité dans la ville).
+
+| Élément | Observé sur les photos | Modélisé |
+|---|---|---|
+| Niveaux | rez-de-chaussée commercial + 3 étages de bureaux | RDC 4,6 m + 3 × 3,8 m = **16 m** (hauteurs estimées) — corrige l'estimation aérienne de 25,5 m |
+| Étages | mur-rideau vitré bleu marine, montants gris foncé, bande à chaque plancher | texture procédurale (travées 1,5 m, imposte), éclairage de nuit par fenêtre |
+| Ailettes | lames aluminium gris clair, pliées en facettes, orientées selon une vague, pendantes sous la dalle, dents de scie au-dessus de l'acrotère | lames à 3 facettes, ≈ 22° ± 17°, pas 1 m, sur la rue et l'angle sud-ouest |
+| Porte-à-faux | étages en avancée sur la rue, sous-face sombre | 1,4 m (estimé) |
+| Rez-de-chaussée | socle pierre gris clair, vitrines, porte de service | idem, vitrines neutres éclairées |
+| Entrée bureaux | portail en retrait, bardage anthracite cannelé, porte vitrée + imposte, palier en granit sombre | portail de 5 m en retrait de 2 m (cotes estimées) |
+| Façades arrière / mitoyenne, annexe | non visibles | enduit clair neutre (simplification) |
+
+Restent estimés : l'emprise (vue aérienne), les cotes, la profondeur du porte-à-faux, le nombre exact d'ailettes.

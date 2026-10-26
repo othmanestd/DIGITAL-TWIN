@@ -158,10 +158,10 @@ export function CasaReel() {
         <mesh key={p.id} position={[p.x, 0, p.z]} geometry={res.pinGeo} material={p.partner ? res.M.pinPartner : p.ak ? res.M.pinAk : res.M.pin} raycast={() => null} />
       ))}
       {res.tags.map((p, i) => (
-        <GeoHtml key={p.id} position={[p.x, p.partner ? 34 : p.scene === "marker" ? 40 : 30, p.z]} center zIndex={5}>
+        <GeoHtml key={p.id} position={[p.x, p.partner ? 21 : p.scene === "marker" ? 40 : 30, p.z]} center zIndex={5}>
           <div ref={(e) => { tags.current[i] = e; }} style={{ opacity: 0, pointerEvents: "none", visibility: "hidden", transition: "opacity .3s, visibility .3s" }}
             className={`flex items-center whitespace-nowrap rounded-full py-1 pl-2.5 pr-1 text-[11px] font-semibold text-white shadow-[0_6px_18px_-8px_rgba(0,0,0,.6)] ring-1 backdrop-blur transition-opacity duration-300 motion-reduce:transition-none ${p.ak ? "bg-[#0E3A5C]/85 ring-[#45bdf5]/50" : p.partner ? "bg-[#2A2350]/85 ring-[#8B7BFF]/50" : "bg-[#0B1020]/75 ring-white/15"}`}>
-            {p.ak ? "Akdital · " : ""}{p.name}{p.partner ? <span className="ml-1.5 font-normal opacity-75">· volume estimé</span> : null}
+            {p.ak ? "Akdital · " : ""}{p.name}{p.partner ? <span className="ml-1.5 font-normal opacity-75">· d'après photos</span> : null}
             <DiscoverButton id={p.id} />
           </div>
         </GeoHtml>

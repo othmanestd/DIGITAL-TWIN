@@ -111,5 +111,5 @@ export const COORD_LABEL: Record<CoordStatus, string> = {
   osm: "Position vérifiée (OSM)", "osm-probable": "Position probable (OSM)", fiche: "Repère Google · à vérifier", city: "Ville seulement", none: "Localisation à vérifier",
 };
 export const MODEL_LABEL: Record<ModelStatus, string> = {
-  detailed: "Modèle 3D détaillé", estimated: "Volume 3D estimé", "osm-volume": "Volume OSM", marker: "Marqueur", none: "Pas de 3D",
+  detailed: "Modèle 3D détaillé", estimated: "Modèle d'après photos, emprise estimée", "osm-volume": "Volume OSM", marker: "Marqueur", none: "Pas de 3D",
 };
