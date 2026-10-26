@@ -13,7 +13,8 @@ import * as THREE from "three";
 import { frame } from "@/lib/world";
 import { CASA } from "@/components/scenes/geo/MoroccoBase";
 import { geoToScene } from "@/lib/geo/casaFrame";
-import { AKDITAL_CASA, CASA_LANDMARKS, type Place } from "@/lib/geo/casaReferential";
+import { AKDITAL_CASA, CASA_LANDMARKS, PARTNERS_CASA, placeById, type Place } from "@/lib/geo/casaReferential";
+import { explorerPlace } from "@/lib/geo/places";
 import { GeoHtml } from "../geo/GeoHtml";
 import { useApp } from "@/lib/store";
 import { DiscoverButton } from "./landmarks/Discover";
@@ -76,21 +77,27 @@ export function CasaReel() {
       foam: new THREE.MeshBasicMaterial({ color: "#EAF2F5", transparent: true, opacity: 0.8, depthWrite: false }),
       pin: new THREE.MeshStandardMaterial({ color: "#8A94A6", roughness: 0.6 }),
       pinAk: new THREE.MeshStandardMaterial({ color: "#1F7FC9", roughness: 0.5, emissive: "#1F7FC9", emissiveIntensity: 0.2 }),
+      pinPartner: new THREE.MeshStandardMaterial({ color: "#8B7BFF", roughness: 0.5, emissive: "#8B7BFF", emissiveIntensity: 0.25 }),
+      halo: new THREE.MeshBasicMaterial({ color: "#8CA5FF", transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide }),
     };
-    const pins: (Place & { x: number; z: number; ak: boolean })[] = [
+    const pins: (Place & { x: number; z: number; ak: boolean; partner?: boolean })[] = [
       ...CASA_LANDMARKS.filter((p) => p.scene === "marker").map((p) => ({ ...p, ...geoToScene(p.lat, p.lon), ak: false })),
       ...AKDITAL_CASA.filter((p) => p.scene === "marker").map((p) => ({ ...p, ...geoToScene(p.lat, p.lon), ak: true })),
+      ...PARTNERS_CASA.filter((p) => p.scene === "marker").map((p) => ({ ...p, ...geoToScene(p.lat, p.lon), ak: false, partner: true })),
     ];
     // place labels on approach: every referential place without a label of its own
-    const tags: (Place & { x: number; z: number; ak: boolean })[] = [
+    const tags: (Place & { x: number; z: number; ak: boolean; partner?: boolean })[] = [
       ...CASA_LANDMARKS.filter((p) => !OWN_LABEL.has(p.id)).map((p) => ({ ...p, ...geoToScene(p.lat, p.lon), ak: false })),
       ...AKDITAL_CASA.filter((p) => !OWN_LABEL.has(p.id)).map((p) => ({ ...p, ...geoToScene(p.lat, p.lon), ak: true })),
+      ...PARTNERS_CASA.map((p) => ({ ...p, ...geoToScene(p.lat, p.lon), ak: false, partner: true })),
     ];
-    return { land, sea, foam, M, pins, tags, pinGeo: new THREE.CylinderGeometry(1.2, 1.2, 36, 8).translate(0, 18, 0) };
+    const haloGeo = new THREE.RingGeometry(0.82, 1, 48).rotateX(-Math.PI / 2);
+    return { land, sea, foam, M, pins, tags, haloGeo, pinGeo: new THREE.CylinderGeometry(1.2, 1.2, 36, 8).translate(0, 18, 0) };
   }, []);
-  useEffect(() => () => { [res.land, res.sea, res.foam, res.pinGeo].forEach((g) => g.dispose()); Object.values(res.M).forEach((m) => m.dispose()); }, [res]);
+  useEffect(() => () => { [res.land, res.sea, res.foam, res.pinGeo, res.haloGeo].forEach((g) => g.dispose()); Object.values(res.M).forEach((m) => m.dispose()); }, [res]);
   const tags = useRef<(HTMLDivElement | null)[]>([]);
   const lab = useRef({ t: 0, on: new Set<number>() });
+  const halo = useRef<THREE.Mesh>(null);
   const root = useRef<THREE.Group>(null);
   const gl = useThree((s) => s.gl);
   useEffect(() => { if (process.env.NODE_ENV !== "production") ((window as unknown as { __casa?: { gl?: unknown } }).__casa ??= {}).gl = gl; }, [gl]);
@@ -98,12 +105,25 @@ export function CasaReel() {
     const op = CASA.v; // 1 near the city … 0 once the Morocco map has closed its hole
     if (root.current) root.current.visible = op > 0.003;
     res.M.land.opacity = op; res.M.sea.opacity = op; res.M.foam.opacity = 0.8 * op;
+    // halo on the selected place (explorer or "Découvrir"): a ring on the ground, sized with the site, pulsing gently
+    const sel = useApp.getState().sel, selId = sel?.kind === "landmark" ? sel.id : null;
+    const sp = selId ? placeById(selId) ?? null : null, xp = selId && !sp ? explorerPlace(selId) : undefined;
+    const h = halo.current;
+    if (h) {
+      const lat = sp?.lat ?? xp?.latitude, lon = sp?.lon ?? xp?.longitude;
+      h.visible = op > 0.3 && lat != null && lon != null;
+      if (h.visible) {
+        const g = geoToScene(lat!, lon!), base = Math.max(28, Math.min(90, ((sp?.r ?? xp?.r ?? 1200) / 1200) * 45));
+        const k = 1 + 0.12 * Math.sin(clock.elapsedTime * 2.4);
+        h.position.set(g.x, 1.2, g.z); h.scale.setScalar(base * k);
+        res.M.halo.opacity = 0.75 * op;
+      }
+    }
     // labels on approach, a few times a second: within each place's radius (larger for a big site, growing with the
     // altitude), on screen, the nearest LABEL_MAX; a margin between showing and hiding so they do not flicker at the edge
     const L = lab.current;
     if (clock.elapsedTime - L.t < 0.15) return;
     L.t = clock.elapsedTime;
-    const sel = useApp.getState().sel, selId = sel?.kind === "landmark" ? sel.id : null;
     const cand: [number, number][] = [];
     if (op > 0.5 && frame.alt < LABEL_TOP_ALT) {
       res.tags.forEach((p, i) => {
@@ -133,14 +153,15 @@ export function CasaReel() {
       <mesh geometry={res.land} material={res.M.land} raycast={() => null} renderOrder={-1} />
       <mesh geometry={res.foam} material={res.M.foam} raycast={() => null} />
       <CasaCity />
+      <mesh ref={halo} geometry={res.haloGeo} material={res.M.halo} visible={false} renderOrder={3} raycast={() => null} />
       {res.pins.map((p) => (
-        <mesh key={p.id} position={[p.x, 0, p.z]} geometry={res.pinGeo} material={p.ak ? res.M.pinAk : res.M.pin} raycast={() => null} />
+        <mesh key={p.id} position={[p.x, 0, p.z]} geometry={res.pinGeo} material={p.partner ? res.M.pinPartner : p.ak ? res.M.pinAk : res.M.pin} raycast={() => null} />
       ))}
       {res.tags.map((p, i) => (
-        <GeoHtml key={p.id} position={[p.x, p.scene === "marker" ? 40 : 30, p.z]} center zIndex={5}>
+        <GeoHtml key={p.id} position={[p.x, p.partner ? 21 : p.scene === "marker" ? 40 : 30, p.z]} center zIndex={5}>
           <div ref={(e) => { tags.current[i] = e; }} style={{ opacity: 0, pointerEvents: "none", visibility: "hidden", transition: "opacity .3s, visibility .3s" }}
-            className={`flex items-center whitespace-nowrap rounded-full py-1 pl-2.5 pr-1 text-[11px] font-semibold text-white shadow-[0_6px_18px_-8px_rgba(0,0,0,.6)] ring-1 backdrop-blur transition-opacity duration-300 motion-reduce:transition-none ${p.ak ? "bg-[#0E3A5C]/85 ring-[#45bdf5]/50" : "bg-[#0B1020]/75 ring-white/15"}`}>
-            {p.ak ? "Akdital · " : ""}{p.name}
+            className={`flex items-center whitespace-nowrap rounded-full py-1 pl-2.5 pr-1 text-[11px] font-semibold text-white shadow-[0_6px_18px_-8px_rgba(0,0,0,.6)] ring-1 backdrop-blur transition-opacity duration-300 motion-reduce:transition-none ${p.ak ? "bg-[#0E3A5C]/85 ring-[#45bdf5]/50" : p.partner ? "bg-[#2A2350]/85 ring-[#8B7BFF]/50" : "bg-[#0B1020]/75 ring-white/15"}`}>
+            {p.ak ? "Akdital · " : ""}{p.name}{p.partner ? <span className="ml-1.5 font-normal opacity-75">· d'après plans</span> : null}
             <DiscoverButton id={p.id} />
           </div>
         </GeoHtml>

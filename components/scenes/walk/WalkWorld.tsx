@@ -28,6 +28,10 @@ import { BLD_INDEX, COLLIDER_STATS, FLOOR_AT, STEP, refreshHospitalProps, setCol
 import { TOUCH, W, WALK_API } from "./state";
 import { useAi } from "@/lib/ai/ui";
 import Visitor, { type VisitorApi } from "./Visitor";
+import { MB_ORIGIN, mbBoxesNear, mbCameraHit, mbGroundAt, mbLiftExit, mbLiftTarget, mbResolveBody, mbSpawn, mbWhere } from "./mibtechWalk";
+import { MIBTECH_ID, mibtechShowFloor } from "../city/landmarks/MibtechBuilding";
+import { CASA_REEL } from "@/lib/geo/casaFrame";
+import { floorY, type MbFloor } from "../city/landmarks/mibtech/mibtechGeo";
 
 // ---------------------------------------------------------------- tuning
 const RADIUS = 0.28, WALK = 1.75, RUN = 4.7, ACCEL = 9, BRAKE = 12, JUMP = 3.2, GRAVITY = 9.81, SUB = 0.08;
@@ -56,7 +60,13 @@ const damp = (k: number, dt: number) => 1 - Math.exp(-k * dt);
 // scratch (no allocation in the frame loop)
 const P = { x: 0, z: 0 }, N = { x: 0, z: 0 }, WH = { b: null as BId | null, tower: false, bridge: false as boolean | undefined };
 const vPivot = new THREE.Vector3(), vCam = new THREE.Vector3(), vEye = new THREE.Vector3(), vLook = new THREE.Vector3(), vTmp = new THREE.Vector3();
-const UI = { view: "third" as "third" | "first", where: null as BId | null, floor: 0, tower: false, bridge: false, near: null as string | null, nearCase: null as string | null };
+const UI = { view: "third" as "third" | "first", where: null as BId | null, floor: 0, tower: false, bridge: false, near: null as string | null, nearCase: null as string | null,
+  site: "hospital" as "hospital" | "mibtech", mb: null as string | null, lift: null as number | null };
+const MBW = { inside: false, level: 0, stair: false, terrace: false };
+const MB_CUT = 2.3;
+// the site's physics (hospital campus or MIBTECH): chosen by W.site
+const body = (p: { x: number; z: number }, feet: number, r: number, n: { x: number; z: number }) => (W.site === "mibtech" ? mbResolveBody(p, feet, r, n) : resolveBody(p, feet, r, n));
+const ground = (x: number, z: number, y: number) => (W.site === "mibtech" ? mbGroundAt(x, z, y) : groundAt(x, z, y));
 const qFrom = new THREE.Quaternion(), qTo = new THREE.Quaternion(), vFrom = new THREE.Vector3();
 
 /** One physics step of the visitor (campus frame). Input: move axes relative to the camera yaw. */
@@ -79,7 +89,7 @@ function step(dt: number, mf: number, ms: number, run: boolean, jump: boolean) {
   for (let i = 0; i < n; i++) {
     P.x = W.x + W.vx * h; P.z = W.z + W.vz * h;
     N.x = 0; N.z = 0;
-    for (let it = 0; it < 3; it++) if (!resolveBody(P, W.y, RADIUS, N)) break;
+    for (let it = 0; it < 3; it++) if (!body(P, W.y, RADIUS, N)) break;
     const nl = Math.hypot(N.x, N.z);
     if (nl > 1e-6) {
       const nx = N.x / nl, nz = N.z / nl, vn = W.vx * nx + W.vz * nz;
@@ -87,7 +97,7 @@ function step(dt: number, mf: number, ms: number, run: boolean, jump: boolean) {
     }
     W.x = P.x; W.z = P.z;
     // vertical: floor slabs and stair ramps
-    const g = groundAt(W.x, W.z, W.y);
+    const g = ground(W.x, W.z, W.y);
     if (W.grounded) {
       if (g >= W.y - 0.5) { W.y = g; W.vy = 0; }       // walk up a step / down a stair, stay on the ground
       else W.grounded = false;                         // walked off an edge
@@ -103,6 +113,16 @@ function step(dt: number, mf: number, ms: number, run: boolean, jump: boolean) {
 
 /** Where the visitor is: building, tower, floor; cut-away heights for the drawing. */
 function locate() {
+  if (W.site === "mibtech") {
+    // MIBTECH: no hospital building; floors above the visitor's are hidden in third person (MibtechBuilding reads W.mbCut)
+    mbWhere(W.x, W.z, W.y, MBW);
+    W.where = null; W.tower = false; W.bridge = false; W.cutB = null; W.clipY = Infinity;
+    W.mbIn = MBW.inside; W.mbStair = MBW.stair; W.mbTerrace = MBW.terrace; W.level = MBW.level;
+    W.mbCut = W.third && MBW.inside ? (MBW.stair ? MBW.level + 1 : MBW.level) : 99;
+    // third person: walls and partitions cut at 2.3 m above the floor (on the stair: above the feet), the view stays open
+    W.cutY = !MBW.inside ? Infinity : (MBW.stair ? W.y : MBW.level === 0 ? 0 : floorY(MBW.level as MbFloor)) + MB_CUT;
+    return;
+  }
   whereAt(W.x, W.z, WH, W.y);
   W.where = WH.b; W.tower = WH.tower; W.bridge = !!WH.bridge; // on the skybridge: the nearer building, level 1
   W.level = W.where ? Math.max(0, Math.min(TOWER_OF[W.where].top, Math.floor((W.y + 0.6) / FLOOR_H))) : 0;
@@ -180,7 +200,7 @@ export default function WalkWorld() {
     const s = st.current;
     const setUi = () => {
       const app = useApp.getState();
-      app.setWalk({ phase: W.phase, view: W.third ? "third" : "first", where: W.where, floor: W.level, tower: W.tower, bridge: W.bridge });
+      app.setWalk({ phase: W.phase, view: W.third ? "third" : "first", where: W.where, floor: W.level, tower: W.tower, bridge: W.bridge, site: W.site });
     };
 
     /** Leave walk mode immediately and give the camera back to CameraControls, synced to the current view. */
@@ -201,49 +221,81 @@ export default function WalkWorld() {
       setEvents({ enabled: true });
       gl.domElement.style.touchAction = s.touchAction;
       if (visitor.current?.root) visitor.current.root.visible = false;
-      W.cutB = null; W.clipY = Infinity; W.bridge = false;
-      useApp.getState().setWalk({ phase: "off", near: null, nearCase: null, where: null, tower: false, bridge: false, floor: 0 });
+      W.cutB = null; W.clipY = Infinity; W.bridge = false; W.mbIn = false; W.mbCut = 99;
+      useApp.getState().setWalk({ phase: "off", near: null, nearCase: null, where: null, tower: false, bridge: false, floor: 0, mb: null, lift: null });
     };
 
-    const enter = () => {
+    const enter = (site: "hospital" | "mibtech" = "hospital") => {
       if (W.phase !== "off") return;
+      if (site === "mibtech" && !CASA_REEL) site = "hospital"; // MIBTECH's building is drawn in Casa réel only
       const app = useApp.getState();
       try { if (tour) tour.stop(true); } catch { /* the tour may not be loaded */ }
       app.setCursor({ visible: false });
       app.setHelpOpen(false);
       app.select({ kind: "overview", id: "hospital" }, { focus: false });
-      // the visitor on the plaza, facing the entrance; the camera behind
-      W.x = SPAWN.x; W.z = SPAWN.z; W.y = 0; W.vx = W.vy = W.vz = 0; W.heading = SPAWN.heading; W.grounded = true; W.speed = 0;
-      W.yaw = wrap(SPAWN.heading + Math.PI); W.pitch = 0.2; W.dist = 5.6; W.third = true;
+      // the visitor in front of the entrance (hospital plaza, or MIBTECH's portal on the boulevard); the camera behind
+      W.site = site;
+      const sp = site === "mibtech" ? mbSpawn() : SPAWN;
+      if (site === "mibtech") { W.ox = MB_ORIGIN[0]; W.oz = MB_ORIGIN[1]; } else { W.ox = CAMPUS_OFFSET.x; W.oz = CAMPUS_OFFSET.z; }
+      W.x = sp.x; W.z = sp.z; W.y = 0; W.vx = W.vy = W.vz = 0; W.heading = sp.heading; W.grounded = true; W.speed = 0;
+      W.yaw = wrap(sp.heading + Math.PI); W.pitch = 0.2; W.dist = 5.6; W.third = true;
       locate();
       s.savedFov = camera.fov; s.savedNear = camera.near;
       s.fov = camera.fov; s.fp = 0; s.dist = W.dist; s.pvInit = false;
       s.enterT = performance.now(); s.flightDone = -1; s.relock = false;
-      scanCampusProps(rt.root);
-      refreshHospitalProps();
+      if (site === "hospital") { scanCampusProps(rt.root); refreshHospitalProps(); }
       W.phase = "enter";
       const c = rig.controls;
       if (c) { c.enabled = false; c.minDistance = 0.5; }
       if (visitor.current?.root) visitor.current.root.visible = true;
       // fly the shared rig to the third-person pose (its log-space flight for long moves)
-      const pivot = vPivot.set(W.x + CAMPUS_OFFSET.x, W.y + PIVOT_H, W.z + CAMPUS_OFFSET.z);
+      const pivot = vPivot.set(W.x + W.ox, W.y + PIVOT_H, W.z + W.oz);
       rig.flyTo(pivot.clone(), W.dist, { azimuth: W.yaw, polar: Math.PI / 2 - W.pitch, duration: 2.8 });
       setUi();
     };
 
     const exit = () => {
       if (W.phase === "off") return;
+      const site = W.site;
       stop();
-      useApp.getState().home(); // the unified scene flies back to the hospital overview
+      if (site === "mibtech") { // back to MIBTECH's card and its overview
+        useApp.getState().select({ kind: "landmark", id: MIBTECH_ID }, { focus: false });
+        mibtechShowFloor(0);
+      } else useApp.getState().home(); // the unified scene flies back to the hospital overview
+    };
+    /** MIBTECH: take the lift to the floor it shows (E at its door) */
+    const ride = () => {
+      if (W.site !== "mibtech") return false;
+      const to = mbLiftTarget(W.x, W.z, W.level, W.mbIn);
+      if (to === null) return false;
+      const out = mbLiftExit(to, W.x, W.z);
+      if (!out) return false;
+      W.x = out.x; W.z = out.z; W.y = out.y; W.vx = W.vy = W.vz = 0; W.grounded = true; W.heading = out.heading;
+      W.yaw = wrap(out.heading + Math.PI); s.pvInit = false;
+      locate(); setUi();
+      return true;
     };
 
-    WALK_API.enter = enter; WALK_API.exit = exit; WALK_API.stop = stop;
+    WALK_API.enter = () => enter(siteNow()); WALK_API.exit = exit; WALK_API.stop = stop;
 
+    // "enter" / "toggle" walk the site on screen: MIBTECH when its card is open; otherwise the site nearest to the point the
+    // camera looks at (the hospital campus or MIBTECH's building, Casa réel)
+    const siteNow = (): "hospital" | "mibtech" => {
+      if (!CASA_REEL) return "hospital";
+      const sel = useApp.getState().sel;
+      if (sel?.kind === "landmark" && sel.id === MIBTECH_ID) return "mibtech";
+      const c = rig.controls;
+      if (!c) return "hospital";
+      const t = c.getTarget(vTmp);
+      const dH = Math.hypot(t.x - CAMPUS_OFFSET.x, t.z - CAMPUS_OFFSET.z), dM = Math.hypot(t.x - MB_ORIGIN[0], t.z - MB_ORIGIN[1]);
+      return dM < dH ? "mibtech" : "hospital";
+    };
     const onReq = (e: Event) => {
       const what = (e as CustomEvent<string>).detail;
-      if (what === "enter") enter();
+      if (what === "enter:mibtech") enter("mibtech");
+      else if (what === "enter") enter(siteNow());
       else if (what === "exit") exit();
-      else if (W.phase === "off") enter(); else exit();
+      else if (W.phase === "off") enter(siteNow()); else exit();
     };
     window.addEventListener("atlas:walk", onReq);
 
@@ -267,6 +319,7 @@ export default function WalkWorld() {
       if (!e.repeat && (e.code === "KeyE" || ch === "e")) {
         // E toggles: opens the case in front of the visitor (or the department view), E again closes the panel
         e.preventDefault();
+        if (ride()) return;
         const app = useApp.getState();
         if (app.panelOpen && app.sel && app.sel.kind !== "overview") { app.select({ kind: "overview", id: "hospital" }, { focus: false }); return; }
         const id = app.walk.near, cid = app.walk.nearCase;
@@ -338,7 +391,7 @@ export default function WalkWorld() {
     // dev handle for QA scripts
     if (process.env.NODE_ENV !== "production") {
       (window as unknown as { __walk: object }).__walk = {
-        W, enter, exit, stop, keys: KEYS, held, meshes: () => meshSignatures(rt.root), scan: () => scanCampusProps(rt.root), ground: groundAt, where: () => whereAt(W.x, W.z, { b: null, tower: false }, W.y), stats: COLLIDER_STATS,
+        W, enter, exit, stop, keys: KEYS, mb: { near: mbBoxesNear, free: (x: number, z: number, y: number) => !mbResolveBody({ x, z }, y, RADIUS, { x: 0, z: 0 }), ground: mbGroundAt, where: (x: number, z: number, y: number) => mbWhere(x, z, y, { inside: false, level: 0, stair: false, terrace: false }), lift: () => ride() }, held, meshes: () => meshSignatures(rt.root), scan: () => scanCampusProps(rt.root), ground: groundAt, where: () => whereAt(W.x, W.z, { b: null, tower: false }, W.y), stats: COLLIDER_STATS,
         teleport: (x: number, z: number, y = 0, heading?: number) => {
           W.x = x; W.z = z; W.y = y; W.vx = W.vy = W.vz = 0; W.grounded = true; s.pvInit = false;
           if (heading !== undefined) { W.heading = heading; W.yaw = wrap(heading + Math.PI); }
@@ -425,7 +478,7 @@ export default function WalkWorld() {
     visitor.current?.pose(dt, s.t, W.yaw + Math.PI);
 
     // ---------------- camera
-    const ox = CAMPUS_OFFSET.x, oz = CAMPUS_OFFSET.z;
+    const ox = W.ox, oz = W.oz;
     s.fp += ((W.third ? 0 : 1) - s.fp) * damp(9, dt);
     if (Math.abs(s.fp - (W.third ? 0 : 1)) < 0.002) s.fp = W.third ? 0 : 1;
     // gentle auto-follow: while moving without touching the mouse, the camera swings back behind the visitor
@@ -444,12 +497,14 @@ export default function WalkWorld() {
     // desired third-person camera, pulled in by the camera colliders (snap in, ease out)
     const px = s.pv.x - ox, py = s.pv.y, pz = s.pv.z - oz;
     const dx = sy * cp * W.dist, dy = sp * W.dist, dz = cy * cp * W.dist;
-    const hit = cameraHit(px, py, pz, px + dx, py + dy, pz + dz, W.cutB ? (W.bridge ? 3 : BLD_INDEX[W.cutB]) : 0, W.cutY);
+    const hit = W.site === "mibtech"
+      ? mbCameraHit(px, py, pz, px + dx, py + dy, pz + dz, W.third && W.mbIn ? W.cutY : Infinity)
+      : cameraHit(px, py, pz, px + dx, py + dy, pz + dz, W.cutB ? (W.bridge ? 3 : BLD_INDEX[W.cutB]) : 0, W.cutY);
     const want = Math.max(0.35, Math.min(W.dist, hit * W.dist - 0.22));
     s.dist = want < s.dist ? want : s.dist + (want - s.dist) * damp(3.5, dt);
     let cx = px + sy * cp * s.dist, cyy = py + sp * s.dist, cz = pz + cy * cp * s.dist;
     // never below the walkable surface around the visitor's level (a cut-away slab above does not count)
-    const gnd = groundAt(cx, cz, Math.min(cyy, W.y + 1.2));
+    const gnd = ground(cx, cz, Math.min(cyy, W.y + 1.2));
     if (cyy < gnd + 0.25) cyy = gnd + 0.25;
     cx += ox; cz += oz;
     // first person: eyes, gentle head bob
@@ -479,11 +534,14 @@ export default function WalkWorld() {
     // ---------------- shared state
     frame.player.active = true;
     frame.player.x = W.x + ox; frame.player.y = W.y; frame.player.z = W.z + oz; frame.player.heading = W.heading;
-    if (s.t - s.propsAt > 2) { s.propsAt = s.t; refreshHospitalProps(); }
+    if (W.site === "hospital" && s.t - s.propsAt > 2) { s.propsAt = s.t; refreshHospitalProps(); }
     setColliderYear(useApp.getState().year); // interior props may arrive later (hot reload)
     if (s.t - s.report > 0.12) {
       s.report = s.t;
       UI.view = W.third ? "third" : "first"; UI.where = W.where; UI.floor = W.level; UI.tower = W.tower; UI.bridge = W.bridge; UI.near = W.bridge ? null : nearDept(); UI.nearCase = nearCase(UI.near);
+      UI.site = W.site;
+      UI.mb = W.site !== "mibtech" ? null : !W.mbIn ? "dehors" : W.mbStair ? "escalier" : W.level === 0 ? "hall" : W.mbTerrace ? "terrasse" : "etage";
+      UI.lift = W.site === "mibtech" && !W.mbStair ? mbLiftTarget(W.x, W.z, W.level, W.mbIn) : null;
       useApp.getState().setWalk(UI);
     }
   });

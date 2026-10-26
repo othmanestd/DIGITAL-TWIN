@@ -22,6 +22,24 @@ import { SensorNet } from "./Twin";
 import { StairTowers } from "./StairTower";
 import { HospitalProps } from "./props";
 import StoryStage from "../story/StoryStage";
+import { BLD, TOWER_OF, type BId } from "../walk/plan";
+import { walkBusy } from "../walk/state";
+
+// Far level of detail (city and world views): beyond FAR_LOD metres the campus — a few hundred objects for a few pixels
+// on screen — is replaced by its two buildings as plain volumes (plates, floor count × FLOOR_H, roof), one draw call.
+const FAR_LOD = 2500;
+function farGeometry() {
+  const parts: THREE.BufferGeometry[] = [];
+  for (const b of ["main", "annex"] as BId[]) {
+    const B = BLD[b], h = (TOWER_OF[b].top + 1) * FLOOR_H;
+    parts.push(new THREE.BoxGeometry(B.w, h, B.d).translate(B.x, h / 2, B.z).toNonIndexed());
+  }
+  const pos: number[] = [], nor: number[] = [];
+  for (const p of parts) { pos.push(...(p.attributes.position.array as Float32Array)); nor.push(...(p.attributes.normal.array as Float32Array)); p.dispose(); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3));
+  return g;
+}
 
 /** Offset applied inside HospitalContent so that the campus (building frame of lib/hospital) is centred on the origin. */
 export { CAMPUS_OFFSET };
@@ -70,8 +88,23 @@ export function HospitalContent({ standalone = false }: { standalone?: boolean }
   const onBridge = cutting && !!walk.bridge;
   const walkKey = walk.phase === "on" && walk.where && !walk.tower ? `${walk.where}:${walk.floor}` : null;
 
+  // far level of detail: the campus or its plain volumes, by the camera's distance (never while walking or on the hospital)
+  const far = useMemo(() => ({ geo: farGeometry(), mat: new THREE.MeshStandardMaterial({ color: "#E8EBEE", roughness: 0.8 }) }), []);
+  useEffect(() => () => { far.geo.dispose(); far.mat.dispose(); }, [far]);
+  const farRef = useRef<THREE.Mesh>(null);
+  const _c = useMemo(() => new THREE.Vector3(), []);
+  useFrame(({ camera }) => {
+    const c = campus.current;
+    if (!c || standalone) return;
+    c.getWorldPosition(_c);
+    const isFar = !walkBusy() && useApp.getState().level !== "hospital" && camera.position.distanceTo(_c) > FAR_LOD;
+    c.visible = !isFar;
+    if (farRef.current) farRef.current.visible = isFar;
+  });
+
   return (
     <group>
+      <mesh ref={farRef} geometry={far.geo} material={far.mat} position={CAMPUS_OFFSET} visible={false} />
       <group ref={campus} position={CAMPUS_OFFSET}>
         <Site standalone={standalone} />
         {FLOOR_LAYOUTS.map((fl) => (

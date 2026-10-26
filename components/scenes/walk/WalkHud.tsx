@@ -29,7 +29,7 @@ export function WalkButton() {
     <style>{"@media (max-width: 1499px) { .jb-walk { width: 46px; padding: 0 !important; justify-content: center; } .jb-walk .lbl, .jb-walk .jb-kbd { display: none; } }"}</style>
     <button className="jb-btn glass jb-walk" data-anchor="ai:walk" data-active={on}
       onClick={(e) => { e.currentTarget.blur(); walkRequest("toggle"); }}
-      title={on ? "Revenir à la vue d'ensemble (Échap)" : "Se promener à pied (B)"}>
+      title={on ? "Revenir à la vue d'ensemble (Échap)" : "Se promener à pied dans le site le plus proche : clinique ou MIBTECH (B)"}>
       <span className="ico blue"><WalkIcon size={16} /></span>
       <span className="lbl">{on ? "Vue d'ensemble" : "À pied"}</span>
       <span className="jb-kbd">B</span>
@@ -54,7 +54,7 @@ const ROWS: [string, string][] = [
   ["Souris", "regarder (clic pour la capturer)"],
   ["Molette", "rapprocher la caméra"],
   ["V", "vue 1re / 3e personne"],
-  ["E", "ouvrir / fermer les cas"],
+  ["E", "ouvrir / fermer les cas · ascenseur"],
   ["Échap", "libérer la souris · quitter"],
 ];
 const label = (where: string | null, floor: number, tower: boolean, bridge = false) => {
@@ -63,6 +63,16 @@ const label = (where: string | null, floor: number, tower: boolean, bridge = fal
   const b = where === "main" ? "Bâtiment principal" : "Siège";
   const f = floor === 0 ? "rez-de-chaussée" : floor === 1 ? "1er étage" : `${floor}e étage`;
   return tower ? `${b} · escalier, ${f}` : `${b} · ${f}`;
+};
+
+const FLOOR_FR = (f: number) => (f === 0 ? "rez-de-chaussée" : f === 1 ? "1er étage" : `${f}e étage`);
+/** MIBTECH (walk/mibtechWalk.ts): where the visitor is */
+const mbLabel = (mb: string | null | undefined, floor: number) => {
+  if (!mb || mb === "dehors") return "MIBTECH · boulevard Mahdi Elmandjra";
+  if (mb === "hall") return "MIBTECH · hall d'entrée (provisoire)";
+  if (mb === "escalier") return `MIBTECH · escalier, ${FLOOR_FR(floor)}`;
+  if (mb === "terrasse") return "MIBTECH · terrasse du 1er étage";
+  return `MIBTECH · ${FLOOR_FR(floor)}`;
 };
 
 /** Left-thumb joystick for touch screens (look around by dragging anywhere on the scene). */
@@ -105,7 +115,8 @@ export default function WalkHud() {
   }, [walk.phase]);
   if (walk.phase === "off") return null;
   const entering = walk.phase === "enter";
-  const near = walk.near ? DEPT[walk.near] : null;
+  const mib = walk.site === "mibtech";
+  const near = walk.near && !mib ? DEPT[walk.near] : null;
   const nc = walk.nearCase ? CASE[walk.nearCase] : null;
   const title = nc?.titre ? (nc.titre.length > 46 ? nc.titre.slice(0, 44).trimEnd() + "…" : nc.titre) : "";
   return (
@@ -113,11 +124,11 @@ export default function WalkHud() {
       {/* where the visitor is */}
       <div style={{ ...glass, position: "absolute", top: 84, left: "50%", transform: "translateX(-50%)", padding: "6px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 500, whiteSpace: "nowrap", transition: "opacity .4s", opacity: entering ? 0 : 1 }}>
         <span style={{ display: "inline-block", width: 7, height: 7, borderRadius: 7, background: "#8EA4FF", marginRight: 8, verticalAlign: 1 }} />
-        {label(walk.where, walk.floor, walk.tower, !!walk.bridge)}
+        {mib ? mbLabel(walk.mb, walk.floor) : label(walk.where, walk.floor, walk.tower, !!walk.bridge)}
       </div>
       {entering && (
         <div style={{ ...glass, position: "absolute", top: 84, left: "50%", transform: "translateX(-50%)", padding: "7px 15px", borderRadius: 999, fontSize: 12.5, whiteSpace: "nowrap" }}>
-          À pied, devant l&apos;entrée principale…
+          {mib ? <>À pied, devant l&apos;entrée de MIBTECH…</> : <>À pied, devant l&apos;entrée principale…</>}
         </div>
       )}
       {touch && walk.phase === "on" && <Joystick />}
@@ -146,6 +157,13 @@ export default function WalkHud() {
           {nc
             ? <span>Cas <b style={{ fontWeight: 600 }}>{nc.id}</b> · {title}</span>
             : <span>Ouvrir <b style={{ fontWeight: 600 }}>{near.short}</b> · ses cas d&apos;usage</span>}
+        </div>
+      )}
+      {/* MIBTECH: the lift (E at its door) */}
+      {mib && walk.phase === "on" && walk.lift != null && !panel && (
+        <div style={{ ...glass, position: "absolute", bottom: 96, left: "50%", transform: "translateX(-50%)", padding: "7px 14px 7px 8px", borderRadius: 999, fontSize: 13, display: "flex", gap: 9, alignItems: "center", whiteSpace: "nowrap" }}>
+          <span style={{ ...kbd, background: "linear-gradient(145deg, #5B7CFF, #3651E8)", border: "none", minWidth: 24 }}>E</span>
+          <span>Ascenseur · aller au <b style={{ fontWeight: 600 }}>{FLOOR_FR(walk.lift)}</b></span>
         </div>
       )}
       {/* first person: centre dot */}

@@ -1,5 +1,6 @@
 "use client";
-// Vertical altitude slider over the whole continuous world: Hôpital (top, closest) → Maroc → Monde → Akdital logo (bottom).
+// Vertical altitude slider over the whole continuous world, three stops: Casablanca (top) → Monde → Akdital logo (bottom).
+// Closer than Casablanca the thumb still follows the camera, but there is no stop: establishments are chosen in the explorer.
 // The thumb follows the real camera altitude; dragging glides the camera through the powers of ten.
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/lib/store";
@@ -8,9 +9,7 @@ import { tone } from "@/lib/ui/tone";
 
 type Mark = { key: "hospital" | "city" | "morocco" | "world" | "jabb"; label: string; g: number; alt: number };
 const MARKS: Mark[] = [
-  { key: "hospital", label: "Hôpital", alt: 260, g: altToG(260) },
   { key: "city", label: "Casablanca", alt: 9_000, g: altToG(9_000) },
-  { key: "morocco", label: "Maroc", alt: 1.9e6, g: altToG(1.9e6) },
   { key: "world", label: "Monde", alt: 2.1e7, g: altToG(2.1e7) },
   { key: "jabb", label: "Akdital", alt: MAX_ALT, g: 1 },
 ];

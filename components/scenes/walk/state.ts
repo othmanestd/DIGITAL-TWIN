@@ -1,12 +1,17 @@
 // Walk mode runtime state, mutated every frame by the walk controller (WalkWorld.tsx) and read by the hospital
 // drawing (floor cut-away, LOD, sliding doors, people pausing) without React re-renders. Campus frame (see plan.ts).
+// Two sites: the hospital campus, and MIBTECH's office building (Casa réel; frame = the scene centred on the building, not
+// rotated: walk/mibtechWalk.ts). W.x / W.z are in the site's frame; the scene position is (W.x + W.ox, W.z + W.oz).
 import { FLOOR_H } from "@/lib/hospital";
 import type { BId } from "./plan";
 
 export type WalkPhase = "off" | "enter" | "on" | "exit";
+export type WalkSite = "hospital" | "mibtech";
 
 export const W = {
   phase: "off" as WalkPhase,
+  site: "hospital" as WalkSite,
+  ox: 0, oz: 0,                      // scene position of the site frame's origin
   third: true,                       // third person (false = first person)
   // the visitor: feet position, velocity, facing (yaw around +y, 0 = facing +z)
   x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, heading: 0, grounded: true, speed: 0,
@@ -18,6 +23,8 @@ export const W = {
   yaw: 0, pitch: 0.3, dist: 4.2,
   // cut-away: floors of `cutB` whose slab is above `cutY` are hidden; stair tower geometry above `clipY` is clipped
   cutB: null as BId | null, cutY: Infinity, clipY: Infinity,
+  // MIBTECH: inside the building's outline, level (0 ground floor … 3), on the stair / the terrace; floors above `mbCut` hidden
+  mbIn: false, mbStair: false, mbTerrace: false, mbCut: 99,
 };
 
 /** The visitor is being driven (not during the entry / exit flights). */
@@ -31,7 +38,7 @@ export function floorCut(building: BId, floor: number) {
 }
 
 /** Ask the walk controller to enter / leave / toggle walk mode (handled by WalkWorld). */
-export function walkRequest(what: "enter" | "exit" | "toggle") {
+export function walkRequest(what: "enter" | "exit" | "toggle" | "enter:mibtech") {
   if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("atlas:walk", { detail: what }));
 }
 
