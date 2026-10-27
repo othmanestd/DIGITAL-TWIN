@@ -272,7 +272,7 @@ export default function WalkWorld() {
       const out = mbLiftExit(to, W.x, W.z);
       if (!out) return false;
       W.x = out.x; W.z = out.z; W.y = out.y; W.vx = W.vy = W.vz = 0; W.grounded = true; W.heading = out.heading;
-      W.yaw = wrap(out.heading + Math.PI); s.pvInit = false;
+      W.yaw = wrap(out.heading + Math.PI); W.pitch = 0.2; s.pvInit = false; s.dist = 0.5; // camera behind, facing the floor
       locate(); setUi();
       return true;
     };

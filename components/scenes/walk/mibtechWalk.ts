@@ -275,12 +275,12 @@ export function mbSpawn() {
 }
 const LB = MIBTECH_PLANS[1].stair_meta.lift;
 const LIFT = { cx: (LB[0][0] + LB[1][0]) / 2, cz: (LB[0][1] + LB[1][1]) / 2, hx: (LB[1][0] - LB[0][0]) / 2, hz: (LB[1][1] - LB[0][1]) / 2 };
-/** Floor the lift would take the visitor to, when they stand at its door (≤ 1.1 m from the shaft), else null. */
+/** Floor the lift would take the visitor to, when they stand at its door (≤ 1.8 m from the shaft), else null. */
 export function mbLiftTarget(x: number, z: number, level: number, inside: boolean): number | null {
   if (!inside) return null;
   const [px, pz] = vecPlan(x, z);
   const dx = Math.max(0, Math.abs(px - LIFT.cx) - LIFT.hx), dz = Math.max(0, Math.abs(pz - LIFT.cz) - LIFT.hz);
-  return Math.hypot(dx, dz) <= 1.1 ? (level + 1) % 4 : null;
+  return Math.hypot(dx, dz) <= 1.8 ? (level + 1) % 4 : null;
 }
 const tmpN = { x: 0, z: 0 }, tmpP = { x: 0, z: 0 };
 /** Where the lift lets the visitor out on `level`: the first free spot in front of the shaft (side nearest to `from`). */
@@ -289,14 +289,27 @@ export function mbLiftExit(level: number, fromX: number, fromZ: number): { x: nu
   const [fpx, fpz] = vecPlan(fromX, fromZ);
   const sides: [number, number][] = [[1, 0], [0, 1], [0, -1], [-1, 0]];
   sides.sort((a, b) => ((b[0] * (fpx - LIFT.cx) + b[1] * (fpz - LIFT.cz)) - (a[0] * (fpx - LIFT.cx) + a[1] * (fpz - LIFT.cz))));
-  for (const [ux, uz] of sides) for (const d of [0.75, 1.1, 1.5]) for (const t of [0, -0.5, 0.5]) {
+  // the landing doors face east: step out straight in front of them first, into open floor (clear 0.55 m round)
+  sides.sort((a, b) => (b[0] === 1 ? 1 : 0) - (a[0] === 1 ? 1 : 0));
+  for (const clear of [0.55, 0.3]) for (const [ux, uz] of sides) for (const d of [1.6, 2.2, 1.2, 2.8, 0.8]) for (const t of [0, -0.4, 0.4]) {
     const px = LIFT.cx + ux * (LIFT.hx + d) + uz * t, pz = LIFT.cz + uz * (LIFT.hz + d) + ux * t;
     const [x, z] = planVec(px, pz);
     if (Math.abs(mbGroundAt(x, z, y) - y) > 0.05) continue;
     tmpP.x = x; tmpP.z = z; tmpN.x = 0; tmpN.z = 0;
-    if (mbResolveBody(tmpP, y, 0.3, tmpN)) continue;
-    const [hx, hz] = planVec(ux, uz);
-    return { x, z, y, heading: Math.atan2(hx, hz) };
+    if (mbResolveBody(tmpP, y, clear, tmpN, false)) continue;
+    // face the most open way (the corridor), not the nearest wall: the longest free run among 8 directions
+    let best = Math.atan2(...planVec(ux, uz)), run = -1;
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * Math.PI * 2, dx = Math.sin(a), dz = Math.cos(a);
+      let L = 0;
+      while (L < 6) {
+        tmpP.x = x + dx * (L + 0.25); tmpP.z = z + dz * (L + 0.25); tmpN.x = 0; tmpN.z = 0;
+        if (Math.abs(mbGroundAt(tmpP.x, tmpP.z, y) - y) > 0.05 || mbResolveBody(tmpP, y, 0.3, tmpN, false)) break;
+        L += 0.25;
+      }
+      if (L > run + 0.3) { run = L; best = a; }
+    }
+    return { x, z, y, heading: best };
   }
   return null;
 }
