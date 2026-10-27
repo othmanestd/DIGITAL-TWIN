@@ -9,7 +9,7 @@ import { DEPT, DEPTS, ALL_DEPTS, AP_FAC, AP_FLOORS, CASE_DEPT, ROLE_LABEL, ROLE_
 import { SITES, CITIES, INTERNATIONAL, GROUP } from "@/lib/geo/network";
 import { facilityBySlug, facilitySites } from "@/lib/facilities";
 import { placeById, REFERENTIAL_CHECKED } from "@/lib/geo/casaReferential";
-import { explorerPlace, hasPoint, COORD_LABEL, MODEL_LABEL } from "@/lib/geo/places";
+import { DEMO_ID, explorerPlace, hasPoint, COORD_LABEL, MODEL_LABEL } from "@/lib/geo/places";
 import { locatePlace, openInCasaReel } from "@/components/places/locate";
 import { MB_VIEW, mibtechShowFloor } from "@/components/scenes/city/landmarks/MibtechBuilding";
 import { walkRequest } from "@/components/scenes/walk/state";
@@ -641,6 +641,8 @@ function ExplorerPlaceView({ id }: { id: string }) {
       <Title eyebrow={<>{p.city} · {p.category}{ak ? " · réseau Akdital" : ""}</>} title={p.name} color={ak ? "#1DB4EA" : "#9B8CFF"}
         icon={ak ? <AkditalMark size={26} /> : <I.city size={22} />} />
       <div className="flex flex-wrap gap-2">
+        {id === DEMO_ID && <button type="button" className={btn} onClick={() => locatePlace(id)} data-anchor={`place-fly:${id}`}>Aller à la clinique</button>}
+        {id === DEMO_ID && <button type="button" className={btn} onClick={() => walkRequest("enter:hospital")} data-anchor="demo-walk">Visiter à pied</button>}
         {hasPoint(p) && CASA_REEL && <button type="button" className={btn} onClick={() => locatePlace(id)} data-anchor={`place-fly:${id}`}>Localiser sur la carte</button>}
         {hasPoint(p) && !CASA_REEL && <button type="button" className={btn} onClick={() => openInCasaReel(id)}>Ouvrir en Casa réel</button>}
         {p.networkSlug && ak && <button type="button" className={btn} onClick={() => select({ kind: "site", id: p.networkSlug! })}>Voir sur la carte du Maroc</button>}

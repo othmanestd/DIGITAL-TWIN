@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { useApp } from "@/lib/store";
 import { rig } from "@/lib/rig";
 import { CASA_REEL, geoToScene } from "@/lib/geo/casaFrame";
-import { explorerPlace, hasPoint } from "@/lib/geo/places";
+import { DEMO_ID, explorerPlace, hasPoint } from "@/lib/geo/places";
 import { walkBusy, WALK_API } from "@/components/scenes/walk/state";
 
 /** flying: camera on its way · facility: Anfa Prime's floors and services · morocco: shown on the Morocco map (city only)
@@ -18,6 +18,7 @@ export function locatePlace(id: string): LocateResult {
   if (!p) return "unknown";
   const app = useApp.getState();
   if (walkBusy()) WALK_API.stop(); // walk mode owns the camera: leave it before flying
+  if (p.id === DEMO_ID) { app.home(); return "facility"; } // the typical hospital's overview (its own flight)
   if (p.model3DId === "anfa-prime-hospital") { app.select({ kind: "facility", id: p.model3DId }); return "facility"; }
   if (p.coordinateStatus === "city" && p.networkSlug) { app.select({ kind: "site", id: p.networkSlug }); return "morocco"; }
   app.select({ kind: "landmark", id: p.id });

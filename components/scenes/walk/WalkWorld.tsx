@@ -296,6 +296,7 @@ export default function WalkWorld() {
     const onReq = (e: Event) => {
       const what = (e as CustomEvent<string>).detail;
       if (what === "enter:mibtech") enter("mibtech");
+      else if (what === "enter:hospital") enter("hospital");
       else if (what === "enter") enter(siteNow());
       else if (what === "exit") exit();
       else if (W.phase === "off") enter(siteNow()); else exit();
