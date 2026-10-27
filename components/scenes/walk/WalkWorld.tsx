@@ -89,7 +89,8 @@ function step(dt: number, mf: number, ms: number, run: boolean, jump: boolean) {
   for (let i = 0; i < n; i++) {
     P.x = W.x + W.vx * h; P.z = W.z + W.vz * h;
     N.x = 0; N.z = 0;
-    for (let it = 0; it < 3; it++) if (!body(P, W.y, RADIUS, N)) break;
+    const rad = W.site === "mibtech" ? 0.2 : RADIUS; // MIBTECH: a slimmer body, easier between the desks
+    for (let it = 0; it < 3; it++) if (!body(P, W.y, rad, N)) break;
     const nl = Math.hypot(N.x, N.z);
     if (nl > 1e-6) {
       const nx = N.x / nl, nz = N.z / nl, vn = W.vx * nx + W.vz * nz;
@@ -118,7 +119,8 @@ function locate() {
     mbWhere(W.x, W.z, W.y, MBW);
     W.where = null; W.tower = false; W.bridge = false; W.cutB = null; W.clipY = Infinity;
     W.mbIn = MBW.inside; W.mbStair = MBW.stair; W.mbTerrace = MBW.terrace; W.level = MBW.level;
-    W.mbCut = W.third && MBW.inside ? (MBW.stair ? MBW.level + 1 : MBW.level) : 99;
+    // the entrance hall stays whole (walls and ceiling, no cut-away): the camera keeps under its ceiling instead
+    W.mbCut = W.third && MBW.inside && !(MBW.level === 0 && !MBW.stair) ? (MBW.stair ? MBW.level + 1 : MBW.level) : 99;
     // third person: walls and partitions cut at 2.3 m above the floor (on the stair: above the feet), the view stays open
     W.cutY = !MBW.inside ? Infinity : (MBW.stair ? W.y : MBW.level === 0 ? 0 : floorY(MBW.level as MbFloor)) + MB_CUT;
     return;
@@ -504,6 +506,12 @@ export default function WalkWorld() {
     s.dist = want < s.dist ? want : s.dist + (want - s.dist) * damp(3.5, dt);
     let cx = px + sy * cp * s.dist, cyy = py + sp * s.dist, cz = pz + cy * cp * s.dist;
     // never below the walkable surface around the visitor's level (a cut-away slab above does not count)
+    // MIBTECH's hall (not cut away): the camera stays under the ceiling, close behind the visitor
+    if (W.site === "mibtech" && W.mbIn && W.level === 0 && !W.mbStair && W.third) {
+      cyy = Math.min(cyy, 3.6);
+      const k = Math.min(1, 2.6 / Math.max(0.01, s.dist));
+      cx = px + (cx - px) * k; cz = pz + (cz - pz) * k;
+    }
     const gnd = ground(cx, cz, Math.min(cyy, W.y + 1.2));
     if (cyy < gnd + 0.25) cyy = gnd + 0.25;
     cx += ox; cz += oz;

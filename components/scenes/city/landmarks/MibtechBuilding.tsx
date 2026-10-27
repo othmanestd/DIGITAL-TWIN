@@ -151,7 +151,7 @@ function fins(): THREE.BufferGeometry {
 
 /** the street front from the photos (plan frame): curtain wall skin, cantilever, ground floor, office entrance, roof plant room */
 function front() {
-  const glass = acc(), stone = acc(), flute = acc(), shop = acc(), dark = acc(), render = acc(), door = acc(), entryDoor = acc(), entryGlass = acc();
+  const garage = acc(), glass = acc(), stone = acc(), flute = acc(), shop = acc(), dark = acc(), render = acc(), door = acc(), entryDoor = acc(), entryGlass = acc();
   const zs = -CANT, X0 = PLATE.x0, X1 = PLATE.x1;
   wall(glass, FRONT.x0, 0.04, FRONT.x1, 0.04, GF, TOP, GLASS_TILE, -1);   // navy skin over the plans' glazed front (seen from outside)
   flat(dark, X0, zs, X1, 0.04, GF, false);                                // soffit of the cantilever
@@ -176,11 +176,15 @@ function front() {
   wall(entryGlass, d0 + 0.12, zb + 0.04, d1 - 0.12, zb + 0.04, 0.15, 2.75, [1.76, GF], -1);
   wall(entryGlass, d0 + 0.12, zb + 0.04, d1 - 0.12, zb + 0.04, 2.87, 3.88, [1.76, GF], -1, 0.3);
   boxWalls(dark, a, zb, b, 0, 0, 0.15, [4, 4]);
-  wall(stone, b, zs, X1, zs, 0, GF, STONE_TILE, -1);
+  // black steel garage door, ribbed, right of the office entrance (user's description); stone around it
+  wall(stone, b, zs, X1, zs, 2.5, GF, STONE_TILE, -1);
+  wall(stone, b, zs, b + 0.12, zs, 0, 2.5, STONE_TILE, -1);
+  wall(stone, X1 - 0.12, zs, X1, zs, 0, 2.5, STONE_TILE, -1);
+  wall(garage, b + 0.12, zs + 0.02, X1 - 0.12, zs + 0.02, 0, 2.5, [1, 0.6], -1);
   // roof: stair exit / plant room over the core
   const sb = MIBTECH_PLANS[2].stair_meta.box;
   boxWalls(render, sb[0][0], sb[0][1], sb[1][0], sb[1][1], TOP, TOP + 3, [4, 4]);
-  return { glass: geo(glass), stone: geo(stone), flute: geo(flute), shop: geo(shop), dark: geo(dark), render: geo(render), door: geo(door), entryDoor: geo(entryDoor), entryGlass: geo(entryGlass), fins: fins() };
+  return { glass: geo(glass), stone: geo(stone), flute: geo(flute), shop: geo(shop), dark: geo(dark), render: geo(render), door: geo(door), entryDoor: geo(entryDoor), entryGlass: geo(entryGlass), garage: geo(garage), fins: fins() };
 }
 
 /** Walk-mode solids (world): the footprint as 2 m cells (each pushed as the AABB of its rotated square). */
@@ -390,6 +394,7 @@ export function MibtechBuilding() {
       glass: glassTex(false), glassN: glassTex(true), stone: stoneTex(), flute: fluteTex(), shop: shopTex(false), shopN: shopTex(true),
       floor: tileTex([208, 207, 202], 2, 1, "rgba(150,148,142,0.55)", 3, true), terrace: tileTex([168, 168, 165], 2, 2, "rgba(90,90,88,0.6)", 9),
       ceiling: ceilingTex(false), ceilingE: ceilingTex(true), veneer: veneerTex(), wall: wallTex(), frost: frostTex(), carpet: carpetTex(),
+      garage: canvas(16, 64, (g) => { g.fillStyle = "#17181B"; g.fillRect(0, 0, 16, 64); for (let y = 0; y < 64; y += 6) { g.fillStyle = "#2E3036"; g.fillRect(0, y, 16, 1); g.fillStyle = "#0B0B0D"; g.fillRect(0, y + 4, 16, 1); } }),
       steel: steelTex(), panel: panelTex(), blackMarble: blackMarbleTex(), marble: tileTex([214, 216, 219], 2, 2, "rgba(150,152,156,0.45)", 21, true),
     };
     const M = {
@@ -400,6 +405,7 @@ export function MibtechBuilding() {
       dark: new THREE.MeshStandardMaterial({ color: "#272B31", roughness: 0.7, metalness: 0.2 }),
       render: new THREE.MeshStandardMaterial({ color: "#D9D6CF", roughness: 0.9 }),
       door: new THREE.MeshStandardMaterial({ color: "#14181D", roughness: 0.2, metalness: 0.5 }),
+      garage: new THREE.MeshStandardMaterial({ map: T.garage, roughness: 0.45, metalness: 0.6 }),
       fin: new THREE.MeshStandardMaterial({ color: "#D6DADF", roughness: 0.38, metalness: 0.45, envMapIntensity: 1.1 }),
     };
     const P = interiorMats(T);
@@ -483,6 +489,7 @@ export function MibtechBuilding() {
         <mesh geometry={F.flute} material={M.flute} />
         <mesh geometry={F.shop} material={M.shop} />
         <mesh geometry={F.door} material={M.door} />
+        <mesh geometry={F.garage} material={M.garage} />
       </group>
       <mesh geometry={F.dark} material={M.dark} castShadow />
       <mesh geometry={F.render} material={M.render} castShadow />
