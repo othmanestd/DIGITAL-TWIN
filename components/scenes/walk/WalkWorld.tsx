@@ -498,8 +498,10 @@ export default function WalkWorld() {
     // desired third-person camera, pulled in by the camera colliders (snap in, ease out)
     const px = s.pv.x - ox, py = s.pv.y, pz = s.pv.z - oz;
     const dx = sy * cp * W.dist, dy = sp * W.dist, dz = cy * cp * W.dist;
+    // MIBTECH indoors: the camera keeps its distance; the walls between it and the visitor turn see-through instead
+    // (MibtechBuilding: x-ray cone), the visitor's own collisions are unchanged
     const hit = W.site === "mibtech"
-      ? mbCameraHit(px, py, pz, px + dx, py + dy, pz + dz, W.third && W.mbIn ? W.cutY : Infinity)
+      ? (W.third && W.mbIn ? 1 : mbCameraHit(px, py, pz, px + dx, py + dy, pz + dz, Infinity))
       : cameraHit(px, py, pz, px + dx, py + dy, pz + dz, W.cutB ? (W.bridge ? 3 : BLD_INDEX[W.cutB]) : 0, W.cutY);
     const want = Math.max(0.35, Math.min(W.dist, hit * W.dist - 0.22));
     s.dist = want < s.dist ? want : s.dist + (want - s.dist) * damp(3.5, dt);
@@ -510,7 +512,7 @@ export default function WalkWorld() {
     if (W.site === "mibtech" && W.mbIn && W.third) {
       const floor0 = W.level === 0 ? 0 : floorY(W.level as MbFloor), ceil = W.level === 0 ? 3.9 : floor0 + 2.5;
       cyy = Math.min(cyy, Math.max(W.y + 1.4, ceil));
-      const k = Math.min(1, 2.8 / Math.max(0.01, s.dist));
+      const k = Math.min(1, 3.2 / Math.max(0.01, s.dist));
       cx = px + (cx - px) * k; cz = pz + (cz - pz) * k;
     }
     const gnd = ground(cx, cz, Math.min(cyy, W.y + 1.2));
