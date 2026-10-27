@@ -347,6 +347,37 @@ function carpetTex() {
     g.strokeStyle = "rgba(40,42,36,0.35)"; g.lineWidth = 1; g.strokeRect(0.5, 0.5, 127, 127); g.strokeRect(128.5, 128.5, 127, 127); // 50 cm tiles
   });
 }
+/** PBR finishing: a normal map derived from a procedural texture's own luminance (dark = recessed: tile joints, wood grain,
+ *  carpet weave, steel brushing, marble veins), so the surfaces catch light like the real materials */
+function normalOf(t: THREE.Texture, strength: number) {
+  const src = t.image as HTMLCanvasElement, w = src.width, h = src.height;
+  const d = src.getContext("2d")!.getImageData(0, 0, w, h).data;
+  const lum = (x: number, y: number) => { const i = (((y + h) % h) * w + ((x + w) % w)) * 4; return (d[i] + d[i + 1] + d[i + 2]) / 765; };
+  const out = canvas(w, h, (g) => {
+    const img = g.createImageData(w, h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const dx = (lum(x - 1, y) - lum(x + 1, y)) * strength, dy = (lum(x, y - 1) - lum(x, y + 1)) * strength;
+      const l = Math.hypot(dx, dy, 1), i = (y * w + x) * 4;
+      img.data[i] = (dx / l * 0.5 + 0.5) * 255; img.data[i + 1] = (dy / l * 0.5 + 0.5) * 255; img.data[i + 2] = (1 / l * 0.5 + 0.5) * 255; img.data[i + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+  });
+  out.colorSpace = THREE.NoColorSpace;
+  return out;
+}
+/** relief strength and reflection per finish (polished stone and tiles reflect the room, carpet and plaster do not) */
+const PBR: Partial<Record<MbMat, { n: number; env: number }>> = {
+  floor: { n: 2.5, env: 0.9 }, marble: { n: 2, env: 1.1 }, blackMarble: { n: 2, env: 1.1 }, woodPanel: { n: 3, env: 0.4 },
+  door: { n: 3, env: 0.35 }, cubicle: { n: 3, env: 0.35 }, carpet: { n: 6, env: 0 }, steel: { n: 1.5, env: 1.4 }, lift: { n: 1.5, env: 1.4 },
+  terrace: { n: 3, env: 0.2 }, ceiling: { n: 1.5, env: 0 },
+};
+function finishPbr(P: Record<MbMat, THREE.MeshStandardMaterial>) {
+  for (const [k, cfg] of Object.entries(PBR) as [MbMat, { n: number; env: number }][]) {
+    const m = P[k];
+    if (!m?.map) continue;
+    m.normalMap = normalOf(m.map, cfg.n); m.normalScale.set(0.6, 0.6); m.envMapIntensity = cfg.env; m.needsUpdate = true;
+  }
+}
 function interiorMats(T: {
   floor: THREE.Texture; terrace: THREE.Texture; ceiling: THREE.Texture; ceilingE: THREE.Texture; veneer: THREE.Texture; wall: THREE.Texture; frost: THREE.Texture; carpet: THREE.Texture;
   steel: THREE.Texture; panel: THREE.Texture; blackMarble: THREE.Texture; marble: THREE.Texture;
@@ -409,6 +440,7 @@ export function MibtechBuilding() {
       fin: new THREE.MeshStandardMaterial({ color: "#D6DADF", roughness: 0.38, metalness: 0.45, envMapIntensity: 1.1 }),
     };
     const P = interiorMats(T);
+    finishPbr(P);
     // walk mode cut-away (third person): the visitor's floor is clipped at the cut height (walls, partitions, ceiling)
     const clip = new THREE.Plane(new THREE.Vector3(0, -1, 0), 1e6);
     for (const m of Object.values(P)) { m.clippingPlanes = [clip]; m.clipShadows = true; }

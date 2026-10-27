@@ -138,7 +138,7 @@ export default function MibtechPeople({ floor }: { floor: MbFloor }) {
   useEffect(() => {
     npcs.forEach((n, i) => crowd.setLook(i, n.look));
     const s = st.current;
-    return () => { if (s.base >= 0) for (let i = 0; i < s.n; i++) MB_PEOPLE[s.base + i].on = false; };
+    return () => { if (s.base >= 0) for (let i = 0; i < s.n; i++) { const q = MB_PEOPLE[s.base + i]; if (q) q.on = false; } };
   }, [npcs, crowd]);
   useEffect(() => () => { glasses.geo.dispose(); glasses.mat.dispose(); }, [glasses]);
   const y = floorY(floor);
@@ -154,8 +154,8 @@ export default function MibtechPeople({ floor }: { floor: MbFloor }) {
     // only while the floor is shown and the camera is near the building
     let o: THREE.Object3D | null = g, shown = true;
     while (o) { if (!o.visible) { shown = false; break; } o = o.parent; }
-    if (s.base < 0 || s.n !== npcs.length) { // slots in the shared list (walk collisions); a new cast gets new slots
-      for (let i = 0; i < s.n; i++) MB_PEOPLE[s.base + i].on = false;
+    if (s.base < 0 || s.n !== npcs.length || !MB_PEOPLE[s.base + npcs.length - 1]) { // slots in the shared list (walk collisions): a new cast, or a new list after a reload, gets new slots
+      for (let i = 0; i < s.n; i++) { const q = MB_PEOPLE[s.base + i]; if (q) q.on = false; }
       s.base = MB_PEOPLE.length; s.n = npcs.length;
       for (let i = 0; i < npcs.length; i++) MB_PEOPLE.push({ x: 0, z: 0, y, on: false });
     }
