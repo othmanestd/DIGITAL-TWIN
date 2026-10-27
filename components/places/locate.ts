@@ -25,7 +25,8 @@ export function locatePlace(id: string): LocateResult {
   if (!CASA_REEL) return "needs-reel";
   const q = geoToScene(p.latitude!, p.longitude!);
   // a little over the site, looking north at ~55°: the building and its streets in view (closer for a small house)
-  rig.flyTo(new THREE.Vector3(q.x, 0, q.z), Math.max(260, p.r * 0.38), { polar: 0.95, azimuth: 0.15 });
+  // a Google-Maps arc from where the camera is: up so both places are in view, then down on this one
+  rig.flyTo(new THREE.Vector3(q.x, 0, q.z), Math.max(260, p.r * 0.38), { polar: 0.95, azimuth: 0.15, cinematic: true, duration: 2.8 });
   return "flying";
 }
 
