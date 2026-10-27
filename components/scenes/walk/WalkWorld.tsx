@@ -63,6 +63,7 @@ const vPivot = new THREE.Vector3(), vCam = new THREE.Vector3(), vEye = new THREE
 const UI = { view: "third" as "third" | "first", where: null as BId | null, floor: 0, tower: false, bridge: false, near: null as string | null, nearCase: null as string | null,
   site: "hospital" as "hospital" | "mibtech", mb: null as string | null, lift: null as number | null };
 const MBW = { inside: false, level: 0, stair: false, terrace: false };
+const MB_CUT = 1.3;
 // the site's physics (hospital campus or MIBTECH): chosen by W.site
 const body = (p: { x: number; z: number }, feet: number, r: number, n: { x: number; z: number }) => (W.site === "mibtech" ? mbResolveBody(p, feet, r, n) : resolveBody(p, feet, r, n));
 const ground = (x: number, z: number, y: number) => (W.site === "mibtech" ? mbGroundAt(x, z, y) : groundAt(x, z, y));
@@ -119,9 +120,10 @@ function locate() {
     W.where = null; W.tower = false; W.bridge = false; W.cutB = null; W.clipY = Infinity;
     W.mbIn = MBW.inside; W.mbStair = MBW.stair; W.mbTerrace = MBW.terrace; W.level = MBW.level;
     // the entrance hall stays whole (walls and ceiling, no cut-away): the camera keeps under its ceiling instead
-    W.mbCut = 99; // indoor camera: no cut-away (see the camera below)
-    // third person: walls and partitions cut at 2.3 m above the floor (on the stair: above the feet), the view stays open
-    W.cutY = Infinity;
+    // third person, like the hospital ("dollhouse"): the floors above, the ceiling and the upper part of every wall cut
+    // away at 1.3 m above the visitor's floor (on the stair: above the feet), the camera high behind, seeing over the walls
+    W.mbCut = W.third && MBW.inside ? (MBW.stair ? MBW.level + 1 : MBW.level) : 99;
+    W.cutY = !MBW.inside ? Infinity : (MBW.stair ? W.y : MBW.level === 0 ? 0 : floorY(MBW.level as MbFloor)) + MB_CUT;
     return;
   }
   whereAt(W.x, W.z, WH, W.y);
@@ -498,23 +500,13 @@ export default function WalkWorld() {
     // desired third-person camera, pulled in by the camera colliders (snap in, ease out)
     const px = s.pv.x - ox, py = s.pv.y, pz = s.pv.z - oz;
     const dx = sy * cp * W.dist, dy = sp * W.dist, dz = cy * cp * W.dist;
-    // MIBTECH indoors: the camera keeps its distance; the walls between it and the visitor turn see-through instead
-    // (MibtechBuilding: x-ray cone), the visitor's own collisions are unchanged
     const hit = W.site === "mibtech"
-      ? (W.third && W.mbIn ? 1 : mbCameraHit(px, py, pz, px + dx, py + dy, pz + dz, Infinity))
+      ? mbCameraHit(px, py, pz, px + dx, py + dy, pz + dz, W.third && W.mbIn ? W.cutY : Infinity)
       : cameraHit(px, py, pz, px + dx, py + dy, pz + dz, W.cutB ? (W.bridge ? 3 : BLD_INDEX[W.cutB]) : 0, W.cutY);
     const want = Math.max(0.35, Math.min(W.dist, hit * W.dist - 0.22));
     s.dist = want < s.dist ? want : s.dist + (want - s.dist) * damp(3.5, dt);
     let cx = px + sy * cp * s.dist, cyy = py + sp * s.dist, cz = pz + cy * cp * s.dist;
     // never below the walkable surface around the visitor's level (a cut-away slab above does not count)
-    // MIBTECH, indoor camera (game-style): the building whole, the camera stopped by every wall (cameraHit above), kept
-    // under the ceiling of the visitor's level and close over the shoulder (rooms and corridors are 3 to 5 m wide)
-    if (W.site === "mibtech" && W.mbIn && W.third) {
-      const floor0 = W.level === 0 ? 0 : floorY(W.level as MbFloor), ceil = W.level === 0 ? 3.9 : floor0 + 2.5;
-      cyy = Math.min(cyy, Math.max(W.y + 1.4, ceil));
-      const k = Math.min(1, 3.2 / Math.max(0.01, s.dist));
-      cx = px + (cx - px) * k; cz = pz + (cz - pz) * k;
-    }
     const gnd = ground(cx, cz, Math.min(cyy, W.y + 1.2));
     if (cyy < gnd + 0.25) cyy = gnd + 0.25;
     cx += ox; cz += oz;

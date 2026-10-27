@@ -347,25 +347,6 @@ function carpetTex() {
     g.strokeStyle = "rgba(40,42,36,0.35)"; g.lineWidth = 1; g.strokeRect(0.5, 0.5, 127, 127); g.strokeRect(128.5, 128.5, 127, 127); // 50 cm tiles
   });
 }
-/** See-through walls (walk mode inside, third person): whatever stands between the camera and the visitor — walls,
- *  partitions, furniture — is drawn as a light screen-door ghost inside a cone from the camera to the visitor's chest, so
- *  the visitor stays in sight; floors are kept whole. Collisions are not affected (walk/mibtechWalk.ts). */
-export const XRAY = { uXOn: { value: 0 }, uXCam: { value: new THREE.Vector3() }, uXTgt: { value: new THREE.Vector3() }, uXR: { value: 1.15 } };
-function seeThrough(m: THREE.MeshStandardMaterial) {
-  m.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, XRAY);
-    sh.vertexShader = "varying vec3 vXrayW;\n" + sh.vertexShader.replace("#include <project_vertex>", "#include <project_vertex>\n  vXrayW = (modelMatrix * vec4(transformed, 1.0)).xyz;");
-    sh.fragmentShader = "uniform float uXOn; uniform vec3 uXCam; uniform vec3 uXTgt; uniform float uXR; varying vec3 vXrayW;\n" + sh.fragmentShader.replace("#include <clipping_planes_fragment>", `#include <clipping_planes_fragment>
-  if (uXOn > 0.5) {
-    vec3 xd = uXTgt - uXCam; float xl = length(xd); vec3 xn = xd / xl; vec3 xp = vXrayW - uXCam; float xt = dot(xp, xn);
-    if (xt > 0.05 && xt < xl - 0.3 && length(xp - xn * xt) < uXR * (0.35 + 0.65 * xt / xl)
-        && mod(floor(gl_FragCoord.x) + floor(gl_FragCoord.y) * 2.0, 4.0) > 0.5) discard; // keep 1 pixel in 4: a ghost
-  }`);
-  };
-  m.customProgramCacheKey = () => "mibtech-xray";
-}
-const XRAY_SKIP: MbMat[] = ["floor", "marble", "carpet", "terrace", "roof"];
-
 /** PBR finishing: a normal map derived from a procedural texture's own luminance (dark = recessed: tile joints, wood grain,
  *  carpet weave, steel brushing, marble veins), so the surfaces catch light like the real materials */
 function normalOf(t: THREE.Texture, strength: number) {
@@ -460,11 +441,12 @@ export function MibtechBuilding() {
     };
     const P = interiorMats(T);
     finishPbr(P);
-    for (const [k, m] of Object.entries(P) as [MbMat, THREE.MeshStandardMaterial][]) if (!XRAY_SKIP.includes(k)) seeThrough(m);
+    // walk cut-away: the walls are drawn both sides, so a wall cut at 1.3 m reads as solid (its inside shows as a top)
+    const CUT_SOLID: MbMat[] = ["wall", "column", "partition", "cubicle", "door", "lift", "steel", "woodPanel", "blackMarble", "cabinet"];
     // walk mode cut-away (third person): the visitor's floor is clipped at the cut height (walls, partitions, ceiling)
     const clip = new THREE.Plane(new THREE.Vector3(0, -1, 0), 1e6);
     for (const m of Object.values(P)) { m.clippingPlanes = [clip]; m.clipShadows = true; }
-    return { F, B, T, M, P, clip };
+    return { F, B, T, M, P, clip, cutSolid: CUT_SOLID };
   }, []);
   const list = useMemo(() => [...Object.values(res.M), ...Object.values(res.P)] as THREE.Material[], [res]);
   useEffect(() => () => {
@@ -506,9 +488,8 @@ export function MibtechBuilding() {
     const cam = state.camera.position, near = walking || MB_VIEW.floor > 0 || Math.hypot(cam.x - CENTER[0], cam.y, cam.z - CENTER[1]) < MB_NEAR;
     const key = walking && W.mbCut < 99 ? 10 + W.mbCut : walking ? 20 : !near ? 30 : MB_VIEW.floor;
     res.clip.constant = walking && W.mbCut < 99 && W.cutY < 1e5 ? W.cutY : 1e6;
-    // see-through walls: on foot inside, third person; the cone from the camera to the visitor's chest
-    XRAY.uXOn.value = walking && W.phase === "on" && W.mbIn && W.third ? 1 : 0;
-    if (XRAY.uXOn.value) { XRAY.uXCam.value.copy(state.camera.position); XRAY.uXTgt.value.set(frame.player.x, frame.player.y + 1.3, frame.player.z); }
+    const solid = res.clip.constant < 1e5 ? THREE.DoubleSide : THREE.FrontSide;
+    for (const k of res.cutSolid) { const m = res.P[k]; if (m.side !== solid) { m.side = solid; m.needsUpdate = true; } }
     if (walking) state.gl.localClippingEnabled = true;
     if (shown.current !== key) {
       shown.current = key;
