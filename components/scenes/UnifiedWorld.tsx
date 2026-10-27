@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { CameraControls, Environment, Lightformer } from "@react-three/drei";
+import CameraControlsImpl from "camera-controls";
 import { useApp } from "@/lib/store";
 import { rig, EARTH_R, GLOBE_DROP, EARTH_CENTER } from "@/lib/rig";
 import { MAX_ALT, altToG, gToAlt, bandAlt, levelForAlt, fadeIn, frame, EGG_DROP, EGG_IN, EGG_FULL } from "@/lib/world";
@@ -41,6 +42,10 @@ function globeQuaternion() {
   const a = Math.atan2(north.x, -north.z);
   return new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), a).multiply(q);
 }
+
+const A = CameraControlsImpl.ACTION;
+/** the map gestures are on (ground view, not walking) */
+const MAP = { on: false };
 
 export default function UnifiedWorld() {
   const controls = useRef<CameraControls>(null);
@@ -88,7 +93,24 @@ export default function UnifiedWorld() {
     const on = () => { s.dragging = true; rig.cancel(); s.intro = false; dive.current++; };
     const off = () => { s.dragging = false; };
     c.addEventListener("controlstart", on); c.addEventListener("controlend", off);
-    return () => { c.removeEventListener("controlstart", on); c.removeEventListener("controlend", off); rig.attach(null); };
+    // Google-Maps gestures on the map (MAP_GESTURES below): Ctrl / Shift / Cmd + left drag rotates and tilts, like the right
+    // button; a double click zooms in on the point under the cursor
+    const el = gl.domElement;
+    const down = (e: PointerEvent) => {
+      if (!MAP.on || e.button !== 0) return;
+      c.mouseButtons.left = e.ctrlKey || e.shiftKey || e.metaKey ? A.ROTATE : A.SCREEN_PAN;
+    };
+    const dbl = (e: MouseEvent) => {
+      if (!MAP.on || walkBusy()) return;
+      const r = el.getBoundingClientRect();
+      rig.zoomAt(0.4, ((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    };
+    el.addEventListener("pointerdown", down, { capture: true });
+    el.addEventListener("dblclick", dbl);
+    return () => {
+      c.removeEventListener("controlstart", on); c.removeEventListener("controlend", off); rig.attach(null);
+      el.removeEventListener("pointerdown", down, { capture: true }); el.removeEventListener("dblclick", dbl);
+    };
   }, [camera]);
 
   // overview flights for the three levels (contents handle their own selections)
@@ -335,6 +357,18 @@ export default function UnifiedWorld() {
     } else if (centreNow) {
       c.minDistance = R_TOP + 1.8e6; c.maxDistance = R_TOP + MAX_ALT;
       c.minPolarAngle = 0; c.maxPolarAngle = Math.PI;
+    }
+    // gestures: on the map like Google Maps (drag = move the map along the ground, right drag = rotate / tilt, one finger
+    // = move, two = zoom / rotate); on the globe like Google Earth (drag = spin the globe)
+    const mapNow = !centreNow && !walkBusy();
+    if (mapNow !== MAP.on) {
+      MAP.on = mapNow;
+      // (SCREEN_PAN in camera-controls 3 = sideways + forward along the ground, the map-like pan)
+      c.mouseButtons.left = mapNow ? A.SCREEN_PAN : A.ROTATE; c.mouseButtons.right = mapNow ? A.ROTATE : A.TRUCK;
+      c.touches.one = mapNow ? A.TOUCH_SCREEN_PAN : A.TOUCH_ROTATE; c.touches.two = A.TOUCH_DOLLY_ROTATE;
+    }
+    if (walkBusy() || centreNow) {
+      // (limits set above)
     } else {
       c.minDistance = 8; c.maxDistance = 4.6e6;
       c.minPolarAngle = 0;

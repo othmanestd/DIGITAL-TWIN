@@ -63,7 +63,7 @@ const vPivot = new THREE.Vector3(), vCam = new THREE.Vector3(), vEye = new THREE
 const UI = { view: "third" as "third" | "first", where: null as BId | null, floor: 0, tower: false, bridge: false, near: null as string | null, nearCase: null as string | null,
   site: "hospital" as "hospital" | "mibtech", mb: null as string | null, lift: null as number | null };
 const MBW = { inside: false, level: 0, stair: false, terrace: false };
-const MB_CUT = 2.3;
+const MB_CUT = 1.3;
 // the site's physics (hospital campus or MIBTECH): chosen by W.site
 const body = (p: { x: number; z: number }, feet: number, r: number, n: { x: number; z: number }) => (W.site === "mibtech" ? mbResolveBody(p, feet, r, n) : resolveBody(p, feet, r, n));
 const ground = (x: number, z: number, y: number) => (W.site === "mibtech" ? mbGroundAt(x, z, y) : groundAt(x, z, y));
@@ -89,7 +89,8 @@ function step(dt: number, mf: number, ms: number, run: boolean, jump: boolean) {
   for (let i = 0; i < n; i++) {
     P.x = W.x + W.vx * h; P.z = W.z + W.vz * h;
     N.x = 0; N.z = 0;
-    for (let it = 0; it < 3; it++) if (!body(P, W.y, RADIUS, N)) break;
+    const rad = W.site === "mibtech" ? 0.2 : RADIUS; // MIBTECH: a slimmer body, easier between the desks
+    for (let it = 0; it < 3; it++) if (!body(P, W.y, rad, N)) break;
     const nl = Math.hypot(N.x, N.z);
     if (nl > 1e-6) {
       const nx = N.x / nl, nz = N.z / nl, vn = W.vx * nx + W.vz * nz;
@@ -118,8 +119,10 @@ function locate() {
     mbWhere(W.x, W.z, W.y, MBW);
     W.where = null; W.tower = false; W.bridge = false; W.cutB = null; W.clipY = Infinity;
     W.mbIn = MBW.inside; W.mbStair = MBW.stair; W.mbTerrace = MBW.terrace; W.level = MBW.level;
+    // the entrance hall stays whole (walls and ceiling, no cut-away): the camera keeps under its ceiling instead
+    // third person, like the hospital ("dollhouse"): the floors above, the ceiling and the upper part of every wall cut
+    // away at 1.3 m above the visitor's floor (on the stair: above the feet), the camera high behind, seeing over the walls
     W.mbCut = W.third && MBW.inside ? (MBW.stair ? MBW.level + 1 : MBW.level) : 99;
-    // third person: walls and partitions cut at 2.3 m above the floor (on the stair: above the feet), the view stays open
     W.cutY = !MBW.inside ? Infinity : (MBW.stair ? W.y : MBW.level === 0 ? 0 : floorY(MBW.level as MbFloor)) + MB_CUT;
     return;
   }
@@ -271,7 +274,7 @@ export default function WalkWorld() {
       const out = mbLiftExit(to, W.x, W.z);
       if (!out) return false;
       W.x = out.x; W.z = out.z; W.y = out.y; W.vx = W.vy = W.vz = 0; W.grounded = true; W.heading = out.heading;
-      W.yaw = wrap(out.heading + Math.PI); s.pvInit = false;
+      W.yaw = wrap(out.heading + Math.PI); W.pitch = 0.2; s.pvInit = false; s.dist = 0.5; // camera behind, facing the floor
       locate(); setUi();
       return true;
     };
@@ -293,6 +296,7 @@ export default function WalkWorld() {
     const onReq = (e: Event) => {
       const what = (e as CustomEvent<string>).detail;
       if (what === "enter:mibtech") enter("mibtech");
+      else if (what === "enter:hospital") enter("hospital");
       else if (what === "enter") enter(siteNow());
       else if (what === "exit") exit();
       else if (W.phase === "off") enter(siteNow()); else exit();

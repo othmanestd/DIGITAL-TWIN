@@ -32,6 +32,7 @@ const CAT_SHORT: Record<PlaceCategory, string> = { "Hôpital": "Hôpital", Clini
 
 /** visual state of a row: what is known, never more */
 function tone(p: ExplorerPlace): { dot: string; label: string } {
+  if (p.coordinateStatus === "demo") return { dot: "#3FD49A", label: "Site de démonstration · bâtiment 3D visitable" };
   if (hasPoint(p) && (p.model3D === "detailed" || p.model3D === "estimated" || p.model3D === "osm-volume")) return { dot: "#3FD49A", label: "Position et volume 3D" };
   if (hasPoint(p) && p.coordinateVerified) return { dot: "#5B9BFF", label: "Position vérifiée, pas de bâtiment 3D" };
   if (hasPoint(p)) return { dot: "#F2B84B", label: "Position à vérifier" };

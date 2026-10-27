@@ -38,7 +38,7 @@ export function floorCut(building: BId, floor: number) {
 }
 
 /** Ask the walk controller to enter / leave / toggle walk mode (handled by WalkWorld). */
-export function walkRequest(what: "enter" | "exit" | "toggle" | "enter:mibtech") {
+export function walkRequest(what: "enter" | "exit" | "toggle" | "enter:mibtech" | "enter:hospital") {
   if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("atlas:walk", { detail: what }));
 }
 

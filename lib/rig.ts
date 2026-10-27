@@ -174,9 +174,11 @@ class Rig {
     if (!a || !c) return false;
     const k = Math.min(1, (performance.now() - a.t0) / a.dur);
     const e = ease(k);
-    // log-space distance + a gentle "rise" when the flight also travels sideways (Google-Maps-like arc)
+    // log-space distance + a "rise" when the flight also travels sideways (Google-Maps arc): at mid-flight the camera is
+    // high enough to see both places (≈ 0.9 × the distance between them), then it comes down on the new one
     const lateral = a.T0.distanceTo(a.T1) / Math.max(a.D0, a.D1);
-    const rise = a.cross ? 1 : 1 + Math.min(2.5, Math.log1p(lateral) * 0.9) * Math.sin(Math.PI * e);
+    const peak = Math.min(40, Math.max(1, lateral * 0.9));
+    const rise = a.cross ? 1 : 1 + (peak - 1) * Math.sin(Math.PI * e);
     const D = Math.exp(Math.log(a.D0) + (Math.log(a.D1) - Math.log(a.D0)) * e) * rise;
     // the target moves in proportion to the distance change, so the camera never dives through the ground
     const span = Math.abs(a.D1 - a.D0);

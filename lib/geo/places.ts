@@ -8,8 +8,9 @@ import { AKDITAL_CASA, PARTNERS_CASA, type Place } from "./casaReferential";
 import { SITES } from "./network";
 
 export type PlaceCategory = "Hôpital" | "Clinique" | "Centre d'oncologie" | "Bâtiment partenaire" | "Établissement";
-/** osm / osm-probable / fiche: a point (building-level) with its source; city: only the city is known; none: no position */
-export type CoordStatus = "osm" | "osm-probable" | "fiche" | "city" | "none";
+/** osm / osm-probable / fiche: a point (building-level) with its source; city: only the city is known; none: no position;
+ *  demo: the twin's own demonstration site (the typical hospital), not a real establishment */
+export type CoordStatus = "osm" | "osm-probable" | "fiche" | "city" | "none" | "demo";
 /** detailed: a dedicated model; osm-volume: its OpenStreetMap footprint drawn as a volume of the city; marker: a marker only */
 export type ModelStatus = "detailed" | "estimated" | "osm-volume" | "marker" | "none";
 
@@ -72,6 +73,16 @@ const MIBTECH: ExplorerPlace = {
   description: mib.note, dataSource: "Lien Google Maps fourni ; site officiel mibtech.ma ; OpenStreetMap (26/10/2026)", lastVerifiedAt: CHECKED, r: mib.r ?? 900,
 };
 
+/** the twin's typical hospital (the clinic modelled by the team, buildings, departments, staff and use cases), listed as
+ *  « Clinique démo »: a demonstration site, not an Akdital establishment, and not at a real address */
+export const DEMO_ID = "clinique-demo";
+const DEMO: ExplorerPlace = {
+  id: DEMO_ID, name: "Clinique démo", officialName: "Clinique démo · hôpital type du jumeau numérique", brand: "Akdital",
+  category: "Clinique", city: "Casablanca", coordinateStatus: "demo", coordinateVerified: false, model3D: "detailed", model3DId: DEMO_ID,
+  description: "L'hôpital type du jumeau numérique : bâtiment principal et siège, services, équipes et cas d'usage IA, visitables à pied. Site de démonstration : ce n'est pas un établissement réel et sa position dans la ville est fictive.",
+  dataSource: "Jumeau numérique · hôpital type (modèle de l'équipe)", lastVerifiedAt: "", r: 500,
+};
+
 const BOUSKOURA: ExplorerPlace = {
   id: "bien-etre-bouskoura", name: "La Clinique du Bien-Être Bouskoura", officialName: "La Clinique du Bien-Être Bouskoura", brand: "Akdital",
   category: "Clinique", city: "Bouskoura", coordinateStatus: "none", coordinateVerified: false,
@@ -98,6 +109,7 @@ const ELSEWHERE: ExplorerPlace[] = SITES.filter((s) => !CASA_SLUGS.has(s.slug) &
 }));
 
 export const EXPLORER_PLACES: ExplorerPlace[] = [
+  DEMO,
   ...AKDITAL_CASA.filter((p) => AKDITAL[p.id]).map((p) => fromReferential(p, AKDITAL[p.id])),
   BOUSKOURA,
   MIBTECH,
@@ -109,6 +121,7 @@ export const hasPoint = (p: ExplorerPlace) => p.latitude != null && p.longitude 
 
 export const COORD_LABEL: Record<CoordStatus, string> = {
   osm: "Position vérifiée (OSM)", "osm-probable": "Position probable (OSM)", fiche: "Repère Google · à vérifier", city: "Ville seulement", none: "Localisation à vérifier",
+  demo: "Site de démonstration",
 };
 export const MODEL_LABEL: Record<ModelStatus, string> = {
   detailed: "Modèle 3D détaillé", estimated: "Modèle d'après photos, emprise estimée", "osm-volume": "Volume OSM", marker: "Marqueur", none: "Pas de 3D",

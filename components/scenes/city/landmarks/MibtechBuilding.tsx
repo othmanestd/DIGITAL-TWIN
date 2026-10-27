@@ -151,7 +151,7 @@ function fins(): THREE.BufferGeometry {
 
 /** the street front from the photos (plan frame): curtain wall skin, cantilever, ground floor, office entrance, roof plant room */
 function front() {
-  const glass = acc(), stone = acc(), flute = acc(), shop = acc(), dark = acc(), render = acc(), door = acc(), entryDoor = acc(), entryGlass = acc();
+  const garage = acc(), glass = acc(), stone = acc(), flute = acc(), shop = acc(), dark = acc(), render = acc(), door = acc(), entryDoor = acc(), entryGlass = acc();
   const zs = -CANT, X0 = PLATE.x0, X1 = PLATE.x1;
   wall(glass, FRONT.x0, 0.04, FRONT.x1, 0.04, GF, TOP, GLASS_TILE, -1);   // navy skin over the plans' glazed front (seen from outside)
   flat(dark, X0, zs, X1, 0.04, GF, false);                                // soffit of the cantilever
@@ -176,11 +176,15 @@ function front() {
   wall(entryGlass, d0 + 0.12, zb + 0.04, d1 - 0.12, zb + 0.04, 0.15, 2.75, [1.76, GF], -1);
   wall(entryGlass, d0 + 0.12, zb + 0.04, d1 - 0.12, zb + 0.04, 2.87, 3.88, [1.76, GF], -1, 0.3);
   boxWalls(dark, a, zb, b, 0, 0, 0.15, [4, 4]);
-  wall(stone, b, zs, X1, zs, 0, GF, STONE_TILE, -1);
+  // black steel garage door, ribbed, right of the office entrance (user's description); stone around it
+  wall(stone, b, zs, X1, zs, 2.5, GF, STONE_TILE, -1);
+  wall(stone, b, zs, b + 0.12, zs, 0, 2.5, STONE_TILE, -1);
+  wall(stone, X1 - 0.12, zs, X1, zs, 0, 2.5, STONE_TILE, -1);
+  wall(garage, b + 0.12, zs + 0.02, X1 - 0.12, zs + 0.02, 0, 2.5, [1, 0.6], -1);
   // roof: stair exit / plant room over the core
   const sb = MIBTECH_PLANS[2].stair_meta.box;
   boxWalls(render, sb[0][0], sb[0][1], sb[1][0], sb[1][1], TOP, TOP + 3, [4, 4]);
-  return { glass: geo(glass), stone: geo(stone), flute: geo(flute), shop: geo(shop), dark: geo(dark), render: geo(render), door: geo(door), entryDoor: geo(entryDoor), entryGlass: geo(entryGlass), fins: fins() };
+  return { glass: geo(glass), stone: geo(stone), flute: geo(flute), shop: geo(shop), dark: geo(dark), render: geo(render), door: geo(door), entryDoor: geo(entryDoor), entryGlass: geo(entryGlass), garage: geo(garage), fins: fins() };
 }
 
 /** Walk-mode solids (world): the footprint as 2 m cells (each pushed as the AABB of its rotated square). */
@@ -343,6 +347,37 @@ function carpetTex() {
     g.strokeStyle = "rgba(40,42,36,0.35)"; g.lineWidth = 1; g.strokeRect(0.5, 0.5, 127, 127); g.strokeRect(128.5, 128.5, 127, 127); // 50 cm tiles
   });
 }
+/** PBR finishing: a normal map derived from a procedural texture's own luminance (dark = recessed: tile joints, wood grain,
+ *  carpet weave, steel brushing, marble veins), so the surfaces catch light like the real materials */
+function normalOf(t: THREE.Texture, strength: number) {
+  const src = t.image as HTMLCanvasElement, w = src.width, h = src.height;
+  const d = src.getContext("2d")!.getImageData(0, 0, w, h).data;
+  const lum = (x: number, y: number) => { const i = (((y + h) % h) * w + ((x + w) % w)) * 4; return (d[i] + d[i + 1] + d[i + 2]) / 765; };
+  const out = canvas(w, h, (g) => {
+    const img = g.createImageData(w, h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const dx = (lum(x - 1, y) - lum(x + 1, y)) * strength, dy = (lum(x, y - 1) - lum(x, y + 1)) * strength;
+      const l = Math.hypot(dx, dy, 1), i = (y * w + x) * 4;
+      img.data[i] = (dx / l * 0.5 + 0.5) * 255; img.data[i + 1] = (dy / l * 0.5 + 0.5) * 255; img.data[i + 2] = (1 / l * 0.5 + 0.5) * 255; img.data[i + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+  });
+  out.colorSpace = THREE.NoColorSpace;
+  return out;
+}
+/** relief strength and reflection per finish (polished stone and tiles reflect the room, carpet and plaster do not) */
+const PBR: Partial<Record<MbMat, { n: number; env: number }>> = {
+  floor: { n: 2.5, env: 0.9 }, marble: { n: 2, env: 1.1 }, blackMarble: { n: 2, env: 1.1 }, woodPanel: { n: 3, env: 0.4 },
+  door: { n: 3, env: 0.35 }, cubicle: { n: 3, env: 0.35 }, carpet: { n: 6, env: 0 }, steel: { n: 1.5, env: 1.4 }, lift: { n: 1.5, env: 1.4 },
+  terrace: { n: 3, env: 0.2 }, ceiling: { n: 1.5, env: 0 },
+};
+function finishPbr(P: Record<MbMat, THREE.MeshStandardMaterial>) {
+  for (const [k, cfg] of Object.entries(PBR) as [MbMat, { n: number; env: number }][]) {
+    const m = P[k];
+    if (!m?.map) continue;
+    m.normalMap = normalOf(m.map, cfg.n); m.normalScale.set(0.6, 0.6); m.envMapIntensity = cfg.env; m.needsUpdate = true;
+  }
+}
 function interiorMats(T: {
   floor: THREE.Texture; terrace: THREE.Texture; ceiling: THREE.Texture; ceilingE: THREE.Texture; veneer: THREE.Texture; wall: THREE.Texture; frost: THREE.Texture; carpet: THREE.Texture;
   steel: THREE.Texture; panel: THREE.Texture; blackMarble: THREE.Texture; marble: THREE.Texture;
@@ -390,6 +425,7 @@ export function MibtechBuilding() {
       glass: glassTex(false), glassN: glassTex(true), stone: stoneTex(), flute: fluteTex(), shop: shopTex(false), shopN: shopTex(true),
       floor: tileTex([208, 207, 202], 2, 1, "rgba(150,148,142,0.55)", 3, true), terrace: tileTex([168, 168, 165], 2, 2, "rgba(90,90,88,0.6)", 9),
       ceiling: ceilingTex(false), ceilingE: ceilingTex(true), veneer: veneerTex(), wall: wallTex(), frost: frostTex(), carpet: carpetTex(),
+      garage: canvas(16, 64, (g) => { g.fillStyle = "#17181B"; g.fillRect(0, 0, 16, 64); for (let y = 0; y < 64; y += 6) { g.fillStyle = "#2E3036"; g.fillRect(0, y, 16, 1); g.fillStyle = "#0B0B0D"; g.fillRect(0, y + 4, 16, 1); } }),
       steel: steelTex(), panel: panelTex(), blackMarble: blackMarbleTex(), marble: tileTex([214, 216, 219], 2, 2, "rgba(150,152,156,0.45)", 21, true),
     };
     const M = {
@@ -400,13 +436,17 @@ export function MibtechBuilding() {
       dark: new THREE.MeshStandardMaterial({ color: "#272B31", roughness: 0.7, metalness: 0.2 }),
       render: new THREE.MeshStandardMaterial({ color: "#D9D6CF", roughness: 0.9 }),
       door: new THREE.MeshStandardMaterial({ color: "#14181D", roughness: 0.2, metalness: 0.5 }),
+      garage: new THREE.MeshStandardMaterial({ map: T.garage, roughness: 0.45, metalness: 0.6 }),
       fin: new THREE.MeshStandardMaterial({ color: "#D6DADF", roughness: 0.38, metalness: 0.45, envMapIntensity: 1.1 }),
     };
     const P = interiorMats(T);
+    finishPbr(P);
+    // walk cut-away: the walls are drawn both sides, so a wall cut at 1.3 m reads as solid (its inside shows as a top)
+    const CUT_SOLID: MbMat[] = ["wall", "column", "partition", "cubicle", "door", "lift", "steel", "woodPanel", "blackMarble", "cabinet"];
     // walk mode cut-away (third person): the visitor's floor is clipped at the cut height (walls, partitions, ceiling)
     const clip = new THREE.Plane(new THREE.Vector3(0, -1, 0), 1e6);
     for (const m of Object.values(P)) { m.clippingPlanes = [clip]; m.clipShadows = true; }
-    return { F, B, T, M, P, clip };
+    return { F, B, T, M, P, clip, cutSolid: CUT_SOLID };
   }, []);
   const list = useMemo(() => [...Object.values(res.M), ...Object.values(res.P)] as THREE.Material[], [res]);
   useEffect(() => () => {
@@ -448,6 +488,8 @@ export function MibtechBuilding() {
     const cam = state.camera.position, near = walking || MB_VIEW.floor > 0 || Math.hypot(cam.x - CENTER[0], cam.y, cam.z - CENTER[1]) < MB_NEAR;
     const key = walking && W.mbCut < 99 ? 10 + W.mbCut : walking ? 20 : !near ? 30 : MB_VIEW.floor;
     res.clip.constant = walking && W.mbCut < 99 && W.cutY < 1e5 ? W.cutY : 1e6;
+    const solid = res.clip.constant < 1e5 ? THREE.DoubleSide : THREE.FrontSide;
+    for (const k of res.cutSolid) { const m = res.P[k]; if (m.side !== solid) { m.side = solid; m.needsUpdate = true; } }
     if (walking) state.gl.localClippingEnabled = true;
     if (shown.current !== key) {
       shown.current = key;
@@ -483,6 +525,7 @@ export function MibtechBuilding() {
         <mesh geometry={F.flute} material={M.flute} />
         <mesh geometry={F.shop} material={M.shop} />
         <mesh geometry={F.door} material={M.door} />
+        <mesh geometry={F.garage} material={M.garage} />
       </group>
       <mesh geometry={F.dark} material={M.dark} castShadow />
       <mesh geometry={F.render} material={M.render} castShadow />
